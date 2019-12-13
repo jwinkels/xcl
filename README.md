@@ -1,7 +1,7 @@
 xcl
 ===
 
-APEX commandline
+APEX commandline Utility
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/xcl.svg)](https://npmjs.org/package/xcl)
