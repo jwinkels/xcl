@@ -1,0 +1,69 @@
+software:
+   utplsql:
+    owner: utPLSQL
+    repo: utPLSQL
+    call: release
+    install:
+        sys: true
+        parameters:
+            username: utplsql
+            password: utplsql
+            tablespace: USERS
+        scripts:
+          - path: source/create_utplsql_owner.sql
+            arguments:
+                - username
+                - password
+                - tablespace
+          - path: source/install.sql
+            arguments:
+                - username
+          - path: source/create_synonyms_and_grants_for_public.sql
+            arguments:
+                - username
+    uninstall:
+        sys: true
+        parameters:
+            username: utplsql
+        scripts:
+            - path: source/uninstall.sql
+              arguments:
+                - username
+   oos-utils:
+    owner: OraOpenSource
+    repo: oos-utils
+    call: tag
+    install:
+        sys: false
+        parameters:
+            grantee: PUBLIC
+        scripts:
+          - path: install/oos_utils_install.sql
+          - path: install/grant_to_oos_utils.sql
+            arguments:
+                - grantee
+    uninstall:
+        sys: false
+        scripts:
+            - path: install/oos_utils_uninstall.sql
+              arguments:
+   table-api-generator:
+    owner: OraMUC
+    repo: table-api-generator
+    call: release
+    install:
+        sys: false
+        scripts:
+          - path: OM_TAPIGEN.pks
+          - path: OM_TAPIGEN.pkb
+          - path: OM_TAPIGEN_ODDGEN_WRAPPER.pks
+          - path: OM_TAPIGEN_ODDGEN_WRAPPER.pkb
+    uninstall:
+        sys: false
+        scripts:
+          - path: uninstall.sql
+            arguments:
+   logger:
+    owner: OraOpenSource
+    repo: Logger
+    call: tag
