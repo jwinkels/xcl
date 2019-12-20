@@ -8,6 +8,9 @@ var Project = /** @class */ (function () {
     Project.prototype.getPath = function () {
         return this.path + "/" + this.name;
     };
+    Project.prototype.getName = function () {
+        return this.name;
+    };
     return Project;
 }());
 exports.Project = Project;

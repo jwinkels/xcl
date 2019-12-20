@@ -10,4 +10,8 @@ export class Project{
     public getPath():string{
         return this.path+"/"+this.name;
     }
+
+    public getName():string{
+        return this.name;
+    }
 }

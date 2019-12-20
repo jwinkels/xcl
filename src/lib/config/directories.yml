@@ -1,0 +1,25 @@
+db:
+- app:
+  - api
+  - source
+  - tests
+- data:
+  - api
+  - constraints
+  - ddl
+  - dml
+  - indexes
+  - polcies
+  - source
+  - tables
+  - tables_ddl
+- logic:
+  - api
+  - contexts
+  - dml
+  - source
+  - tests
+  - views
+apex:
+- f1000
+- f2000

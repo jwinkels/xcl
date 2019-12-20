@@ -40,13 +40,48 @@ class ProjectManager {
         return ProjectManager.project.getPath();
     }
 
+    private createDirectoryPath(path:any,fullPath:string){
+       if (path instanceof Array){
+        for (let i = 0; i < path.length; i++) {
+             this.createDirectoryPath(path[i],fullPath);
+          }
+       }else if (path instanceof Object){
+        for(let i=0; i<Object.keys(path).length; i++){
+            let objName=Object.keys(path)[i];
+            this.createDirectoryPath(path[objName],fullPath+objName+'/');
+        }
+       } else{
+           if (!fs.existsSync(ProjectManager.project.getPath()+fullPath+path)){
+            fullPath=ProjectManager.project.getPath()+fullPath+path;
+            fs.mkdirSync(fullPath,{recursive: true});
+           }
+           
+       }
+       
+    }
+
+    public createDirectoryStructure(){
+        let dirsJson:JSON;
+        let directories:string[]=[];
+
+        let parsedDirs = yaml.parseDocument(
+            fs.readFileSync("./config/directories.yml").toString()
+        );
+        
+        dirsJson = parsedDirs.toJSON(); 
+
+        this.createDirectoryPath(dirsJson,"/");
+
+    }
+
     public loadProjectConfiguration(){
-        let config=yaml.parse(fs.readFileSync(ProjectManager.project.getPath()+'/xli.yml').toString());
-        console.log(config);
+        let config=yaml.parse(fs.readFileSync(ProjectManager.project.getPath()+'/xcl.yml').toString());
+        //console.log(config);
     }
 }
 
-ProjectManager.getInstance("xxx").loadProjectConfiguration();
+//ProjectManager.getInstance("xxx").loadProjectConfiguration();
 
-console.log(ProjectManager.getInstance("pvslite").getProjectHome());
+//console.log(ProjectManager.getInstance("pvslite").getProjectHome());
+ProjectManager.getInstance("xxx").createDirectoryStructure();
 //console.log(ProjectManager.getInstance("test").getProjectHome());
