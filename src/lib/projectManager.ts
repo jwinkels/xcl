@@ -5,7 +5,7 @@ import * as os from 'os';
 import { Project } from './Project';
 
 //Implementation in Singleton-Pattern because there is no need for multiple instances of the ProjectManager!
-class ProjectManager {
+export class ProjectManager {
     private static manager: ProjectManager;
     private static xclHome = os.homedir + '/AppData/Roaming/xcl';
     private static project:Project;
@@ -83,5 +83,5 @@ class ProjectManager {
 //ProjectManager.getInstance("xxx").loadProjectConfiguration();
 
 //console.log(ProjectManager.getInstance("pvslite").getProjectHome());
-ProjectManager.getInstance("xxx").createDirectoryStructure();
+//ProjectManager.getInstance("xxx").createDirectoryStructure();
 //console.log(ProjectManager.getInstance("test").getProjectHome());

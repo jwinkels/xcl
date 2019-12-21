@@ -2,8 +2,8 @@ const fs = require('fs-extra');
 const homedir = require('os').homedir();
 const xclHome = homedir + '/AppData/Roaming/xcl';
 
-if (!fs.existsSync(xlineHome)) {
-  fs.mkdirSync(xlineHome);
+if (!fs.existsSync(xclHome)) {
+  fs.mkdirSync(xclHome);
 }
 
 fs.copySync('./scripts/artifacts/software.yml', xclHome + '/software.yml');
