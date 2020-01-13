@@ -3,6 +3,7 @@ import * as yaml from 'yaml';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import { Project } from './Project';
+import { dirname } from 'path';
 
 //Implementation in Singleton-Pattern because there is no need for multiple instances of the ProjectManager!
 export class ProjectManager {
@@ -12,7 +13,7 @@ export class ProjectManager {
     private static projectsYaml:yaml.ast.Document;
 
     private constructor(){
-        console.log("Baue Project Manager!!"); 
+        console.log(ProjectManager.xclHome); 
         ProjectManager.projectsYaml=yaml.parseDocument(
                                                 fs.readFileSync(ProjectManager.xclHome+"/projects.yml").toString()
                                             );      
@@ -21,18 +22,22 @@ export class ProjectManager {
      * returns the Instance of ProjectManager
      * @param project 
      */
-    static getInstance(project: string){
+    static getInstance(projectName: string){
         if (!ProjectManager.manager) {
             ProjectManager.manager = new ProjectManager();
         }
         let json=ProjectManager.projectsYaml.toJSON();
-        if (json.projects[project]){
-            let projectJSON=json.projects[project];
-            ProjectManager.project = new Project(project, projectJSON.path);
-            return ProjectManager.manager;
+        if (json.projects && json.projects[projectName]){
+            let projectJSON=json.projects[projectName];
+            ProjectManager.project = new Project(projectName, projectJSON.path);
         }else{
-            throw new Error("Cannot read Project '"+project+"' ");
+            console.log(projectName+' is to be created in: '+process.cwd());
+            ProjectManager.project = new Project(projectName, process.cwd());
+            json.projects[ProjectManager.project.getName()]=ProjectManager.project.toJSON();
+            console.log(json.projects);
+           // fs.writeFileSync(ProjectManager.xclHome+"/projects.yml",yaml.)
         }
+        return ProjectManager.manager;
         
     }
 
@@ -65,7 +70,7 @@ export class ProjectManager {
         let directories:string[]=[];
 
         let parsedDirs = yaml.parseDocument(
-            fs.readFileSync("./config/directories.yml").toString()
+            fs.readFileSync(__dirname+"/config/directories.yml").toString()
         );
         
         dirsJson = parsedDirs.toJSON(); 
@@ -79,9 +84,3 @@ export class ProjectManager {
         //console.log(config);
     }
 }
-
-//ProjectManager.getInstance("xxx").loadProjectConfiguration();
-
-//console.log(ProjectManager.getInstance("pvslite").getProjectHome());
-//ProjectManager.getInstance("xxx").createDirectoryStructure();
-//console.log(ProjectManager.getInstance("test").getProjectHome());

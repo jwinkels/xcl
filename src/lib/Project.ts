@@ -14,4 +14,8 @@ export class Project{
     public getName():string{
         return this.name;
     }
+
+    public toJSON():any{
+        return {path: this.getPath()}
+    }
 }
