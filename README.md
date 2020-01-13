@@ -19,7 +19,7 @@ $ npm install -g xcl
 $ xcl COMMAND
 running command...
 $ xcl (-v|--version|version)
-xcl/0.0.0 win32-x64 node-v10.16.0
+xcl/0.0.0 win32-x64 node-v13.3.0
 $ xcl --help [COMMAND]
 USAGE
   $ xcl COMMAND
@@ -31,6 +31,7 @@ USAGE
 * [`xcl hello [FILE]`](#xcl-hello-file)
 * [`xcl help [COMMAND]`](#xcl-help-command)
 * [`xcl project:create [FILE]`](#xcl-projectcreate-file)
+* [`xcl project:list [FILE]`](#xcl-projectlist-file)
 
 ## `xcl hello [FILE]`
 
@@ -71,11 +72,26 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.2
 
 ## `xcl project:create [FILE]`
 
-describe the command here
+create a project
 
 ```
 USAGE
   $ xcl project:create [FILE]
+
+OPTIONS
+  -h, --help       show CLI help
+  -n, --name=name  Name of the Project to be created
+```
+
+_See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\create.ts)_
+
+## `xcl project:list [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl project:list [FILE]
 
 OPTIONS
   -f, --force
@@ -83,5 +99,5 @@ OPTIONS
   -n, --name=name  name to print
 ```
 
-_See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\create.ts)_
+_See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\list.ts)_
 <!-- commandsstop -->
