@@ -49,7 +49,10 @@
     "bin": "xcl",
     "plugins": [
       "@oclif/plugin-help"
-    ]
+    ],
+    "topics": {      
+      "project": { "description": "Adds, manages projects"}
+    }
   },
   "repository": "MaikMichel/xcl",
   "scripts": {
