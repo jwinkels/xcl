@@ -94,10 +94,9 @@ export class ProjectManager {
     return projects;
   }
 
-  public listProjects(){
+  public listProjects() {
     const table = new Table({
-      head: [
-        chalk.blueBright('index'),
+      head: [        
         chalk.blueBright('name'),
         chalk.blueBright('path')
       ]
@@ -106,7 +105,7 @@ export class ProjectManager {
     const projects:Project[] = ProjectManager.getInstance().getProjects();
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
-      table.push([ i, project.getName(), project.getPath() ]);
+      table.push([ project.getName(), project.getPath() ]);
     }
 
     console.log(table.toString());
