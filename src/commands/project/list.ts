@@ -1,7 +1,7 @@
 import {Command, flags} from '@oclif/command'
 
 export default class ProjectList extends Command {
-  static description = 'describe the command here'
+  static description = 'list a project'
 
   static flags = {
     help: flags.help({char: 'h'}),
