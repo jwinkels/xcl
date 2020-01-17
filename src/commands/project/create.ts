@@ -2,7 +2,7 @@ import {Command, flags} from '@oclif/command'
 import {ProjectManager} from '../../lib/ProjectManager'
 
 export default class ProjectCreate extends Command {
-  static description = 'create a project'
+  static description = 'create, list or remove a project'
 
   static flags = {
     help: flags.help({char: 'h'}),    
