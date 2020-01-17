@@ -1,86 +1,114 @@
 //Imports
-import * as yaml from 'yaml';
-import * as fs from 'fs-extra';
-import * as os from 'os';
-import { Project } from './Project';
-import { dirname } from 'path';
+import * as yaml from "yaml";
+import * as fs from "fs-extra";
+import * as os from "os";
+import { Project } from "./Project";
+import { ProjectNotFoundError } from "./errors/ProjectNotFoundError";
+import chalk from 'chalk'
+const Table = require('cli-table')
 
 //Implementation in Singleton-Pattern because there is no need for multiple instances of the ProjectManager!
 export class ProjectManager {
-    private static manager: ProjectManager;
-    private static xclHome = os.homedir + '/AppData/Roaming/xcl';
-    private static project:Project;
-    private static projectsYaml:yaml.ast.Document;
+  public static projectYMLfile: string = "projects.yml";
 
-    private constructor(){
-        console.log(ProjectManager.xclHome); 
-        ProjectManager.projectsYaml=yaml.parseDocument(
-                                                fs.readFileSync(ProjectManager.xclHome+"/projects.yml").toString()
-                                            );      
+  private static manager: ProjectManager;
+  private static xclHome = os.homedir + "/AppData/Roaming/xcl";
+  // private static project: Project;
+  private static projectsYaml: yaml.ast.Document;
+  private static projectsJson: any;
+
+  private constructor() {
+    // read projects
+    ProjectManager.projectsYaml = yaml.parseDocument(fs.readFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile).toString());
+
+    // convert to json of create an empty definition
+    ProjectManager.projectsJson = ProjectManager.projectsYaml.toJSON() || { projects: {} };
+
+    // what else belongs to PM?
+  }
+
+  /**
+   * return Singelton-Instance of PM
+   */
+  static getInstance() {
+    if (!ProjectManager.manager) {
+      ProjectManager.manager = new ProjectManager();
     }
-    /**
-     * returns the Instance of ProjectManager
-     * @param project 
-     */
-    static getInstance(projectName: string){
-        if (!ProjectManager.manager) {
-            ProjectManager.manager = new ProjectManager();
-        }
-        let json=ProjectManager.projectsYaml.toJSON();
-        if (json.projects && json.projects[projectName]){
-            let projectJSON=json.projects[projectName];
-            ProjectManager.project = new Project(projectName, projectJSON.path);
-        }else{
-            console.log(projectName+' is to be created in: '+process.cwd());
-            ProjectManager.project = new Project(projectName, process.cwd());
-            json.projects[ProjectManager.project.getName()]=ProjectManager.project.toJSON();
-            console.log(json.projects);
-           // fs.writeFileSync(ProjectManager.xclHome+"/projects.yml",yaml.)
-        }
-        return ProjectManager.manager;
-        
+    return ProjectManager.manager;
+  }
+
+  /**
+   * returns Project, when defined. Otherwise raises an exception
+   *
+   * @param projectName name of project
+   */
+  public getProject(projectName: string): Project {
+    if (ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName]) {
+      let projectJSON = ProjectManager.projectsJson.projects[projectName];
+      return new Project(projectName, projectJSON.path, true);
+    } else {
+      throw new ProjectNotFoundError(`project ${projectName} not found`);
     }
+  }
 
-    public getProjectHome():string{
-        return ProjectManager.project.getPath();
-    }
+  /**
+   * return Project, when found otherwise creates it
+   * @param projectName name of project
+   */
+  public createProject(projectName: string): Project {
+    // check if not allready defined
+    let project;
+    try {
+      project = this.getProject(projectName);
+      console.log(projectName + " allready created. Look @: " + project.getPath());
+    } catch (err) {
+      if (err instanceof ProjectNotFoundError) {
+        // start to create the project
+        console.log(projectName + " is to be created in: " + process.cwd());
+        project = new Project(projectName, process.cwd() + "/" + projectName, false);
 
-    private createDirectoryPath(path:any,fullPath:string){
-       if (path instanceof Array){
-        for (let i = 0; i < path.length; i++) {
-             this.createDirectoryPath(path[i],fullPath);
-          }
-       }else if (path instanceof Object){
-        for(let i=0; i<Object.keys(path).length; i++){
-            let objName=Object.keys(path)[i];
-            this.createDirectoryPath(path[objName],fullPath+objName+'/');
-        }
-       } else{
-           if (!fs.existsSync(ProjectManager.project.getPath()+fullPath+path)){
-            fullPath=ProjectManager.project.getPath()+fullPath+path;
-            fs.mkdirSync(fullPath,{recursive: true});
-           }
-           
-       }
-       
-    }
-
-    public createDirectoryStructure(){
-        let dirsJson:JSON;
-        let directories:string[]=[];
-
-        let parsedDirs = yaml.parseDocument(
-            fs.readFileSync(__dirname+"/config/directories.yml").toString()
-        );
-        
-        dirsJson = parsedDirs.toJSON(); 
-
-        this.createDirectoryPath(dirsJson,"/");
-
+        this.addProjectToGlobalConfig(project);
+      } else {
+        // undefined error. what happened?
+        throw err;
+      }
     }
 
-    public loadProjectConfiguration(){
-        let config=yaml.parse(fs.readFileSync(ProjectManager.project.getPath()+'/xcl.yml').toString());
-        //console.log(config);
+    return project;
+  }
+
+  private addProjectToGlobalConfig(project: Project) {
+    ProjectManager.projectsJson.projects[project.getName()] = project.toJSON();    
+    fs.writeFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile, yaml.stringify(ProjectManager.projectsJson));
+  }
+
+  public getProjects():Project[] {
+  
+    let projects:Project[] = [];
+
+    Object.keys(ProjectManager.projectsJson.projects).forEach(function(projectName) {
+      let projectJSON = ProjectManager.projectsJson.projects[projectName];
+      projects.push(new Project(projectName, projectJSON.path, true));
+    });
+
+    return projects;
+  }
+
+  public listProjects(){
+    const table = new Table({
+      head: [
+        chalk.blueBright('index'),
+        chalk.blueBright('name'),
+        chalk.blueBright('path')
+      ]
+    });
+    
+    const projects:Project[] = ProjectManager.getInstance().getProjects();
+    for (let i = 0; i < projects.length; i++) {
+      const project = projects[i];
+      table.push([ i, project.getName(), project.getPath() ]);
     }
+
+    console.log(table.toString());
+  }
 }

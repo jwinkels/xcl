@@ -1,30 +1,29 @@
 import {Command, flags} from '@oclif/command'
-import {ProjectManager} from '../../lib/projectManager'
+import {ProjectManager} from '../../lib/ProjectManager'
 
 export default class ProjectCreate extends Command {
   static description = 'create a project'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'Name of the Project to be created'})
-    // flag with no value (-f, --force)
-    //force: flags.boolean({char: 'f'}),
+    help: flags.help({char: 'h'}),    
   }
 
-  static args = [{name: 'file'}]
+  static args = [
+                  {
+                    name: 'project',
+                    description: 'name of the project to create',
+                    required: true
+                  }
+                ]
 
   async run() {
     const {args, flags} = this.parse(ProjectCreate)
+    // flags kommen bestimmt noch...
+    // -f force
+    // - template?
+    
+    ProjectManager.getInstance().createProject(args.project)
 
-    /*const name = flags.name || 'world'
-    this.log(`hello ${name} from C:\\Users\\mmi\\Projekte\\xcl\\src\\commands\\project\\create.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
-    }*/
-
-    if(flags.name){
-      ProjectManager.getInstance(flags.name).createDirectoryStructure()
-    }
+    
   }
 }
