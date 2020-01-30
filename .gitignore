@@ -107,3 +107,7 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Ignore js-Dateien
+**\*.js
+

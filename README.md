@@ -28,10 +28,42 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
+* [`xcl feature:list [FILE]`](#xcl-featurelist-file)
+* [`xcl feature:versions [FILE]`](#xcl-featureversions-file)
 * [`xcl hello [FILE]`](#xcl-hello-file)
 * [`xcl help [COMMAND]`](#xcl-help-command)
-* [`xcl project:create [FILE]`](#xcl-projectcreate-file)
+* [`xcl project:create PROJECT`](#xcl-projectcreate-project)
 * [`xcl project:list [FILE]`](#xcl-projectlist-file)
+
+## `xcl feature:list [FILE]`
+
+lists all available Features
+
+```
+USAGE
+  $ xcl feature:list [FILE]
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+_See code: [src\commands\feature\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\list.ts)_
+
+## `xcl feature:versions [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl feature:versions [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src\commands\feature\versions.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\versions.ts)_
 
 ## `xcl hello [FILE]`
 
@@ -68,35 +100,35 @@ OPTIONS
   --all  see all commands in CLI
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.2/src\commands\help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.3/src\commands\help.ts)_
 
-## `xcl project:create [FILE]`
+## `xcl project:create PROJECT`
 
-create a project
+create, list or remove a project
 
 ```
 USAGE
-  $ xcl project:create [FILE]
+  $ xcl project:create PROJECT
+
+ARGUMENTS
+  PROJECT  name of the project to create
 
 OPTIONS
-  -h, --help       show CLI help
-  -n, --name=name  Name of the Project to be created
+  -h, --help  show CLI help
 ```
 
 _See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\create.ts)_
 
 ## `xcl project:list [FILE]`
 
-describe the command here
+lists all known xcl projects
 
 ```
 USAGE
   $ xcl project:list [FILE]
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -h, --help  show CLI help
 ```
 
 _See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\list.ts)_
