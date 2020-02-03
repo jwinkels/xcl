@@ -6,6 +6,7 @@ import chalk from 'chalk'
 import { Feature } from './Feature';
 import { integer } from '@oclif/command/lib/flags';
 import { ProjectManager } from './projectManager';
+import { ProjectFeature } from './projectFeature';
 const Table = require('cli-table')
 
 export class FeatureManager{
@@ -76,17 +77,33 @@ export class FeatureManager{
             for (let i=0; i<releases.length; i++){
               table.push([releases[i]]);
             }
-
             console.log(table.toString());
-
+            FeatureManager.getInstance().addFeatureToProject('logger','3.1.0','lalala');
           });
+          
         }else{
           throw Error('Unknown Feature: '+name+' Try: xcl feature:list');
         }
       }
 
-      public addFeatureToProject(featureName:string, projectName:string){
+      public addFeatureToProject(featureName:string, version:string, projectName:string){
         let pManager:ProjectManager=ProjectManager.getInstance();
-        pManager.getProject(projectName);
+        pManager.getProject(projectName).addFeature(this.getProjectFeature(featureName, version));
+      }
+
+      private getProjectFeature(featureName:string, version:string):ProjectFeature{
+        if( FeatureManager.features.has(featureName.toLowerCase()) ){
+          if (FeatureManager.features.get(featureName.toLowerCase()) !== undefined ){
+            let feature = new ProjectFeature({parent: FeatureManager.features.get(featureName.toLowerCase()),
+                                              version: version});
+            if (feature !== undefined){                                            
+              return feature;
+            }else{
+              throw Error("Feature could not be found!");
+            }
+          }
+        }else{
+          throw Error ("Unkown feature!");
+        }
       }
 }

@@ -107,4 +107,8 @@ export class Project {
     
     return yaml.parse(conf);
   }
+
+  public addFeature(feature:ProjectFeature){
+    this.features.push(feature);
+  }
 }

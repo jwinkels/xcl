@@ -15,14 +15,14 @@ export class Feature{
         this.name=args.name;
         this.owner=args.owner;
         this.repo=args.repo;
+        this.gitAttribute=args.gitAttribute;
         
         if (args.gitAttribute == 'tag'){
             this.isManagedByTag = true;
-            this.gitAttribute='tags';
+          
         }else{
             if (args.gitAttribute == 'release'){
                 this.isManagedByRelease = true;
-                this.gitAttribute='releases';
             }else{
                 throw Error('Unknown Option:"' + args.gitAttribute + '"!\n A Feature must be called by "tag" or by "release"!');
             }
@@ -79,17 +79,16 @@ export class Feature{
 
     protected call():Promise<any>{
         return new Promise<any>((resolve,reject)=>{
-            let path:string='/repos/'+this.owner+'/'+this.repo+'/'+this.gitAttribute;
+            let path:string='/repos/'+this.owner+'/'+this.repo;
             let data ="";
             
-            /*
             if(this.isManagedByRelease){
                 path+='/releases';
             }else{
                 if(this.isManagedByTag){
                     path+='/tags';
                 }
-            }*/
+            }
             const options:https.RequestOptions = {
                 host: 'api.github.com',
                 port: 443,
