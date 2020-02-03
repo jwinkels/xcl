@@ -18,9 +18,6 @@ export default class ProjectCreate extends Command {
 
   async run() {
     const {args, flags} = this.parse(ProjectCreate)
-    // flags kommen bestimmt noch...
-    // -f force
-    // - template?
     
     ProjectManager.getInstance().createProject(args.project)
 

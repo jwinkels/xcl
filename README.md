@@ -19,7 +19,7 @@ $ npm install -g xcl
 $ xcl COMMAND
 running command...
 $ xcl (-v|--version|version)
-xcl/0.0.0 win32-x64 node-v13.3.0
+xcl/0.0.0 win32-x64 node-v10.16.0
 $ xcl --help [COMMAND]
 USAGE
   $ xcl COMMAND
@@ -29,11 +29,12 @@ USAGE
 # Commands
 <!-- commands -->
 * [`xcl feature:list [FILE]`](#xcl-featurelist-file)
-* [`xcl feature:versions [FILE]`](#xcl-featureversions-file)
+* [`xcl feature:versions FEATURE`](#xcl-featureversions-feature)
 * [`xcl hello [FILE]`](#xcl-hello-file)
 * [`xcl help [COMMAND]`](#xcl-help-command)
 * [`xcl project:create PROJECT`](#xcl-projectcreate-project)
 * [`xcl project:list [FILE]`](#xcl-projectlist-file)
+* [`xcl project:remove [FILE]`](#xcl-projectremove-file)
 
 ## `xcl feature:list [FILE]`
 
@@ -49,18 +50,19 @@ OPTIONS
 
 _See code: [src\commands\feature\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\list.ts)_
 
-## `xcl feature:versions [FILE]`
+## `xcl feature:versions FEATURE`
 
-describe the command here
+lists all available Releases of the Feature
 
 ```
 USAGE
-  $ xcl feature:versions [FILE]
+  $ xcl feature:versions FEATURE
+
+ARGUMENTS
+  FEATURE  name of the feature
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -h, --help  show CLI help
 ```
 
 _See code: [src\commands\feature\versions.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\versions.ts)_
@@ -132,4 +134,20 @@ OPTIONS
 ```
 
 _See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\list.ts)_
+
+## `xcl project:remove [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl project:remove [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src\commands\project\remove.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\remove.ts)_
 <!-- commandsstop -->

@@ -8,7 +8,7 @@ import chalk from 'chalk'
 const Table = require('cli-table')
 
 //Implementation in Singleton-Pattern because there is no need for multiple instances of the ProjectManager!
-export class ProjectManager {
+export class ProjectManager {  
   public static projectYMLfile: string = "projects.yml";
 
   private static manager: ProjectManager;
@@ -45,7 +45,7 @@ export class ProjectManager {
   public getProject(projectName: string): Project {
     if (ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName]) {
       let projectJSON = ProjectManager.projectsJson.projects[projectName];
-      return new Project(projectName, projectJSON.path, true);
+      return new Project(projectName, projectJSON.path, false);
     } else {
       throw new ProjectNotFoundError(`project ${projectName} not found`);
     }
@@ -65,7 +65,7 @@ export class ProjectManager {
       if (err instanceof ProjectNotFoundError) {
         // start to create the project
         console.log(projectName + " is to be created in: " + process.cwd());
-        project = new Project(projectName, process.cwd() + "/" + projectName, false);
+        project = new Project(projectName, process.cwd() + "/" + projectName, true);
 
         this.addProjectToGlobalConfig(project);
       } else {
@@ -82,13 +82,42 @@ export class ProjectManager {
     fs.writeFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile, yaml.stringify(ProjectManager.projectsJson));
   }
 
+
+  public removeProject(projectName: string, path: boolean, database: boolean) {
+    // check if not allready defined
+    let project;
+    try {
+      project = this.getProject(projectName);
+      
+      // remove from 
+      this.removeProjectFromGlobalConfig(project);
+
+      // todo remove from path?
+      if (path) {
+        fs.removeSync(project.getPath());
+        console.log(`Path ${project.getPath()} removed`);
+      }
+      // todo remove from db?
+
+    } catch (err) {
+      // undefined error. what happened?
+      throw err;      
+    }
+  }
+
+  private removeProjectFromGlobalConfig(project: Project) {
+    delete ProjectManager.projectsJson.projects[project.getName()];
+    fs.writeFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile, yaml.stringify(ProjectManager.projectsJson));
+    console.log(`Project ${project.getName()} removed`);
+  }
+
   public getProjects():Project[] {
   
     let projects:Project[] = [];
 
     Object.keys(ProjectManager.projectsJson.projects).forEach(function(projectName) {
       let projectJSON = ProjectManager.projectsJson.projects[projectName];
-      projects.push(new Project(projectName, projectJSON.path, true));
+      projects.push(new Project(projectName, projectJSON.path, false));
     });
 
     return projects;
@@ -98,14 +127,15 @@ export class ProjectManager {
     const table = new Table({
       head: [        
         chalk.blueBright('name'),
-        chalk.blueBright('path')
+        chalk.blueBright('path'),
+        chalk.redBright('status')
       ]
     });
     
     const projects:Project[] = ProjectManager.getInstance().getProjects();
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
-      table.push([ project.getName(), project.getPath() ]);
+      table.push([ project.getName(), project.getPath(), project.getErrorText() ]);
     }
 
     console.log(table.toString());

@@ -4,20 +4,26 @@ import * as fs from "fs-extra";
 export class Project {
   private name: string;
   private path: string;
+  private errorText: string = '';
   private config: Object;
 
-  constructor(name: string, path: string, exists: boolean) {
+  constructor(name: string, path: string, create: boolean) {
     this.name = name;
     this.path = path;
 
-    if (exists) {
-      this.config = this.readConfig();
-    } else {
+    if (create) {
       this.config = this.initialzeConfig();
 
       this.createDirectoryStructure();
       this.writeConfig();
+    } else {
+      this.config = this.readConfig();      
+      
     }
+  }
+
+  public getErrorText(): string {
+    return this.errorText;
   }
 
   public getPath(): string {
@@ -77,6 +83,25 @@ export class Project {
   }
 
   private readConfig() {
-    return yaml.parse(fs.readFileSync(this.getPath() + "/xcl.yml").toString());
+    let conf:string
+    let confObject;
+
+    try {
+      conf = fs.readFileSync(this.getPath() + "/xcl.yml").toString();      
+    } catch (err) {
+      if (err.code === 'ENOENT') {        
+        conf = yaml.stringify({xli: {
+                                project: this.getName(),
+                                errtext: 'File not found!'
+                              }});
+        this.errorText = 'File not found!';
+      } else {
+        throw err;
+      }
+      
+    }
+
+    
+    return yaml.parse(conf);
   }
 }
