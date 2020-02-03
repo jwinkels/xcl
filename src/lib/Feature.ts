@@ -6,26 +6,30 @@ export class Feature{
     private name:String;
     private owner:String;
     private repo:String;
+    private gitAttribute:String;
     private isManagedByTag:boolean=false;
     private isManagedByRelease:boolean=false;
+    
 
-    constructor(name:String, owner:String, repo:String, managedBy:String){
-        this.name=name;
-        this.owner=owner;
-        this.repo=repo;
-
-        if (managedBy=='tag'){
-            this.isManagedByTag=true;
+    constructor(args: {name:String, owner:String, repo:String, gitAttribute:String }){
+        this.name=args.name;
+        this.owner=args.owner;
+        this.repo=args.repo;
+        
+        if (args.gitAttribute == 'tag'){
+            this.isManagedByTag = true;
+            this.gitAttribute='tags';
         }else{
-            if (managedBy=='release'){
-                this.isManagedByRelease=true;
+            if (args.gitAttribute == 'release'){
+                this.isManagedByRelease = true;
+                this.gitAttribute='releases';
             }else{
-                throw Error('Unknown Option:"'+managedBy+'"!\n A Feature must be called by "tag" or by "release"!');
+                throw Error('Unknown Option:"' + args.gitAttribute + '"!\n A Feature must be called by "tag" or by "release"!');
             }
         }
     }
 
-    public getReleases():Promise<String[]>{
+    public getReleaseInformation():any{
         return new Promise<String[]>((resolve, reject)=>{
             let releases:String[]=[];
             this.call().then(function(featureData){
@@ -51,7 +55,7 @@ export class Feature{
             host: 'api.github.com',
             port: 443,
             path: '/repos/'+this.owner+'/'+this.repo+'/releases',
-            headers: {'User-Agent':'xline'}
+            headers: {'User-Agent':'xcl'}
         };
 
         //ClientRequest request=https.request();
@@ -69,19 +73,23 @@ export class Feature{
         return this.owner;
     }
 
-    private call():Promise<any>{
-        return new Promise<any>((resolve,reject)=>{
-            let path:string='/repos/'+this.owner+'/'+this.repo;
-            let data ="";
+    public getGitAttribute():String{
+        return this.gitAttribute;
+    }
 
+    protected call():Promise<any>{
+        return new Promise<any>((resolve,reject)=>{
+            let path:string='/repos/'+this.owner+'/'+this.repo+'/'+this.gitAttribute;
+            let data ="";
+            
+            /*
             if(this.isManagedByRelease){
                 path+='/releases';
             }else{
                 if(this.isManagedByTag){
                     path+='/tags';
                 }
-            }
-            
+            }*/
             const options:https.RequestOptions = {
                 host: 'api.github.com',
                 port: 443,

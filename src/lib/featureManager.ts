@@ -5,6 +5,7 @@ import * as os from "os";
 import chalk from 'chalk'
 import { Feature } from './Feature';
 import { integer } from '@oclif/command/lib/flags';
+import { ProjectManager } from './projectManager';
 const Table = require('cli-table')
 
 export class FeatureManager{
@@ -12,7 +13,6 @@ export class FeatureManager{
 
     private static manager: FeatureManager;
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
-    // private static project: Project;
     private static softwareYaml: yaml.ast.Document;
     private static softwareJson: any;
     private static features: Map<String, Feature>;
@@ -29,7 +29,12 @@ export class FeatureManager{
 
         Object.keys(FeatureManager.softwareJson.software).forEach(function(softwareName){
           let softwareJSON = FeatureManager.softwareJson.software[softwareName];
-          FeatureManager.features.set(softwareName, new Feature(softwareName, softwareJSON.owner, softwareJSON.repo, softwareJSON.call));
+          FeatureManager.features.set(softwareName, new Feature({ name: softwareName, 
+                                                                  owner: softwareJSON.owner, 
+                                                                  repo: softwareJSON.repo, 
+                                                                  gitAttribute: softwareJSON.call
+                                                                })
+                                                              );
         });
     
         // what else belongs to FM?
@@ -50,13 +55,7 @@ export class FeatureManager{
             chalk.blueBright('owner')
           ]
         });
-        let feature:Feature;    
-        /*const features:Feature[] = FeatureManager.getInstance().getFeatures();
-
-        for (let i = 0; i < features.length; i++) {
-          const feature = features[i];
-          table.push([ feature.getName(), feature.getRepo(), feature.getOwner() ]);
-        }*/
+        let feature:Feature;
 
         for(feature of FeatureManager.features.values()){
           table.push([ feature.getName(), feature.getRepo(), feature.getOwner() ]);
@@ -72,8 +71,8 @@ export class FeatureManager{
           ]
         });
         
-        if(FeatureManager.features.has(name)){
-          FeatureManager.features.get(name).getReleases().then(function(releases){
+        if(FeatureManager.features.has(name.toLowerCase())){
+          FeatureManager.features.get(name.toLowerCase()).getReleaseInformation().then(function(releases){
             for (let i=0; i<releases.length; i++){
               table.push([releases[i]]);
             }
@@ -86,4 +85,8 @@ export class FeatureManager{
         }
       }
 
+      public addFeatureToProject(featureName:string, projectName:string){
+        let pManager:ProjectManager=ProjectManager.getInstance();
+        pManager.getProject(projectName);
+      }
 }

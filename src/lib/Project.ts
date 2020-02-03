@@ -1,14 +1,17 @@
 import * as yaml from "yaml";
 import * as fs from "fs-extra";
+import { ProjectFeature } from './projectFeature';
 
 export class Project {
   private name: string;
   private path: string;
   private config: Object;
+  private features:ProjectFeature[];
 
   constructor(name: string, path: string, exists: boolean) {
     this.name = name;
     this.path = path;
+    this.features = [];
 
     if (exists) {
       this.config = this.readConfig();
