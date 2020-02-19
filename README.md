@@ -28,21 +28,22 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`xcl feature:list [FILE]`](#xcl-featurelist-file)
+* [`xcl feature:list`](#xcl-featurelist)
 * [`xcl feature:versions FEATURE`](#xcl-featureversions-feature)
 * [`xcl hello [FILE]`](#xcl-hello-file)
 * [`xcl help [COMMAND]`](#xcl-help-command)
 * [`xcl project:create PROJECT`](#xcl-projectcreate-project)
+* [`xcl project:init [FILE]`](#xcl-projectinit-file)
 * [`xcl project:list [FILE]`](#xcl-projectlist-file)
-* [`xcl project:remove [FILE]`](#xcl-projectremove-file)
+* [`xcl project:remove PROJECT`](#xcl-projectremove-project)
 
-## `xcl feature:list [FILE]`
+## `xcl feature:list`
 
 lists all available Features
 
 ```
 USAGE
-  $ xcl feature:list [FILE]
+  $ xcl feature:list
 
 OPTIONS
   -h, --help  show CLI help
@@ -121,6 +122,22 @@ OPTIONS
 
 _See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\create.ts)_
 
+## `xcl project:init [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl project:init [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src\commands\project\init.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\init.ts)_
+
 ## `xcl project:list [FILE]`
 
 lists all known xcl projects
@@ -135,18 +152,21 @@ OPTIONS
 
 _See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\list.ts)_
 
-## `xcl project:remove [FILE]`
+## `xcl project:remove PROJECT`
 
-describe the command here
+removes project
 
 ```
 USAGE
-  $ xcl project:remove [FILE]
+  $ xcl project:remove PROJECT
+
+ARGUMENTS
+  PROJECT  name of the project to remove
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -d, --database
+  -h, --help      show CLI help
+  -p, --path
 ```
 
 _See code: [src\commands\project\remove.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\remove.ts)_

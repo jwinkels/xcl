@@ -5,6 +5,9 @@ import * as os from "os";
 import { Project } from "./Project";
 import { ProjectNotFoundError } from "./errors/ProjectNotFoundError";
 import chalk from 'chalk'
+import oracledb from 'oracledb';
+//const dbConfig = require('./dbconfig.js');
+
 const Table = require('cli-table')
 
 //Implementation in Singleton-Pattern because there is no need for multiple instances of the ProjectManager!
@@ -140,4 +143,40 @@ export class ProjectManager {
 
     console.log(table.toString());
   }
+
+  public initializeProject(projectName: string, flags: { help: void; machine: string | undefined; port: string | undefined; service: string | undefined; force: boolean; }) {
+    const p:Project = this.getProject(projectName);
+    console.log('Flags', flags);
+
+    (async function(){
+
+      const conn = await oracledb.getConnection({user:'trex',password:'trex',connectString:'localhost:1521/XE'});
+      const res = await conn.execute('SELECT * FROM DUAL where :p1 is null and :p2 is null', {
+        p1:null, 
+        p2:undefined,
+      });
+      console.log(res.rows.length);
+    
+    })();
+
+
+    // TODO: Connection zur DB erstellen flags überschreiben Umgebungsvariablen
+    // TODO: Abfrage nach syspwd?
+
+    // Indextablespace auslagern
+    // > data user bekommt das recht tablespaces anzulegen. hier muss ggf. auch das Rech weitergegegen werden
+
+    // prüfen ob User schon da sind
+    // wenn ja, fragen nach droppen bei ja weiter, bei nein exit
+
+    // durch features loopen und deren install methode aufrufen
+
+    // user erstellen
+
+    // app erstellen
+
+
+
+  }  
+
 }

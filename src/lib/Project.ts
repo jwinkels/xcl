@@ -53,7 +53,7 @@ export class Project {
       }
     } else {
       if (!fs.existsSync(this.getPath() + fullPath + path)) {
-        fullPath = this.getPath() + fullPath + path;
+        fullPath = this.getPath() + fullPath + path;        
         fs.mkdirSync(fullPath, { recursive: true });
       }
     }
@@ -63,6 +63,10 @@ export class Project {
     let parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories.yml").toString());
 
     this.createDirectoryPath(parsedDirs.toJSON(), "/");
+    
+    fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}_data`);
+    fs.renameSync(this.getPath() + "/db/logic", this.getPath() + `/db/${this.getName()}_logic`);
+    fs.renameSync(this.getPath() + "/db/app", this.getPath() + `/db/${this.getName()}_app`);
   }
 
   public writeConfig() {    
