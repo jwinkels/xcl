@@ -6,13 +6,12 @@ export class ProjectFeature extends Feature{
     private downloadUrl:String="";
     private installed:Boolean=false;
 
-    public constructor(args:{parent:Feature, version:String}){
+    public constructor(args : {parent:Feature, version:String}){
             super( { name : args.parent.getName(), 
                 owner : args.parent.getOwner(), 
                 repo : args.parent.getRepo(), 
                 gitAttribute : args.parent.getGitAttribute()
             });
-            console.log('Define ProjectFeature');
             this.version=args.version;
             this.setDownloadUrl(this.version).then(
                 (url)=>{

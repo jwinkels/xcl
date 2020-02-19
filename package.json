@@ -57,6 +57,9 @@
     "topics": {
       "project": {
         "description": "Adds, manages projects"
+      },
+      "feature": {
+        "description": "Adds, manages features"
       }
     }
   },

@@ -73,7 +73,7 @@ export class FeatureManager{
         });
         
         if(FeatureManager.features.has(name.toLowerCase())){
-          FeatureManager.features.get(name.toLowerCase()).getReleaseInformation().then(function(releases){
+          FeatureManager.features.get(name.toLowerCase()).getReleaseInformation().then(function(releases:String[]){
             for (let i=0; i<releases.length; i++){
               table.push([releases[i]]);
             }
