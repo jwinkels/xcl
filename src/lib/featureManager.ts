@@ -73,7 +73,7 @@ export class FeatureManager{
         });
         
         if(FeatureManager.features.has(name.toLowerCase())){
-          FeatureManager.features.get(name.toLowerCase()).getReleaseInformation().then(function(releases:String[]){
+            (FeatureManager.features.get(name.toLowerCase()) ! ).getReleaseInformation().then(function(releases:String[]){
             for (let i=0; i<releases.length; i++){
               table.push([releases[i]]);
             }
@@ -87,7 +87,7 @@ export class FeatureManager{
 
       public addFeatureToProject(featureName:string, version:string, projectName:string){
         let pManager:ProjectManager=ProjectManager.getInstance();
-        pManager.getProject(projectName).addFeature(this.getProjectFeature(featureName, version));
+        pManager.getProject(projectName).addFeature( (this.getProjectFeature(featureName, version) ! ));
         this.listProjectFeatures(projectName);
       }
 
@@ -110,19 +110,19 @@ export class FeatureManager{
         console.log(table.toString());
       }
 
-      public getProjectFeature(featureName:string, version:string):ProjectFeature{
+      public getProjectFeature(featureName:string, version:string):ProjectFeature|undefined{
+        let feature:ProjectFeature|undefined;
         if( FeatureManager.features.has(featureName.toLowerCase()) ){
           if (FeatureManager.features.get(featureName.toLowerCase()) !== undefined ){
-            let feature = new ProjectFeature({parent: FeatureManager.features.get(featureName.toLowerCase()),
+            feature = new ProjectFeature({parent: (FeatureManager.features.get(featureName.toLowerCase()) !),
                                               version: version});
-            if (feature !== undefined){                                            
-              return feature;
-            }else{
+            if (feature === undefined){                                            
               throw Error("Feature could not be found!");
             }
           }
         }else{
           throw Error ("Unkown feature!");
         }
+        return feature;
       }
 }

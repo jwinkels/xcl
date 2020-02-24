@@ -7,8 +7,8 @@ export class Project {
   private name: string;
   private path: string;
   private errorText: string = '';
-  private config: Object;
-  private features:ProjectFeature[];
+  private config: any;
+  private features:ProjectFeature[]=[];
 
   constructor(name: string, path: string, create: boolean) {
     this.name = name;
@@ -76,7 +76,7 @@ export class Project {
 
   private initialzeConfig() {
     return {
-      xli: {
+      xcl: {
         project: this.getName(),
         description: "XCL- Projekt " + this.getName(),
         users: {
@@ -98,7 +98,7 @@ export class Project {
       conf = fs.readFileSync(this.getPath() + "/xcl.yml").toString();      
     } catch (err) {
       if (err.code === 'ENOENT') {        
-        conf = yaml.stringify({xli: {
+        conf = yaml.stringify({xcl: {
                                 project: this.getName(),
                                 errtext: 'File not found!'
                               }});
@@ -118,11 +118,11 @@ export class Project {
     this.features.push(feature);
     let config=this.readConfig();
 
-    if(!this.config.xli.software){
-      this.config.xli.dependencies=[];
+    if(!this.config.xcl.software){
+      this.config.xcl.dependencies=[];
     }
 
-    this.config.xli.dependencies.push({
+    this.config.xcl.dependencies.push({
                            name: feature.getName(), 
                            version: feature.getReleaseInformation(),
                            installed: feature.getInstalled(),
@@ -139,9 +139,9 @@ export class Project {
   public getFeatures():ProjectFeature[]{
     let features: ProjectFeature[]=[];
 
-    if (this.config.xli.dependencies){
-      this.config.xli.dependencies.forEach(element => {
-        features.push(FeatureManager.getInstance().getProjectFeature(element.name,element.version));    
+    if (this.config.xcl.dependencies){
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; }) => {
+        features.push( (FeatureManager.getInstance().getProjectFeature(element.name,element.version) ! ));    
       });      
     }else{
       return features;
