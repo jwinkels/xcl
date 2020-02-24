@@ -16,13 +16,28 @@ export class ProjectFeature extends Feature{
             this.setDownloadUrl(this.version).then(
                 (url)=>{
                     this.downloadUrl=url;
-                    console.log(this.downloadUrl);
                 }
             );
     }
 
     public getReleaseInformation():String{
         return this.version;
+    }
+
+    public getStatus():String{
+        if (this.installed){
+            return 'installed';
+        }else{
+            return 'uninstalled';
+        }
+    }
+
+    public getInstalled():Boolean{
+        return this.installed;
+    }
+
+    public setInstalled(status:Boolean){
+        this.installed=status;
     }
 
     private setDownloadUrl(versionName:String):Promise<String>{

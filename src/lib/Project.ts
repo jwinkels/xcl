@@ -1,6 +1,7 @@
 import * as yaml from "yaml";
 import * as fs from "fs-extra";
 import { ProjectFeature } from './projectFeature';
+import { FeatureManager } from './featureManager';
 
 export class Project {
   private name: string;
@@ -12,7 +13,7 @@ export class Project {
   constructor(name: string, path: string, create: boolean) {
     this.name = name;
     this.path = path;
-    this.features = [];
+   
 
     if (create) {
       this.config = this.initialzeConfig();
@@ -21,7 +22,7 @@ export class Project {
       this.writeConfig();
     } else {
       this.config = this.readConfig();      
-      
+      this.features=this.getFeatures();
     }
   }
 
@@ -112,7 +113,39 @@ export class Project {
     return yaml.parse(conf);
   }
 
+  //
   public addFeature(feature:ProjectFeature){
     this.features.push(feature);
+    let config=this.readConfig();
+
+    if(!this.config.xli.software){
+      this.config.xli.dependencies=[];
+    }
+
+    this.config.xli.dependencies.push({
+                           name: feature.getName(), 
+                           version: feature.getReleaseInformation(),
+                           installed: feature.getInstalled(),
+                           user:{
+                              name: 'undefined',
+                              pwd: 'undefined'
+                              }
+                          });
+
+    this.writeConfig();
+
   }
-}
+
+  public getFeatures():ProjectFeature[]{
+    let features: ProjectFeature[]=[];
+
+    if (this.config.xli.dependencies){
+      this.config.xli.dependencies.forEach(element => {
+        features.push(FeatureManager.getInstance().getProjectFeature(element.name,element.version));    
+      });      
+    }else{
+      return features;
+    }
+    return features;
+  }
+}  

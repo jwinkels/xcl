@@ -77,7 +77,6 @@ export class FeatureManager{
             for (let i=0; i<releases.length; i++){
               table.push([releases[i]]);
             }
-            console.log(table.toString());
             FeatureManager.getInstance().addFeatureToProject('logger','3.1.0','lalala');
           });
           
@@ -89,9 +88,29 @@ export class FeatureManager{
       public addFeatureToProject(featureName:string, version:string, projectName:string){
         let pManager:ProjectManager=ProjectManager.getInstance();
         pManager.getProject(projectName).addFeature(this.getProjectFeature(featureName, version));
+        this.listProjectFeatures(projectName);
       }
 
-      private getProjectFeature(featureName:string, version:string):ProjectFeature{
+      public listProjectFeatures(projectName:string){
+        const table = new Table({
+          head: [        
+            chalk.blueBright('name'),
+            chalk.blueBright('version'),
+            chalk.red('status')
+          ]
+        });
+
+        let feature:ProjectFeature;
+
+        for(feature of ProjectManager.getInstance().getProject(projectName).getFeatures()){
+          table.push([feature.getName(), feature.getReleaseInformation(),feature.getStatus()]);
+        }
+      
+
+        console.log(table.toString());
+      }
+
+      public getProjectFeature(featureName:string, version:string):ProjectFeature{
         if( FeatureManager.features.has(featureName.toLowerCase()) ){
           if (FeatureManager.features.get(featureName.toLowerCase()) !== undefined ){
             let feature = new ProjectFeature({parent: FeatureManager.features.get(featureName.toLowerCase()),
