@@ -39,6 +39,7 @@ USAGE
 * [`xcl project:create PROJECT`](#xcl-projectcreate-project)
 * [`xcl project:init PROJECT`](#xcl-projectinit-project)
 * [`xcl project:list [FILE]`](#xcl-projectlist-file)
+* [`xcl project:prepare [FILE]`](#xcl-projectprepare-file)
 * [`xcl project:remove PROJECT`](#xcl-projectremove-project)
 
 ## `xcl config:github [USER]`
@@ -121,8 +122,8 @@ USAGE
   $ xcl feature:list
 
 OPTIONS
-  -a, --all              Show all Features available
-  -h, --help             show CLI help
+  -a, --all              Show all Features available  
+  -h, --help             show CLI help  
   -p, --project=project  (required) [default: all] Shows all Features of a Project
 ```
 
@@ -233,6 +234,22 @@ OPTIONS
 ```
 
 _See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\list.ts)_
+
+## `xcl project:prepare [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl project:prepare [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src\commands\project\prepare.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\prepare.ts)_
 
 ## `xcl project:remove PROJECT`
 

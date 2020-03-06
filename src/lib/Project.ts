@@ -148,7 +148,7 @@ export class Project {
   public getFeatures():Map<String,ProjectFeature>{
     let features: Map<String,ProjectFeature>=new Map<String,ProjectFeature>();
     this.config=this.readConfig();
-    if (this.config.xcl.dependencies){
+    if (this.config.xcl?.dependencies){
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; user:any}) => {
         features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));    
       });      
