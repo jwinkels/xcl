@@ -1,5 +1,6 @@
 import * as yaml from "yaml";
 import * as fs from "fs-extra";
+import chalk from 'chalk'
 import { ProjectFeature } from './projectFeature';
 import { FeatureManager } from './featureManager';
 
@@ -8,7 +9,7 @@ export class Project {
   private path: string;
   private errorText: string = '';
   private config: any;
-  private features:ProjectFeature[]=[];
+  private features: Map<String, ProjectFeature>;
 
   constructor(name: string, path: string, create: boolean) {
     this.name = name;
@@ -17,7 +18,7 @@ export class Project {
 
     if (create) {
       this.config = this.initialzeConfig();
-
+      this.features=new Map();
       this.createDirectoryStructure();
       this.writeConfig();
     } else {
@@ -35,6 +36,11 @@ export class Project {
   }
 
   public getName(): string {
+    
+    if (this.name == ''){
+      this.name=this.config.xcl.project;
+    }
+
     return this.name;
   }
 
@@ -90,7 +96,7 @@ export class Project {
     };
   }
 
-  private readConfig() {
+  private readConfig():any{
     let conf:string
     let confObject;
 
@@ -109,39 +115,42 @@ export class Project {
       
     }
 
-    
     return yaml.parse(conf);
   }
 
   //
   public addFeature(feature:ProjectFeature){
-    this.features.push(feature);
-    let config=this.readConfig();
+    if ( ! this.features.has(feature.getName())){  
+      this.config=this.readConfig();
+      this.features.set(feature.getName(),feature);
+      if(!this.config.xcl.dependencies){
+        console.log('No dependencies!');
+        this.config.xcl.dependencies=[];
+      }
 
-    if(!this.config.xcl.software){
-      this.config.xcl.dependencies=[];
+      this.config.xcl.dependencies.push({
+                            name: feature.getName(), 
+                            version: feature.getReleaseInformation(),
+                            installed: feature.getInstalled(),
+                            user:{
+                                name: feature.getUser().getName(),
+                                pwd: feature.getUser().getPassword()
+                                }
+                            });
+
+      this.writeConfig();
+    }else{
+      console.log(chalk.yellowBright('WARNING: Dependency is already defined to this Project! No dependency added!'));
+      console.log(chalk.blueBright('INFO: To Update the dependency use feature:update'));
     }
-
-    this.config.xcl.dependencies.push({
-                           name: feature.getName(), 
-                           version: feature.getReleaseInformation(),
-                           installed: feature.getInstalled(),
-                           user:{
-                              name: 'undefined',
-                              pwd: 'undefined'
-                              }
-                          });
-
-    this.writeConfig();
-
   }
 
-  public getFeatures():ProjectFeature[]{
-    let features: ProjectFeature[]=[];
-
+  public getFeatures():Map<String,ProjectFeature>{
+    let features: Map<String,ProjectFeature>=new Map<String,ProjectFeature>();
+    this.config=this.readConfig();
     if (this.config.xcl?.dependencies){
-      this.config.xcl.dependencies.forEach((element: { name: string; version: string; }) => {
-        features.push( (FeatureManager.getInstance().getProjectFeature(element.name,element.version) ! ));    
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; user:any}) => {
+        features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));    
       });      
     }else{
       return features;

@@ -1,9 +1,10 @@
 import * as fs from "fs-extra";
 import * as https from "https";
+import {GithubCredentials} from './GithubCredentials';
 
 export class Feature{
 
-    private name:String;
+    private name:string;
     private owner:String;
     private repo:String;
     private gitAttribute:String;
@@ -11,7 +12,7 @@ export class Feature{
     private isManagedByRelease:boolean=false;
     
 
-    constructor(args: {name:String, owner:String, repo:String, gitAttribute:String }){
+    constructor(args: {name:string, owner:String, repo:String, gitAttribute:String }){
         this.name=args.name;
         this.owner=args.owner;
         this.repo=args.repo;
@@ -61,7 +62,7 @@ export class Feature{
         //ClientRequest request=https.request();
     }
 
-    public getName():String{
+    public getName():string{
         return this.name;
     }
 
@@ -81,6 +82,7 @@ export class Feature{
         return new Promise<any>((resolve,reject)=>{
             let path:string='/repos/'+this.owner+'/'+this.repo;
             let data ="";
+            var options:https.RequestOptions;
             
             if(this.isManagedByRelease){
                 path+='/releases';
@@ -89,12 +91,29 @@ export class Feature{
                     path+='/tags';
                 }
             }
-            const options:https.RequestOptions = {
-                host: 'api.github.com',
-                port: 443,
-                path: path,
-                headers: {'User-Agent':'xcl'}
-              };
+        
+            if(GithubCredentials.get()){
+                console.log('using credentials');
+                options = {
+                    host: 'api.github.com',
+                    port: 443,
+                    path: path,
+                    headers: {
+                        'User-Agent':'xcl',
+                        'Authorization': 'Basic '+GithubCredentials.get()
+                    }
+                };
+            }else{
+                console.log('no credentials');
+                options = {
+                    host: 'api.github.com',
+                    port: 443,
+                    path: path,
+                    headers: {
+                        'User-Agent':'xcl'
+                    }
+                };
+            }
             
             const req=https.request(options,(res)=>{
             res.on('data', (d) => {

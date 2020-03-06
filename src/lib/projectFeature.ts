@@ -1,34 +1,33 @@
 import { Feature } from './Feature';
+import chalk from 'chalk'
+import { Schema } from './Schema';
 
 
 export class ProjectFeature extends Feature{
     private version:String;
-    private downloadUrl:String="";
-    private installed:Boolean=false;
+    private installed:Boolean;
+    private user:Schema;
 
-    public constructor(args : {parent:Feature, version:String}){
+    constructor(args : {parent:Feature, version:String, username:string, password:string, installed:Boolean}){
             super( { name : args.parent.getName(), 
                 owner : args.parent.getOwner(), 
                 repo : args.parent.getRepo(), 
                 gitAttribute : args.parent.getGitAttribute()
             });
             this.version=args.version;
-            this.setDownloadUrl(this.version).then(
-                (url)=>{
-                    this.downloadUrl=url;
-                }
-            );
+            this.installed=args.installed;
+            this.user=new Schema({name: args.username, password: args.password});
     }
 
     public getReleaseInformation():String{
         return this.version;
     }
 
-    public getStatus():String{
+    public getStatus():string{
         if (this.installed){
-            return 'installed';
+            return chalk.green('installed');
         }else{
-            return 'uninstalled';
+            return chalk.red('uninstalled');
         }
     }
 
@@ -40,22 +39,31 @@ export class ProjectFeature extends Feature{
         this.installed=status;
     }
 
-    private setDownloadUrl(versionName:String):Promise<String>{
-        return new Promise<String>((resolve, reject)=>{
-            this.call().then(function (releases){
-                var jsonObject = JSON.parse(releases.toString());
-                try{
-                    for (var i=0; i<jsonObject.length; i++){
-                        if (jsonObject[i].name && jsonObject[i].name.includes(versionName)){
-                            resolve(jsonObject[i].zipball_url);
-                        }else if (jsonObject[i].tag_name && jsonObject[i].tag_name.includes(versionName)) {
-                            resolve(jsonObject[i].zipball_url);
-                        }
-                    }
-                }catch(err){
-                    reject(err);
-                }
-            });
-        });
+    public getUser():Schema{
+        return this.user;
     }
+
+    public getDownloadUrl():Promise<string>{
+        var self=this;
+        return new Promise((resolve, reject)=>{
+            this.call()
+                .then(function(releases){
+                    var jsonObject = JSON.parse(releases.toString());
+                    try{
+                        for (var i=0; i<jsonObject.length; i++){
+                            if (jsonObject[i].name && jsonObject[i].name.includes(self.getReleaseInformation())){
+                                resolve(jsonObject[i].zipball_url);
+                            }else if (jsonObject[i].tag_name && jsonObject[i].tag_name.includes(self.getReleaseInformation())) {
+                                resolve(jsonObject[i].zipball_url);
+                            }
+                        }
+                    }catch(err){
+                        throw Error (err);
+                    }
+                });
+            });
+    }
+
+    
+
 }

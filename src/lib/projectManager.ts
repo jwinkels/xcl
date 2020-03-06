@@ -18,6 +18,7 @@ export class ProjectManager {
   // private static project: Project;
   private static projectsYaml: yaml.ast.Document;
   private static projectsJson: any;
+  private static project:Project;
 
   private constructor() {
     // read projects
@@ -25,7 +26,6 @@ export class ProjectManager {
 
     // convert to json of create an empty definition
     ProjectManager.projectsJson = ProjectManager.projectsYaml.toJSON() || { projects: {} };
-
     // what else belongs to PM?
   }
 
@@ -45,12 +45,26 @@ export class ProjectManager {
    * @param projectName name of project
    */
   public getProject(projectName: string): Project {
-    if (ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName]) {
-      let projectJSON = ProjectManager.projectsJson.projects[projectName];
-      return new Project(projectName, projectJSON.path, false);
-    } else {
-      throw new ProjectNotFoundError(`project ${projectName} not found`);
+    if(ProjectManager.project && ProjectManager.project.getName()==projectName){
+      return ProjectManager.project;
+    }else{
+      if (ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName]) {
+        let projectJSON = ProjectManager.projectsJson.projects[projectName];
+        ProjectManager.project = new Project(projectName, projectJSON.path, false);
+        return ProjectManager.project;
+      } else {
+        throw new ProjectNotFoundError(`project ${projectName} not found`);
+      }
     }
+  }
+
+  public getProjectNameByPath(projectPath: string):string{
+    try {
+      return new Project('',projectPath,false).getName();  
+    } catch (error) {
+      return 'all';
+    }
+    
   }
 
   /**
