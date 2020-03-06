@@ -139,7 +139,7 @@ export class Project {
   public getFeatures():ProjectFeature[]{
     let features: ProjectFeature[]=[];
 
-    if (this.config.xcl.dependencies){
+    if (this.config.xcl?.dependencies){
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; }) => {
         features.push( (FeatureManager.getInstance().getProjectFeature(element.name,element.version) ! ));    
       });      

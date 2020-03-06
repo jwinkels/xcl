@@ -33,8 +33,9 @@ USAGE
 * [`xcl hello [FILE]`](#xcl-hello-file)
 * [`xcl help [COMMAND]`](#xcl-help-command)
 * [`xcl project:create PROJECT`](#xcl-projectcreate-project)
-* [`xcl project:init [FILE]`](#xcl-projectinit-file)
+* [`xcl project:init PROJECT`](#xcl-projectinit-project)
 * [`xcl project:list [FILE]`](#xcl-projectlist-file)
+* [`xcl project:prepare [FILE]`](#xcl-projectprepare-file)
 * [`xcl project:remove PROJECT`](#xcl-projectremove-project)
 
 ## `xcl feature:list`
@@ -46,7 +47,8 @@ USAGE
   $ xcl feature:list
 
 OPTIONS
-  -h, --help  show CLI help
+  -h, --help             show CLI help
+  -p, --project=project  Shows all Features of a Project
 ```
 
 _See code: [src\commands\feature\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\list.ts)_
@@ -107,7 +109,7 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.3
 
 ## `xcl project:create PROJECT`
 
-create, list or remove a project
+create a project
 
 ```
 USAGE
@@ -122,18 +124,23 @@ OPTIONS
 
 _See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\create.ts)_
 
-## `xcl project:init [FILE]`
+## `xcl project:init PROJECT`
 
-describe the command here
+initialize a project
 
 ```
 USAGE
-  $ xcl project:init [FILE]
+  $ xcl project:init PROJECT
+
+ARGUMENTS
+  PROJECT  name of the project to initialze
 
 OPTIONS
   -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -h, --help             show CLI help
+  -m, --machine=machine  machine or ip of database
+  -p, --port=port        port where the listener works on
+  -s, --service=service  servie/sid of the database
 ```
 
 _See code: [src\commands\project\init.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\init.ts)_
@@ -151,6 +158,22 @@ OPTIONS
 ```
 
 _See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\list.ts)_
+
+## `xcl project:prepare [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl project:prepare [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src\commands\project\prepare.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\prepare.ts)_
 
 ## `xcl project:remove PROJECT`
 

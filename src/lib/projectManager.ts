@@ -5,8 +5,7 @@ import * as os from "os";
 import { Project } from "./Project";
 import { ProjectNotFoundError } from "./errors/ProjectNotFoundError";
 import chalk from 'chalk'
-import oracledb from 'oracledb';
-//const dbConfig = require('./dbconfig.js');
+import { DBHelper, IConnectionProperties } from './DBHelper';
 
 const Table = require('cli-table')
 
@@ -144,20 +143,31 @@ export class ProjectManager {
     console.log(table.toString());
   }
 
-  public initializeProject(projectName: string, flags: { help: void; machine: string | undefined; port: string | undefined; service: string | undefined; force: boolean; }) {
+  public async initializeProject(projectName: string, flags: { help: void; username: string | undefined; password: string | undefined; connect: string | undefined; force: boolean; }) {    
     const p:Project = this.getProject(projectName);
-    console.log('Flags', flags);
-
-    (async function(){
-
-      const conn = await oracledb.getConnection({user:'trex',password:'trex',connectString:'localhost:1521/XE'});
-      const res = await conn.execute('SELECT * FROM DUAL where :p1 is null and :p2 is null', {
-        p1:null, 
-        p2:undefined,
-      });
-      console.log(res.rows.length);
+    const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.password, flags.connect);    
     
-    })();
+    // Prüfen ober es den User schon gibt
+    if (await DBHelper.isProjectInstalled(p, c)) {
+      if ( !flags.force) {
+        console.log(chalk.red(`Failure: ProjectSchemas allready exists in db!!!'`));
+        console.log(chalk.yellow(`If you wish to drop users before, you could use force flag'`));
+        throw "Test";                
+      }
+    }  
+    
+    console.log(chalk.green(`OK, Schemas werden installiert' ${p.getPath()}`));
+    DBHelper.executeScript(c, p.getPath() + '/internal/schema/create_schema_users.sql ' + p.getName() + '_data ' + p.getName());
+    DBHelper.executeScript(c, p.getPath() + '/internal/schema/create_schema_users.sql ' + p.getName() + '_logic ' + p.getName());
+    DBHelper.executeScript(c, p.getPath() + '/internal/schema/create_schema_users.sql ' + p.getName() + '_app ' + p.getName());
+    
+
+    // nein, alles klar Anlegen
+
+
+    
+
+    
 
 
     // TODO: Connection zur DB erstellen flags überschreiben Umgebungsvariablen
