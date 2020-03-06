@@ -30,7 +30,8 @@ USAGE
 <!-- commands -->
 * [`xcl config:github [USER]`](#xcl-configgithub-user)
 * [`xcl feature:add FEATURE VERSION [PROJECT]`](#xcl-featureadd-feature-version-project)
-* [`xcl feature:install [FILE]`](#xcl-featureinstall-file)
+* [`xcl feature:deinstall [FILE]`](#xcl-featuredeinstall-file)
+* [`xcl feature:install FEATURE [PROJECT]`](#xcl-featureinstall-feature-project)
 * [`xcl feature:list`](#xcl-featurelist)
 * [`xcl feature:versions FEATURE`](#xcl-featureversions-feature)
 * [`xcl hello [FILE]`](#xcl-hello-file)
@@ -56,7 +57,7 @@ _See code: [src\commands\config\github.ts](https://github.com/MaikMichel/xcl/blo
 
 ## `xcl feature:add FEATURE VERSION [PROJECT]`
 
-describe the command here
+Add Feature to dependency list
 
 ```
 USAGE
@@ -68,23 +69,45 @@ ARGUMENTS
   PROJECT  name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -h, --help  show CLI help
+  -h, --help               show CLI help
+  -p, --password=password  [default: undefined]
+  -u, --username=username  [default: undefined]
 ```
 
 _See code: [src\commands\feature\add.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\add.ts)_
 
-## `xcl feature:install [FILE]`
+## `xcl feature:deinstall [FILE]`
 
 describe the command here
 
 ```
 USAGE
-  $ xcl feature:install [FILE]
+  $ xcl feature:deinstall [FILE]
 
 OPTIONS
   -f, --force
   -h, --help       show CLI help
   -n, --name=name  name to print
+```
+
+_See code: [src\commands\feature\deinstall.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\deinstall.ts)_
+
+## `xcl feature:install FEATURE [PROJECT]`
+
+Install a Feature to target Schema
+
+```
+USAGE
+  $ xcl feature:install FEATURE [PROJECT]
+
+ARGUMENTS
+  FEATURE  Name of the Project-Feature to be installed
+  PROJECT  name of the Project (when not in a xcl-Project path)
+
+OPTIONS
+  -c, --connection=connection  (required)
+  -h, --help                   show CLI help
+  -p, --syspw=syspw            (required)
 ```
 
 _See code: [src\commands\feature\install.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\install.ts)_

@@ -2,10 +2,12 @@ import {Command, flags} from '@oclif/command'
 import { FeatureManager } from '../../lib/featureManager'
 
 export default class FeatureInstall extends Command {
-  static description = 'describe the command here'
+  static description = 'Install a Feature to target Schema'
 
   static flags = {
-    help: flags.help({char: 'h'})
+    help: flags.help({char: 'h'}),
+    connection: flags.string( {char: 'c', required: true} ),
+    syspw: flags.string( {char: 'p', required: true})
   }
 
   static args = [
@@ -15,11 +17,6 @@ export default class FeatureInstall extends Command {
           required: true          
         },
         {
-          name: 'connection',
-          description: 'JDBC Connection String (SQLcl Connection String)',
-          required: true
-        },
-        {
           name: 'project',
           description: 'name of the Project (when not in a xcl-Project path)'
         }
@@ -27,6 +24,6 @@ export default class FeatureInstall extends Command {
 
   async run() {
     const {args, flags} = this.parse(FeatureInstall)
-    FeatureManager.getInstance().installProjectFeature(args.feature, args.connection, args.project);
+    FeatureManager.getInstance().installProjectFeature(args.feature, flags.connection, flags.syspw ,args.project);
   }
 }

@@ -2,7 +2,7 @@ import {Command, flags} from '@oclif/command'
 import {FeatureManager} from '../../lib/featureManager'
 
 export default class FeatureAdd extends Command {
-  static description = 'describe the command here'
+  static description = 'Add Feature to dependency list'
 
   static flags = {
     help: flags.help({char: 'h'}),

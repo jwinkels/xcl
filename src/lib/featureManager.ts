@@ -180,30 +180,156 @@ export class FeatureManager{
         return feature;
       }
 
-      public installProjectFeature(featureName:string, connection:string, projectName:string){
+      public installProjectFeature(featureName:string, connection:string, syspw:string, projectName:string){
+          var connectionWithUser="";
+          var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
+          
           if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
+
             let feature:ProjectFeature=ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)!;
-            if (FeatureManager.getInstallSteps(feature.getName()).installzip){
-              var zip = new AdmZip(ProjectManager.getInstance().getProject(projectName).getPath()+'/dependencies/'+feature.getName()+'_'+feature.getReleaseInformation()+'.zip');
-              zip.extractAllTo(ProjectManager.getInstance().getProject(projectName).getPath()+'/dependencies/');
-              var zipEntries = zip.getEntries();
-              var unzipped=zipEntries[0].entryName.toString();
-              fs.renameSync(ProjectManager.getInstance().getProject(projectName).getPath()+'/dependencies/'+unzipped,
-                        ProjectManager.getInstance().getProject(projectName).getPath()+'/dependencies/'+feature.getName().toLowerCase()+'_'+feature.getReleaseInformation()+'_tmp');
-              var pathTmp=ProjectManager.getInstance().getProject(projectName).getPath()+'/dependencies/'+feature.getName().toLowerCase()+'_'+feature.getReleaseInformation()+'_tmp';
-              zip = new AdmZip(pathTmp+'/'+FeatureManager.getInstallSteps(feature.getName()).installzip[0].path+'/'+feature.getName().toLowerCase()+'_'+feature.getReleaseInformation()+'.zip');
-              zip.extractAllTo(ProjectManager.getInstance().getProject(projectName).getPath()+'/dependencies/'+feature.getName().toLowerCase()+'_'+feature.getReleaseInformation()+'/');
-              fs.removeSync(pathTmp);
-            }else{
-              var zip = new AdmZip(ProjectManager.getInstance().getProject(projectName).getPath()+'/dependencies/'+feature.getName()+'_'+feature.getReleaseInformation()+'.zip');
-              zip.extractAllTo(ProjectManager.getInstance().getProject(projectName).getPath()+'/dependencies/');
-            }
+            var installSteps = FeatureManager.getInstallSteps(feature.getName());
+            FeatureManager.unzipFeature(installSteps, projectPath, feature).then(()=>{
+              if (installSteps.scripts){
+                for (var i=0; i<installSteps.scripts.length; i++){
+                  var argumentString="";
+                  var argumentValues=[];
 
+                  if (installSteps.scripts[i].arguments){
+                    for (var j=0; j<installSteps.scripts[i].arguments.length; j++){
+                      if (installSteps.scripts[i].arguments[j] == 'credentials'){
+                        argumentString = " " + feature.getUser().getName() + " ";
+                        argumentString = argumentString+feature.getUser().getPassword();
+                      }else if(installSteps.scripts[i].arguments[j] == 'username'){
+                        argumentString = " " + feature.getUser().getName(); 
+                      }else{
+                        argumentString = argumentString + " " + installSteps.parameters[installSteps.scripts[i].arguments[j]];
+                      }
+                    }
+                  }
 
+                  if (installSteps.scripts[i].sys === true){
+                    connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
+                  }else{
+                    connectionWithUser=feature.getUser().getName() + "/" + feature.getUser().getPassword() + "@" + connection;
+                  }
 
+                  var executeString="";
+                  if (fs.existsSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '/' + installSteps.scripts[i].path)){
+                    executeString = projectPath + '/dependencies/' 
+                                                + feature.getName() 
+                                                + '_' 
+                                                + feature.getReleaseInformation() 
+                                                + '/' 
+                                                + installSteps.scripts[i].path 
+                                                + argumentString;
+                  }else{
+                    if(fs.existsSync(__dirname + "/scripts/" + installSteps.scripts[i].path)){
+                      executeString=__dirname + "/scripts/" + installSteps.scripts[i].path + argumentString;
+                    }else{
+                      throw Error("Script couldn't be found!");
+                    }
+                  }
+                  console.log(executeString);
+                  Executer.execute(connectionWithUser,executeString);
+                }
+                fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
+              }else{
+                throw Error('Could not find installation information! Update your software.yml File!');
+              }
+            });
           }else{
             console.log(chalk.red('ERROR: Dependency missing! Execute ´xcl feature:add´ first!'));
           } 
+      }
+
+      public deinstallProjectFeature(featureName:string, connection:string, syspw:string, projectName:string){
+        var connectionWithUser="";
+          var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
+          
+          if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
+
+            let feature:ProjectFeature=ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)!;
+            var deinstallSteps = FeatureManager.getDeinstallSteps(feature.getName());
+            FeatureManager.unzipFeature(deinstallSteps, projectPath, feature).then(()=>{
+              if (deinstallSteps.scripts){
+                for (var i=0; i<deinstallSteps.scripts.length; i++){
+                  var argumentString="";
+                  var argumentValues=[];
+
+                  if (deinstallSteps.scripts[i].arguments){
+                    for (var j=0; j<deinstallSteps.scripts[i].arguments.length; j++){
+                      if (deinstallSteps.scripts[i].arguments[j] == 'credentials'){
+                        argumentString = " " + feature.getUser().getName() + " ";
+                        argumentString = argumentString+feature.getUser().getPassword();
+                      }else if(deinstallSteps.scripts[i].arguments[j] == 'username'){
+                        argumentString = " " + feature.getUser().getName(); 
+                      }else{
+                        argumentString = argumentString + " " + deinstallSteps.parameters[deinstallSteps.scripts[i].arguments[j]];
+                      }
+                    }
+                  }
+
+                  if (deinstallSteps.scripts[i].sys === true){
+                    connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
+                  }else{
+                    connectionWithUser=feature.getUser().getName() + "/" + feature.getUser().getPassword() + "@" + connection;
+                  }
+
+                  var executeString="";
+                  if (fs.existsSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '/' + deinstallSteps.scripts[i].path)){
+                    executeString = projectPath + '/dependencies/' 
+                                                + feature.getName() 
+                                                + '_' 
+                                                + feature.getReleaseInformation() 
+                                                + '/' 
+                                                + deinstallSteps.scripts[i].path 
+                                                + argumentString;
+                  }else{
+                    if(fs.existsSync(__dirname + "/scripts/" + deinstallSteps.scripts[i].path)){
+                      executeString=__dirname + "/scripts/" + deinstallSteps.scripts[i].path + argumentString;
+                    }else{
+                      throw Error("Script couldn't be found!");
+                    }
+                  }
+                  console.log(executeString);
+                  Executer.execute(connectionWithUser,executeString);
+                }
+                fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
+              }else{
+                throw Error('Could not find installation information! Update your software.yml File!');
+              }
+            });
+          }else{
+            console.log(chalk.red('ERROR: Dependency missing! Execute ´xcl feature:add´ first!'));
+          } 
+      }  
+
+
+      private static unzipFeature(installSteps:any, projectPath:string, feature:ProjectFeature):Promise<any>{
+        return new Promise<any>((resolve, reject)=>{
+          if (installSteps.installzip){
+            var zip = new AdmZip(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '.zip');
+            zip.extractAllTo(projectPath + '/dependencies/');
+            var zipEntries = zip.getEntries();
+            var unzipped = zipEntries[0].entryName.toString();
+            fs.renameSync(projectPath + '/dependencies/' + unzipped,
+                          projectPath + '/dependencies/' + feature.getName().toLowerCase() + '_' + feature.getReleaseInformation() + '_tmp');
+            var pathTmp = projectPath + '/dependencies/' + feature.getName().toLowerCase() + '_' + feature.getReleaseInformation() + '_tmp';
+            
+            zip = new AdmZip(pathTmp + '/' + installSteps.installzip[0].path + '/' + feature.getName().toLowerCase() + '_'+feature.getReleaseInformation() + '.zip');
+
+            zip.extractAllTo(projectPath + '/dependencies/' + feature.getName().toLowerCase() + '_' + feature.getReleaseInformation() + '/');
+            fs.removeSync(pathTmp);
+          }else{
+            var zip = new AdmZip(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '.zip');
+            zip.extractAllTo(projectPath+'/dependencies/');
+            var zipEntries = zip.getEntries();
+            var unzipped = zipEntries[0].entryName.toString();
+            fs.renameSync(projectPath + '/dependencies/' + unzipped,
+                          projectPath + '/dependencies/' + feature.getName().toLowerCase() + '_' + feature.getReleaseInformation());
+          }
+          resolve();
+        });
       }
 
       private static getInstallSteps(featureName:string):any{
@@ -211,6 +337,14 @@ export class FeatureManager{
           return FeatureManager.softwareJson.software[featureName].install;
         }else{
           throw Error('Could not find installation information! Update your software.yml File!');
+        }
+      }
+
+      private static getDeinstallSteps(featureName:string):any{
+        if(FeatureManager.softwareJson.software[featureName]){
+          return FeatureManager.softwareJson.software[featureName].uninstall;
+        }else{
+          throw Error('Could not find deinstall information! Update your software.yml File!');
         }
       }
 }

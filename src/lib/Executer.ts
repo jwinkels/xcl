@@ -1,11 +1,12 @@
 import { spawnSync } from 'child_process';
 
-const { spawn } = require('child_process');
-
-
 export class Executer{
     public static execute(connection:string, path:String){
         console.log('Installing...');
-        console.log(spawnSync('sql '+connection+ ' @'+path));
+        console.log(process.cwd());
+        var result=spawnSync('sql',[connection] ,{encoding: 'utf8',input:'@'+path, shell:true});
+        console.log(result.stdout.toString());
+        console.log(result.stderr.toString());
+        return result.status;
     }
 }
