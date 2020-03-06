@@ -4,25 +4,25 @@ software:
     repo: utPLSQL
     call: release
     install:
-        sys: true
         parameters:
             username: utplsql
             password: utplsql
             tablespace: USERS
         scripts:
           - path: source/create_utplsql_owner.sql
+            sys: true
             arguments:
-                - username
-                - password
+                - credentials
                 - tablespace
           - path: source/install.sql
+            sys: true
             arguments:
                 - username
           - path: source/create_synonyms_and_grants_for_public.sql
+            sys: true
             arguments:
                 - username
     uninstall:
-        sys: true
         parameters:
             username: utplsql
         scripts:
@@ -34,7 +34,6 @@ software:
     repo: oos-utils
     call: tag
     install:
-        sys: false
         parameters:
             grantee: PUBLIC
         scripts:
@@ -43,7 +42,6 @@ software:
             arguments:
                 - grantee
     uninstall:
-        sys: false
         scripts:
             - path: install/oos_utils_uninstall.sql
               arguments:
@@ -52,18 +50,34 @@ software:
     repo: table-api-generator
     call: release
     install:
-        sys: false
         scripts:
           - path: OM_TAPIGEN.pks
           - path: OM_TAPIGEN.pkb
           - path: OM_TAPIGEN_ODDGEN_WRAPPER.pks
           - path: OM_TAPIGEN_ODDGEN_WRAPPER.pkb
     uninstall:
-        sys: false
         scripts:
           - path: uninstall.sql
             arguments:
    logger:
     owner: OraOpenSource
     repo: Logger
-    call: tag
+    call: release
+    install:
+      installzip:
+        - path: releases/
+      parameters:
+        username: logger
+        password: logger
+      scripts:
+        - path: createUser.sql
+          sys: true
+          arguments:
+            - credentials
+        - path: logger_install.sql
+    uninstall:
+      scripts:
+        - path: drop_logger.sql
+        - path: dropUser.sql
+          arguments:
+            - username
