@@ -23,6 +23,10 @@ export class ProjectFeature extends Feature{
         return this.version;
     }
 
+    public setReleaseInformation(version:String){
+        this.version=version;
+    }
+
     public getStatus():string{
         if (this.installed){
             return chalk.green('installed');

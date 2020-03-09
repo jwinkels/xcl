@@ -6,8 +6,8 @@ export default class FeatureAdd extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    username: flags.string({char: 'u', default: 'undefined'}),
-    password: flags.string({char: 'p', default: 'undefined'})
+    username: flags.string({char: 'u', required: true}),
+    password: flags.string({char: 'p', required: true})
   }
 
   static args = [{

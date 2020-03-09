@@ -30,14 +30,16 @@ USAGE
 <!-- commands -->
 * [`xcl config:github [USER]`](#xcl-configgithub-user)
 * [`xcl feature:add FEATURE VERSION [PROJECT]`](#xcl-featureadd-feature-version-project)
-* [`xcl feature:deinstall [FILE]`](#xcl-featuredeinstall-file)
+* [`xcl feature:deinstall FEATURE [PROJECT]`](#xcl-featuredeinstall-feature-project)
 * [`xcl feature:install FEATURE [PROJECT]`](#xcl-featureinstall-feature-project)
 * [`xcl feature:list`](#xcl-featurelist)
+* [`xcl feature:remove [FILE]`](#xcl-featureremove-file)
+* [`xcl feature:update FEATURE VERSION [PROJECT]`](#xcl-featureupdate-feature-version-project)
 * [`xcl feature:versions FEATURE`](#xcl-featureversions-feature)
 * [`xcl hello [FILE]`](#xcl-hello-file)
 * [`xcl help [COMMAND]`](#xcl-help-command)
 * [`xcl project:create PROJECT`](#xcl-projectcreate-project)
-* [`xcl project:init PROJECT`](#xcl-projectinit-project)
+* [`xcl project:init [PROJECT]`](#xcl-projectinit-project)
 * [`xcl project:list [FILE]`](#xcl-projectlist-file)
 * [`xcl project:prepare [FILE]`](#xcl-projectprepare-file)
 * [`xcl project:remove PROJECT`](#xcl-projectremove-project)
@@ -71,24 +73,29 @@ ARGUMENTS
 
 OPTIONS
   -h, --help               show CLI help
-  -p, --password=password  [default: undefined]
-  -u, --username=username  [default: undefined]
+  -p, --password=password  (required)
+  -u, --username=username  (required)
 ```
 
 _See code: [src\commands\feature\add.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\add.ts)_
 
-## `xcl feature:deinstall [FILE]`
+## `xcl feature:deinstall FEATURE [PROJECT]`
 
 describe the command here
 
 ```
 USAGE
-  $ xcl feature:deinstall [FILE]
+  $ xcl feature:deinstall FEATURE [PROJECT]
+
+ARGUMENTS
+  FEATURE  Name of the Project-Feature to be installed
+  PROJECT  name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -c, --connection=connection  (required)
+  -h, --help                   show CLI help
+  -o, --owner                  drop owner schema
+  -p, --syspw=syspw            (required)
 ```
 
 _See code: [src\commands\feature\deinstall.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\deinstall.ts)_
@@ -122,12 +129,49 @@ USAGE
   $ xcl feature:list
 
 OPTIONS
-  -a, --all              Show all Features available  
-  -h, --help             show CLI help  
+  -a, --all              Show all Features available
+  -h, --help             show CLI help
   -p, --project=project  (required) [default: all] Shows all Features of a Project
 ```
 
 _See code: [src\commands\feature\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\list.ts)_
+
+## `xcl feature:remove [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl feature:remove [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src\commands\feature\remove.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\remove.ts)_
+
+## `xcl feature:update FEATURE VERSION [PROJECT]`
+
+Update Project Feature version
+
+```
+USAGE
+  $ xcl feature:update FEATURE VERSION [PROJECT]
+
+ARGUMENTS
+  FEATURE  Name of the Project-Feature to be installed
+  VERSION  Version of the Feature
+  PROJECT  name of the Project (when not in a xcl-Project path)
+
+OPTIONS
+  -c, --connection=connection  (required)
+  -h, --help                   show CLI help
+  -p, --syspw=syspw            (required)
+```
+
+_See code: [src\commands\feature\update.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\update.ts)_
 
 ## `xcl feature:versions FEATURE`
 
@@ -200,23 +244,22 @@ OPTIONS
 
 _See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\create.ts)_
 
-## `xcl project:init PROJECT`
+## `xcl project:init [PROJECT]`
 
 initialize a project
 
 ```
 USAGE
-  $ xcl project:init PROJECT
+  $ xcl project:init [PROJECT]
 
 ARGUMENTS
   PROJECT  name of the project to initialze
 
 OPTIONS
+  -c, --connect=connect    Connectstring ex. localhost:1521/xepdb1
   -f, --force
-  -h, --help             show CLI help
-  -m, --machine=machine  machine or ip of database
-  -p, --port=port        port where the listener works on
-  -s, --service=service  servie/sid of the database
+  -h, --help               show CLI help
+  -p, --password=password  Password of user sys
 ```
 
 _See code: [src\commands\project\init.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\init.ts)_

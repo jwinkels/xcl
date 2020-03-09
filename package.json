@@ -25,13 +25,13 @@
     "request": "^2.88.2",
     "request-promise-native": "^1.0.8",
     "tslib": "^1.11.1",
-    "yaml": "^1.7.2"
+    "yaml": "^1.8.0"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1.22.2",
     "@oclif/test": "^1.2.5",
     "@oclif/tslint": "^3.1.1",
-    "@types/chai": "^4.2.9",
+    "@types/chai": "^4.2.10",
     "@types/mocha": "^5.2.7",
     "@types/node": "^10.17.17",
     "chai": "^4.2.0",
@@ -82,7 +82,8 @@
     "posttest": "tslint -p test -t stylish",
     "prepack": "rimraf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "version": "oclif-dev readme && git add README.md"
+    "version": "oclif-dev readme && git add README.md",
+    "postinstall": "node scripts/post-install.js"
   },
   "types": "lib/index.d.ts"
 }

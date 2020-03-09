@@ -27,6 +27,7 @@ software:
             username: utplsql
         scripts:
             - path: source/uninstall.sql
+              sys: true
               arguments:
                 - username
    oos-utils:

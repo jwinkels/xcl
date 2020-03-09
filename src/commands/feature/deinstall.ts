@@ -1,25 +1,34 @@
 import {Command, flags} from '@oclif/command'
+import { FeatureManager } from '../../lib/featureManager'
 
 export default class FeatureDeinstall extends Command {
   static description = 'describe the command here'
 
   static flags = {
     help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    name: flags.string({char: 'n', description: 'name to print'}),
-    // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
+    connection: flags.string( {char: 'c', required: true} ),
+    syspw: flags.string( {char: 'p', required: true}),
+    owner: flags.boolean ( {char: 'o', description: 'drop owner schema'} )
   }
 
-  static args = [{name: 'file'}]
+  static args = [
+        {
+          name: 'feature',
+          description: 'Name of the Project-Feature to be installed',
+          required: true          
+        },
+        {
+          name: 'project',
+          description: 'name of the Project (when not in a xcl-Project path)'
+        }
+      ]
 
+      
   async run() {
     const {args, flags} = this.parse(FeatureDeinstall)
-
-    const name = flags.name || 'world'
-    this.log(`hello ${name} from C:\\Users\\jaw\\Projekte\\xcl-type\\xcl\\src\\commands\\feature\\deinstall.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
+    await FeatureManager.getInstance().deinstallProjectFeature(args.feature, flags.connection, flags.syspw ,args.project);
+    if (flags.owner){
+      FeatureManager.getInstance().dropOwnerSchema(args.feature, flags.connection, flags.syspw ,args.project);
     }
   }
 }

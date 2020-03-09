@@ -145,6 +145,31 @@ export class Project {
     }
   }
 
+  public removeFeature(feature:ProjectFeature){
+    if (this.features.has(feature.getName())){  
+      this.config=this.readConfig();
+      this.features.delete(feature.getName());
+      if(!this.config.xcl.dependencies){
+        console.log('No dependencies!');
+        this.config.xcl.dependencies=[];
+      }
+
+      this.config.xcl.dependencies.pop({
+        name: feature.getName(), 
+        version: feature.getReleaseInformation(),
+        installed: feature.getInstalled(),
+        user:{
+            name: feature.getUser().getName(),
+            pwd: feature.getUser().getPassword()
+            }
+    });
+
+      this.writeConfig();
+    }else{
+      console.log(chalk.yellowBright('WARNING: Dependency is not defined to this Project! No dependency removed!'));
+    }
+  }
+
   public getFeatures():Map<String,ProjectFeature>{
     let features: Map<String,ProjectFeature>=new Map<String,ProjectFeature>();
     this.config=this.readConfig();
@@ -156,5 +181,17 @@ export class Project {
       return features;
     }
     return features;
+  }
+
+  public updateFeature(feature:ProjectFeature){
+    if (this.features.has(feature.getName())){  
+      this.config=this.readConfig();
+      this.config.xcl.dependencies.forEach((element: { name: string; installed: Boolean; }) => {
+        if(element.name===feature.getName()){
+          element.installed=feature.getInstalled();
+        }
+      });
+      this.writeConfig();
+    }
   }
 }  

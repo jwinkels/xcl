@@ -1,6 +1,7 @@
 import { Project } from './Project';
 import { spawnSync } from 'child_process';
 import * as path from 'path'
+import { ProjectFeature } from './projectFeature';
 
 const oracledb = require('oracledb');
 
@@ -52,6 +53,29 @@ export class DBHelper {
       return Promise.resolve(countSchemas>0);
     }
   };
+
+  public static async isFeatureInstalled(feature: ProjectFeature, conn:IConnectionProperties):Promise<boolean>{
+    let connection;
+    let userCount;
+    try{
+      connection = await oracledb.getConnection(conn);
+
+      const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${feature.getUser().getName().toUpperCase()}'`);
+      console.log(result.rows[0][0]>0);
+      userCount = result.rows[0][0];
+    }catch(err){
+      console.error(err,"{color:red}");
+    }finally{
+      if(connection) {
+        try{
+          await connection.close();
+        }catch(err){
+          console.error(err);
+        }
+      }
+      return Promise.resolve(userCount > 0)
+    }
+  }
 
   public static getConnectionString(conn: IConnectionProperties):string {
     return  `${conn.user}/${conn.password}@${conn.connectString} as sysdba` 
