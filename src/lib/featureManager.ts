@@ -49,7 +49,6 @@ export class FeatureManager{
 
     static getInstance() {
         if (!FeatureManager.manager) {
-          console.log('Create!');
           FeatureManager.manager = new FeatureManager();
         }
         return FeatureManager.manager;
@@ -84,7 +83,6 @@ export class FeatureManager{
             for (let i=0; i<releases.length; i++){
               table.push([releases[i]]);
             }
-            //FeatureManager.getInstance().addFeatureToProject('logger','3.1.0','lalala');
             console.log(table.toString());
           });
           
@@ -237,8 +235,6 @@ export class FeatureManager{
                           throw Error("Script couldn't be found!");
                         }
                       }
-                      console.log(executeString);
-                      //Executer.execute(connectionWithUser,executeString);
                       DBHelper.executeScript(c, executeString);
                     }
                     fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
@@ -314,7 +310,6 @@ export class FeatureManager{
                       }
                     }
                     console.log(executeString);
-                    //Executer.execute(connectionWithUser,executeString);
                     DBHelper.executeScript(c, executeString);
                   }
                   fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
@@ -401,7 +396,10 @@ export class FeatureManager{
       public removeFeatureFromProject(featureName:string, projectName:string){
         if(ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
           ProjectManager.getInstance().getProject(projectName).removeFeature(ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)!);
+          console.log(chalk.green(`SUCCESS: Feature ${featureName} removed!`));
+        }else{
+          console.log(chalk.yellow(`WARNING: Feature ${featureName} not in dependency list! Nothing removed!`));
         }
-        console.log(chalk.green(`Feature ${featureName} removed!`));
+        
       }
 }

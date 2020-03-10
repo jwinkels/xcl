@@ -2,12 +2,12 @@ import {Command, flags} from '@oclif/command'
 import { FeatureManager } from '../../lib/featureManager'
 
 export default class FeatureDeinstall extends Command {
-  static description = 'describe the command here'
+  static description = 'deinstall a Feature from Database'
 
   static flags = {
     help: flags.help({char: 'h'}),
-    connection: flags.string( {char: 'c', required: true} ),
-    syspw: flags.string( {char: 'p', required: true}),
+    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true} ),
+    syspw: flags.string( {char: 'p', description:'Password of SYS-User', required: true}),
     owner: flags.boolean ( {char: 'o', description: 'drop owner schema'} )
   }
 

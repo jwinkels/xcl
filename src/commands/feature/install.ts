@@ -2,12 +2,12 @@ import {Command, flags} from '@oclif/command'
 import { FeatureManager } from '../../lib/featureManager'
 
 export default class FeatureInstall extends Command {
-  static description = 'Install a Feature to target Schema'
+  static description = 'install a Feature to target Schema'
 
   static flags = {
     help: flags.help({char: 'h'}),
-    connection: flags.string( {char: 'c', required: true} ),
-    syspw: flags.string( {char: 'p', required: true})
+    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true} ),
+    syspw: flags.string( {char: 'p', description:'Password of SYS-User', required: true})
   }
 
   static args = [

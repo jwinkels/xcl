@@ -1,13 +1,15 @@
 import {Command, flags} from '@oclif/command'
 import {FeatureManager} from '../../lib/featureManager'
+import { ProjectManager } from '../../lib/projectManager';
+import chalk from 'chalk';
 
 export default class FeatureAdd extends Command {
-  static description = 'Add Feature to dependency list'
+  static description = 'add Feature to dependency list'
 
   static flags = {
     help: flags.help({char: 'h'}),
-    username: flags.string({char: 'u', required: true}),
-    password: flags.string({char: 'p', required: true})
+    username: flags.string({char: 'u', description: 'schema name for the feature to be installed in', required: true}),
+    password: flags.string({char: 'p', description: 'password for the new schema', required: true})
   }
 
   static args = [{
@@ -22,12 +24,20 @@ export default class FeatureAdd extends Command {
                 },
                 {
                   name: 'project',
-                  description: 'name of the Project (when not in a xcl-Project path)'
+                  description: 'Name of the Project (when not in a xcl-Project path)'
                 }
               ];
 
   async run() {
     const {args, flags} = this.parse(FeatureAdd);
-    FeatureManager.getInstance().addFeatureToProject(args.feature,args.version,args.project, flags.username, flags.password); 
+    if ( ProjectManager.getInstance().getProjectNameByPath(process.cwd()) !== 'all' ){
+      FeatureManager.getInstance().addFeatureToProject(args.feature,args.version, ProjectManager.getInstance().getProjectNameByPath(process.cwd()), flags.username, flags.password); 
+    }else{
+      if ( args.project ){
+        FeatureManager.getInstance().addFeatureToProject(args.feature,args.version, args.project, flags.username, flags.password); 
+      }else{
+        console.log(chalk.red('ERROR: You need to specify a project or be in a xcl-Project managed directory!'));
+      }
+    }
   }
 }
