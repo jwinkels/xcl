@@ -36,7 +36,7 @@ export class DBHelper {
       connection = await oracledb.getConnection(conn);
       
       const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${project.getName().toUpperCase}_%'`);
-      countSchemas = result.rows[0];
+      countSchemas = result.rows[0][0];
 
     } catch (err) {
       console.error(err, "{color:red}");
@@ -61,7 +61,6 @@ export class DBHelper {
       connection = await oracledb.getConnection(conn);
 
       const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${feature.getUser().getName().toUpperCase()}'`);
-      console.log(result.rows[0][0]>0);
       userCount = result.rows[0][0];
     }catch(err){
       console.error(err,"{color:red}");
@@ -96,9 +95,7 @@ export class DBHelper {
       }
     );
 
-    console.log("out: ", childProcess.stdout);
-
-    
+    console.log("out: ", childProcess.stdout);  
   }
 
   
