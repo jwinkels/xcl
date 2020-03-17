@@ -202,17 +202,12 @@ export class ProjectManager {
     // Indextablespace auslagern
     // > data user bekommt das recht tablespaces anzulegen. hier muss ggf. auch das Rech weitergegegen werden
 
-    // prüfen ob User schon da sind
-    // wenn ja, fragen nach droppen bei ja weiter, bei nein exit
-
+    
     // durch features loopen und deren install methode aufrufen
 
     // user erstellen
 
     // app erstellen
-
-
-
   }
 
 }

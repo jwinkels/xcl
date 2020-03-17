@@ -8,7 +8,7 @@ import chalk from 'chalk'
 import { Feature } from './Feature';
 import { integer } from '@oclif/command/lib/flags';
 import { ProjectManager } from './ProjectManager';
-import { ProjectFeature } from './projectFeature';
+import { ProjectFeature } from './ProjectFeature';
 import { Request } from 'request';
 import requestPromise = require('request-promise-native');
 import { GithubCredentials } from './GithubCredentials';
