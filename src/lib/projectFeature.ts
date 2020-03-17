@@ -9,10 +9,12 @@ export class ProjectFeature extends Feature{
     private user:Schema;
 
     constructor(args : {parent:Feature, version:String, username:string, password:string, installed:Boolean}){
-            super( { name : args.parent.getName(), 
+            super( {
+                name : args.parent.getName(), 
                 owner : args.parent.getOwner(), 
                 repo : args.parent.getRepo(), 
-                gitAttribute : args.parent.getGitAttribute()
+                gitAttribute : args.parent.getGitAttribute(),
+                type : args.parent.getType()
             });
             this.version=args.version;
             this.installed=args.installed;

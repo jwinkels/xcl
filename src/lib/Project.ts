@@ -120,29 +120,47 @@ export class Project {
 
   //
   public addFeature(feature:ProjectFeature){
-    if ( ! this.features.has(feature.getName())){  
+    if ( ! this.features.has(feature.getName()) || !(feature.getType()==="DEPLOY" && this.hasDeployMethod())){  
       this.config=this.readConfig();
       this.features.set(feature.getName(),feature);
       if(!this.config.xcl.dependencies){
-        console.log('No dependencies!');
         this.config.xcl.dependencies=[];
       }
 
       this.config.xcl.dependencies.push({
-                            name: feature.getName(), 
-                            version: feature.getReleaseInformation(),
-                            installed: feature.getInstalled(),
-                            user:{
-                                name: feature.getUser().getName(),
-                                pwd: feature.getUser().getPassword()
-                                }
-                            });
+              name: feature.getName(), 
+              version: feature.getReleaseInformation(),
+              installed: feature.getInstalled(),
+              type: feature.getType(),
+              user:{
+                  name: feature.getUser().getName(),
+                  pwd: feature.getUser().getPassword()
+                  }
+              });
 
       this.writeConfig();
     }else{
-      console.log(chalk.yellowBright('WARNING: Dependency is already defined to this Project! No dependency added!'));
-      console.log(chalk.blueBright('INFO: To Update the dependency use feature:update'));
+      if ( this.features.has(feature.getName()) ){
+        console.log(chalk.yellowBright('WARNING: Dependency is already defined to this Project! No dependency added!'));
+        console.log(chalk.blueBright('INFO: To Update the dependency use feature:update'));
+      }
+
+      if( feature.getType()==="DEPLOY" && this.hasDeployMethod() ){
+        console.log(chalk.red('ERROR: deployment already configured! Remove the feature before adding a new deployment configuration!'));
+      }
     }
+  }
+
+  private hasDeployMethod():Boolean{
+    let deployMethodAvailable=false;
+    this.features.forEach(function(feature){
+      
+      if(feature.getType() === "DEPLOY"){
+        deployMethodAvailable = true;
+      }
+
+    });
+    return deployMethodAvailable;
   }
 
   public removeFeature(feature:ProjectFeature){

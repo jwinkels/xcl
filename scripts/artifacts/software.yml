@@ -82,3 +82,14 @@ software:
         - path: dropUser.sql
           arguments:
             - username
+  orcas:
+    owner: jwinkels
+    repo: orcas4xcl
+    call: release
+    deploy: true
+  bash:
+    owner: MaikMichel
+    repo: bash4xcl
+    call: release
+    deploy: true
+

@@ -10,13 +10,15 @@ export class Feature{
     private gitAttribute:String;
     private isManagedByTag:boolean=false;
     private isManagedByRelease:boolean=false;
+    private type:String;
     
 
-    constructor(args: {name:string, owner:String, repo:String, gitAttribute:String }){
+    constructor(args: {name:string, owner:String, repo:String, gitAttribute:String, type:String }){
         this.name=args.name;
         this.owner=args.owner;
         this.repo=args.repo;
         this.gitAttribute=args.gitAttribute;
+        this.type=args.type;
         
         if (args.gitAttribute == 'tag'){
             this.isManagedByTag = true;
@@ -78,6 +80,10 @@ export class Feature{
         return this.gitAttribute;
     }
 
+    public getType():String{
+        return this.type;
+    }
+
     protected call():Promise<any>{
         return new Promise<any>((resolve,reject)=>{
             let path:string='/repos/'+this.owner+'/'+this.repo;
@@ -93,7 +99,6 @@ export class Feature{
             }
         
             if(GithubCredentials.get()){
-                console.log('using credentials');
                 options = {
                     host: 'api.github.com',
                     port: 443,
@@ -104,7 +109,6 @@ export class Feature{
                     }
                 };
             }else{
-                console.log('no credentials');
                 options = {
                     host: 'api.github.com',
                     port: 443,

@@ -11,14 +11,20 @@ export default class FeatureList extends Command {
     all: flags.boolean({char: 'a', description: 'show all Features available'}),
   }
 
-  static args = [ ]
+  static args = [ 
+      {
+        name: 'type',
+        description: 'Show all Features of type [DB or DEPLOY]',
+        default: 'ALL'
+      }
+   ]
 
   async run() {
     const {args, flags} = this.parse(FeatureList);
     if (flags.project!=='all' && !flags.all){
-      FeatureManager.getInstance().listProjectFeatures(flags.project);
+      FeatureManager.getInstance().listProjectFeatures(flags.project, args.type);
     }else{
-      FeatureManager.getInstance().listFeatures();
+      FeatureManager.getInstance().listFeatures(args.type);
     }
   }
 }

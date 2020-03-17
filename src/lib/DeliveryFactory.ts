@@ -8,7 +8,4 @@ const deliveryFactory=new Container();
 deliveryFactory.bind<DeliveryMethod>("Method").to(Orcas).whenTargetNamed("ORCAS");
 deliveryFactory.bind<DeliveryMethod>("Method").to(Bash).whenTargetNamed("BASH");
 
-let bash = deliveryFactory.getNamed<DeliveryMethod>("Method","ORCAS");
-bash.install();
-
 export { deliveryFactory };
