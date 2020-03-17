@@ -38,6 +38,10 @@ software:
         parameters:
             grantee: PUBLIC
         scripts:
+          - path: create_user.sql
+            sys: true
+            arguments:
+              - credentials
           - path: install/oos_utils_install.sql
           - path: install/grant_to_oos_utils.sql
             arguments:
@@ -71,7 +75,7 @@ software:
         username: logger
         password: logger
       scripts:
-        - path: createUser.sql
+        - path: create_user.sql
           sys: true
           arguments:
             - credentials
@@ -79,6 +83,6 @@ software:
     uninstall:
       scripts:
         - path: drop_logger.sql
-        - path: dropUser.sql
+        - path: drop_user.sql
           arguments:
             - username
