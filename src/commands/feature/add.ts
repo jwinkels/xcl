@@ -1,6 +1,6 @@
 import {Command, flags} from '@oclif/command'
-import {FeatureManager} from '../../lib/featureManager'
-import { ProjectManager } from '../../lib/projectManager';
+import {FeatureManager} from '../../lib/FeatureManager'
+import { ProjectManager } from '../../lib/ProjectManager';
 import chalk from 'chalk';
 
 export default class FeatureAdd extends Command {

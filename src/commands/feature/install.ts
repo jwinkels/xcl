@@ -1,5 +1,5 @@
 import {Command, flags} from '@oclif/command'
-import { FeatureManager } from '../../lib/featureManager'
+import { FeatureManager } from '../../lib/FeatureManager'
 
 export default class FeatureInstall extends Command {
   static description = 'install a Feature to target Schema'

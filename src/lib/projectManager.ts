@@ -6,11 +6,12 @@ import { Project } from "./Project";
 import { ProjectNotFoundError } from "./errors/ProjectNotFoundError";
 import chalk from 'chalk'
 import { DBHelper, IConnectionProperties } from './DBHelper';
+import cli from 'cli-ux'
 
 const Table = require('cli-table')
 
 //Implementation in Singleton-Pattern because there is no need for multiple instances of the ProjectManager!
-export class ProjectManager {  
+export class ProjectManager {
   public static projectYMLfile: string = "projects.yml";
 
   private static manager: ProjectManager;
@@ -60,11 +61,11 @@ export class ProjectManager {
 
   public getProjectNameByPath(projectPath: string):string{
     try {
-      return new Project('',projectPath,false).getName();  
+      return new Project('',projectPath,false).getName();
     } catch (error) {
       return 'all';
     }
-    
+
   }
 
   /**
@@ -94,7 +95,7 @@ export class ProjectManager {
   }
 
   private addProjectToGlobalConfig(project: Project) {
-    ProjectManager.projectsJson.projects[project.getName()] = project.toJSON();    
+    ProjectManager.projectsJson.projects[project.getName()] = project.toJSON();
     fs.writeFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile, yaml.stringify(ProjectManager.projectsJson));
   }
 
@@ -104,8 +105,8 @@ export class ProjectManager {
     let project;
     try {
       project = this.getProject(projectName);
-      
-      // remove from 
+
+      // remove from
       this.removeProjectFromGlobalConfig(project);
 
       // todo remove from path?
@@ -117,7 +118,7 @@ export class ProjectManager {
 
     } catch (err) {
       // undefined error. what happened?
-      throw err;      
+      throw err;
     }
   }
 
@@ -128,7 +129,7 @@ export class ProjectManager {
   }
 
   public getProjects():Project[] {
-  
+
     let projects:Project[] = [];
 
     Object.keys(ProjectManager.projectsJson.projects).forEach(function(projectName) {
@@ -141,13 +142,13 @@ export class ProjectManager {
 
   public listProjects() {
     const table = new Table({
-      head: [        
+      head: [
         chalk.blueBright('name'),
         chalk.blueBright('path'),
         chalk.redBright('status')
       ]
     });
-    
+
     const projects:Project[] = ProjectManager.getInstance().getProjects();
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
@@ -157,34 +158,45 @@ export class ProjectManager {
     console.log(table.toString());
   }
 
-  public async initializeProject(projectName: string, flags: { help: void; username: string | undefined; password: string | undefined; connect: string | undefined; force: boolean; }) {    
+  public async initializeProject(projectName: string, flags: { help: void; password: string | undefined; connect: string | undefined; force: boolean; yes: boolean}) {
     const p:Project = this.getProject(projectName);
     const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.password, flags.connect);    
-    
+
     // Prüfen ober es den User schon gibt
     if (await DBHelper.isProjectInstalled(p, c)) {
       if ( !flags.force) {
-        console.log(chalk.red(`Failure: ProjectSchemas allready exists in db!!!'`));
-        console.log(chalk.yellow(`If you wish to drop users before, you could use force flag'`));
-        throw "Test";                
+        console.log(chalk.yellow(`Warning: ProjectSchemas allready exists in db!!!`));
+        console.log(chalk.yellow(`If you wish to drop users before, you could use force flag`));
+        return;
+      } else { 
+        if (flags.force && !flags.yes) {
+          const confirmYN = await cli.confirm(chalk.green(`Force option detected, schema will be dropped. Continue Y/N`));
+          
+          if (!confirmYN) {
+            console.log(chalk.yellow(`Project initialization canceled`));          
+            return;
+          }
+        }
+        
+        console.log(chalk.yellow(`Dropping existing schemas`));
+        DBHelper.executeScript(c, __dirname + '/scripts/drop_xcl_users.sql ' + p.getName() + '_data ' +
+                                                                           p.getName() + '_logic ' +
+                                                                           p.getName() + '_app ' +
+                                                                           p.getName() + '_depl');
       }
-    }  
-    
-    console.log(chalk.green(`OK, Schemas werden installiert' ${p.getPath()}`));
-    DBHelper.executeScript(c, p.getPath() + '/internal/schema/create_schema_users.sql ' + p.getName() + '_data ' + p.getName());
-    DBHelper.executeScript(c, p.getPath() + '/internal/schema/create_schema_users.sql ' + p.getName() + '_logic ' + p.getName());
-    DBHelper.executeScript(c, p.getPath() + '/internal/schema/create_schema_users.sql ' + p.getName() + '_app ' + p.getName());
-    
+    }
 
-    // nein, alles klar Anlegen
+    console.log(chalk.green(`OK, Schemas werden installiert`));
+    DBHelper.executeScript(c, __dirname + '/scripts/create_xcl_users.sql ' + p.getName() + '_depl ' +
+                                                                           p.getName() + ' ' +
+                                                                           p.getName() + '_data ' +
+                                                                           p.getName() + '_logic ' +
+                                                                           p.getName() + '_app');
 
+    if (await DBHelper.isProjectInstalled(p, c)) {
+      console.log(chalk.green(`Project successfully installed`));
+    }
 
-    
-
-    
-
-
-    // TODO: Connection zur DB erstellen flags überschreiben Umgebungsvariablen
     // TODO: Abfrage nach syspwd?
 
     // Indextablespace auslagern
@@ -201,6 +213,6 @@ export class ProjectManager {
 
 
 
-  }  
+  }
 
 }

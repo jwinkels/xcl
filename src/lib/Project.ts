@@ -2,7 +2,7 @@ import * as yaml from "yaml";
 import * as fs from "fs-extra";
 import chalk from 'chalk'
 import { ProjectFeature } from './projectFeature';
-import { FeatureManager } from './featureManager';
+import { FeatureManager } from './FeatureManager';
 
 export class Project {
   private name: string;

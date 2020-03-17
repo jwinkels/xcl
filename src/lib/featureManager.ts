@@ -7,7 +7,7 @@ import * as request from "request-promise-native";
 import chalk from 'chalk'
 import { Feature } from './Feature';
 import { integer } from '@oclif/command/lib/flags';
-import { ProjectManager } from './projectManager';
+import { ProjectManager } from './ProjectManager';
 import { ProjectFeature } from './projectFeature';
 import { Request } from 'request';
 import requestPromise = require('request-promise-native');
@@ -330,7 +330,7 @@ export class FeatureManager{
         var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
         const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
         if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
-          DBHelper.executeScript(c,`${__dirname}/scripts/dropUser.sql ${ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)?.getUser().getName()}` );
+          DBHelper.executeScript(c,`${__dirname}/scripts/drop_user.sql ${ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)?.getUser().getName()}` );
         }
       }
 

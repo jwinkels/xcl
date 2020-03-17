@@ -1,6 +1,6 @@
 import {Command, flags} from '@oclif/command'
 import {FeatureManager} from '../../lib/FeatureManager'
-import { ProjectManager } from '../../lib/projectManager'
+import { ProjectManager } from '../../lib/ProjectManager'
 
 export default class FeatureList extends Command {
   static description = 'lists all available Features'
