@@ -12,11 +12,17 @@ project
     - fragt nach ob die projekt-schemas entfernt werden soll
     - fragt nach ob die features ebenfalls rausgenommen werden
 
+  init
+    - erstellt die projekt dependencies (schemas) + option?loop über feature install xxx
+    
 
 feature
   add
     - fügt das feature yml - mäßig dem projekt hinzu
     - lädt das zeug aus dem internet (artifacts / zips)
+  
+  install
+    - installiert feature x in die db
 
   list
     - listet verfügbare features auf
