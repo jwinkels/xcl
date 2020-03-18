@@ -83,9 +83,7 @@ export class DBHelper {
   public static async executeScript(conn: IConnectionProperties, script: string){
     
     
-    console.log('executeScript', script);
-    
-    // Funzt noch nicht...
+    //console.log('executeScript', script);
     const childProcess = spawnSync(
       'sql', // Sqlcl path should be in path
       [DBHelper.getConnectionString(conn)], {
@@ -95,7 +93,7 @@ export class DBHelper {
       }
     );
 
-    console.log("out: ", childProcess.stdout);  
+   // console.log("out: ", childProcess.stdout);  
   }
 
   
