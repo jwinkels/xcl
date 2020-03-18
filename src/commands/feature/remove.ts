@@ -1,7 +1,7 @@
 import {Command, flags} from '@oclif/command'
 import chalk from 'chalk'
-import { FeatureManager } from '../../lib/featureManager'
-import { ProjectManager } from '../../lib/projectManager'
+import { FeatureManager } from '../../lib/FeatureManager'
+import { ProjectManager } from '../../lib/ProjectManager'
 
 export default class FeatureRemove extends Command {
   static description = 'remove Feature from Project'

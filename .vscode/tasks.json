@@ -1,0 +1,22 @@
+{
+  // version of tasks.json
+  "version": "2.0.0",
+  // The command is tsc. Assumes that tsc has been installed using npm install -g typescript
+  "command": "tsc",
+  // The command is a shell script
+  "type": "shell",
+  "presentation": {
+    "reveal": "silent", // Show the output window only if unrecognized errors occur.
+    "panel": "new" // create a new panel for every task
+  },
+  // args is the arguments passed to the command
+  "args": [
+    "--target", "es2017",
+    "--outDir", "lib",
+    "--sourceMap",
+    "--watch"
+  ],
+  // use the standard tsc problem matcher to find compile problems
+  // in the output.
+  "problemMatcher": "$tsc"
+}

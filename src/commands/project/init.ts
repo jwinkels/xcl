@@ -12,7 +12,8 @@ export default class ProjectInit extends Command {
     password: flags.string({char: 'p', description: 'Password of user sys'}),
     connect: flags.string({char: 'c', description: 'Connectstring ex. localhost:1521/xepdb1'}),
     // flag with no value (-f, --force)
-    force: flags.boolean({char: 'f'}),
+    force: flags.boolean({char: 'f', description: 'Attention: forces dropping existing schemas'}),
+    yes: flags.boolean({char: 'y', description: 'Ansers force-action with yes (Use with caution)'}),
   }
 
   static args = [
@@ -23,11 +24,14 @@ export default class ProjectInit extends Command {
   ]
 
   async run() {
-    const {args, flags} = this.parse(ProjectInit)
-    
-    if (!args.project) {
+    const {args, flags} = this.parse(ProjectInit)    
+
+    // Wenn kein Projekt angegeben wurde gehen wir davon aus, das der letzte Teil des 
+    // aktuelleb Pfads, der Projektname ist
+    if (!args.project) {      
       args.project = path.basename(path.resolve(process.cwd()));
     }
+    
     ProjectManager.getInstance().initializeProject(args.project, flags)
   }
 }

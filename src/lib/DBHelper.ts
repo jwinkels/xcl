@@ -1,7 +1,9 @@
 import { Project } from './Project';
 import { spawnSync } from 'child_process';
 import * as path from 'path'
-import { ProjectFeature } from './projectFeature';
+import { ProjectFeature } from './ProjectFeature';
+import chalk from 'chalk'
+import cli from 'cli-ux'
 
 const oracledb = require('oracledb');
 
@@ -25,8 +27,20 @@ export class DBHelper {
       // https://github.com/oracle/node-oracledb/blob/master/doc/api.md#oracledbconstantsprivilege
       privilege     : pUserName === 'sys' ? 2 : undefined
     };  
+    
+    // console.debug(conn);
 
-    return conn;
+    try {          
+      if ([conn.user, conn.password, conn.connectString].includes('undefined')) {
+        throw new Error("Not all connection params have a value!");
+      } 
+
+      return conn;
+
+    } catch (err) {
+      console.error(chalk.red(err.message));
+      process.exit(1);
+    }
   }
 
   public static async isProjectInstalled(project: Project, conn:IConnectionProperties):Promise<boolean> {
@@ -34,19 +48,25 @@ export class DBHelper {
     let countSchemas:number = 0;
     try {
       connection = await oracledb.getConnection(conn);
+      let query = `SELECT count(1) FROM all_users where username like '${project.getName().toUpperCase()}_%'`;
+      // console.debug(query);
       
-      const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${project.getName().toUpperCase}_%'`);
+      const result = await connection.execute(query);
+      // console.debug(result)
+      
       countSchemas = result.rows[0][0];
 
     } catch (err) {
-      console.error(err, "{color:red}");
+        console.error(chalk.red(err));
+        process.exit(1);
     } finally {
       if (connection) {
         try {
           // Connections should always be released when not needed
           await connection.close();
         } catch (err) {
-          console.error(err);
+          console.error(chalk.red(err));
+          process.exit(1);
         }
       }
       
@@ -76,24 +96,59 @@ export class DBHelper {
     }
   }
 
+
+  public static async getOraVersion(conn:IConnectionProperties):Promise<number> {
+    let connection;
+    let version:number = 0;
+    try {
+      connection = await oracledb.getConnection(conn);
+      let query = `select substr(version, 1, instr(version, '.', 1, 1)-1) 
+      from product_component_version
+     where product like 'Oracle Database %'`;
+
+      console.log(query);
+      
+      const result = await connection.execute(query);
+      console.log(result)
+      
+      version = result.rows[0][0];
+
+    } catch (err) {
+      console.error(err, "{color:red}");
+    } finally {
+      if (connection) {
+        try {
+          // Connections should always be released when not needed
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      
+      return Promise.resolve(version);
+    }
+  };
+
+
   public static getConnectionString(conn: IConnectionProperties):string {
-    return  `${conn.user}/${conn.password}@${conn.connectString} as sysdba` 
+    
+    return  `${conn.user}/${conn.password}@${conn.connectString}${conn.user === 'sys' ? ' as sysdba' : ''}` 
   }
 
-  public static async executeScript(conn: IConnectionProperties, script: string){
+  public static executeScript(conn: IConnectionProperties, script: string){
     
-    
-    //console.log('executeScript', script);
+    // Funzt noch nicht...
     const childProcess = spawnSync(
-      'sql', // Sqlcl path should be in path
+      'sqlplus -s', // Sqlcl path should be in path
       [DBHelper.getConnectionString(conn)], {
         encoding: 'utf8',
         input: "@" + script,
         shell: true
       }
     );
+    
 
-   // console.log("out: ", childProcess.stdout);  
+    console.log(chalk.gray(childProcess.stdout));  
   }
 
   
