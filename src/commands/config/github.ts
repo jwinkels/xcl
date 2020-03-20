@@ -9,11 +9,10 @@ export default class ConfigGithub extends Command {
     help: flags.help({char: 'h'}),
   }
 
-  static args = [{name: 'user'}]
+  static args = [{name: 'user', required: true}]
 
   async run() {
     const {args, flags} = this.parse(ConfigGithub);
-    var password=readline.question('Github-Account-Password['+args.user+']: ', {hideEchoBack: true});
-    GithubCredentials.writeCredentials(new Buffer(args.user+':'+password).toString('base64'));
+    GithubCredentials.oauth(args.user);
   }
 }

@@ -105,7 +105,7 @@ export class Feature{
                     path: path,
                     headers: {
                         'User-Agent':'xcl',
-                        'Authorization': 'Basic '+GithubCredentials.get()
+                        'Authorization': 'token '+GithubCredentials.get()
                     }
                 };
             }else{
