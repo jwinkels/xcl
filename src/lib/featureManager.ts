@@ -127,7 +127,7 @@ export class FeatureManager{
                     if (GithubCredentials.get()){
                         options.headers= {
                             'User-Agent': 'xcl',
-                            'Authorization': 'Basic '+GithubCredentials.get()
+                            'Authorization': 'token '+GithubCredentials.get()
                         };
                     }else{
                       options.headers= {
