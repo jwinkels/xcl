@@ -1,5 +1,5 @@
 software:
-   utplsql:
+  utplsql:
     owner: utPLSQL
     repo: utPLSQL
     call: release
@@ -30,7 +30,7 @@ software:
               sys: true
               arguments:
                 - username
-   oos-utils:
+  oos-utils:
     owner: OraOpenSource
     repo: oos-utils
     call: tag
@@ -50,7 +50,7 @@ software:
         scripts:
             - path: install/oos_utils_uninstall.sql
               arguments:
-   table-api-generator:
+  table-api-generator:
     owner: OraMUC
     repo: table-api-generator
     call: release
@@ -64,7 +64,7 @@ software:
         scripts:
           - path: uninstall.sql
             arguments:
-   logger:
+  logger:
     owner: OraOpenSource
     repo: Logger
     call: release
