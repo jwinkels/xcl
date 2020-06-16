@@ -111,3 +111,7 @@ dist
 # Ignore js-Dateien
 **\*.js
 
+# Ignore test Projects
+lalala/
+
+package-lock.json

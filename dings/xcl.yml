@@ -1,9 +1,0 @@
-xcl:
-  project: dings
-  description: XCL- Projekt dings
-  users:
-    schema_app: dings_app
-    schema_logic: dings_logic
-    schema_data: dings_data
-    user_deployment: dings_depl
-    user_sys: sys
