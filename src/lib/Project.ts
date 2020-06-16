@@ -3,6 +3,7 @@ import * as fs from "fs-extra";
 import chalk from 'chalk'
 import { ProjectFeature } from './ProjectFeature';
 import { FeatureManager } from './FeatureManager';
+import { Schema } from './Schema';
 
 export class Project {
   private name: string;
@@ -10,6 +11,7 @@ export class Project {
   private errorText: string = '';
   private config: any;
   private features: Map<String, ProjectFeature>;
+  private users: Map<String,Schema>;
 
   constructor(name: string, path: string, create: boolean) {
     this.name = name;
@@ -19,11 +21,13 @@ export class Project {
     if (create) {
       this.config = this.initialzeConfig();
       this.features=new Map();
+      this.users=new Map();
       this.createDirectoryStructure();
       this.writeConfig();
     } else {
       this.config = this.readConfig();      
-      this.features=this.getFeatures();
+      this.features = this.getFeatures();
+      this.users = this.getUsers();
     }
   }
 
@@ -42,6 +46,24 @@ export class Project {
     }
 
     return this.name;
+  }
+
+  public getVersion():string{
+    if(this.config){
+      return this.config.xcl.version;
+    }else{
+      this.config=this.readConfig();
+      return this.config.xcl.version;
+    }
+  }
+
+  public setVersion(version:string){
+    if(!this.config.xcl.version){
+      this.config=this.readConfig(); 
+    }
+
+    this.config.xcl.version=version;
+    this.writeConfig();
   }
 
   public toJSON(): any {
@@ -85,6 +107,7 @@ export class Project {
       xcl: {
         project: this.getName(),
         description: "XCL- Projekt " + this.getName(),
+        version: "Release 1.0",
         users: {
           schema_app: this.getName() + "_app",
           schema_logic: this.getName() + "_logic",
@@ -163,6 +186,16 @@ export class Project {
     return deployMethodAvailable;
   }
 
+  public getDeployMethod():string{
+    let method="";
+    if(this.hasDeployMethod()){
+      this.features.forEach(function(feature){
+        method=feature.getName();
+      });
+    }
+    return method;
+  }
+
   public removeFeature(feature:ProjectFeature){
     if (this.features.has(feature.getName())){  
       this.config=this.readConfig();
@@ -211,5 +244,18 @@ export class Project {
       });
       this.writeConfig();
     }
+  }
+
+  public getUsers():Map<String,Schema>{
+    this.config=this.readConfig();
+    this.users=new Map<String,Schema>();
+    if(this.config.xcl?.users){
+      let users=this.config.xcl?.users;
+        let proxy= new Schema({name: users.schema_depl, password:"", proxy:undefined});
+        this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy:proxy}));
+        this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
+        this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
+    }
+    return this.users;
   }
 }  

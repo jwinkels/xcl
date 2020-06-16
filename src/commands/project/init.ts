@@ -13,7 +13,7 @@ export default class ProjectInit extends Command {
     connect: flags.string({char: 'c', description: 'Connectstring ex. localhost:1521/xepdb1'}),
     // flag with no value (-f, --force)
     force: flags.boolean({char: 'f', description: 'Attention: forces dropping existing schemas'}),
-    yes: flags.boolean({char: 'y', description: 'Ansers force-action with yes (Use with caution)'}),
+    yes: flags.boolean({char: 'y', description: 'Answers force-action with yes (Use with caution)'}),
   }
 
   static args = [

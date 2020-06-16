@@ -7,28 +7,75 @@ import { ProjectManager } from './projectManager';
 
 
 @injectable()
-class Orcas implements DeliveryMethod{
+export class Orcas implements DeliveryMethod{
     public install(feature:ProjectFeature, projectPath:string){
-        let featurePath = projectPath + '/dependencies/'+feature.getName()+'_'+feature.getReleaseInformation();
-        fs.copyFileSync(featurePath+'/app/build.gradle',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_app/build.gradle');
-        fs.copyFileSync(featurePath+'/logic/build.gradle',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_logic/build.gradle');
-        fs.copyFileSync(featurePath+'/data/build.gradle',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_data/build.gradle');
+        let featurePath = projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
+        fs.copyFileSync(featurePath+'/app/build.gradle',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_app/build.gradle');
+        fs.copyFileSync(featurePath+'/logic/build.gradle',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_logic/build.gradle');
+        fs.copyFileSync(featurePath+'/data/build.gradle',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/build.gradle');
         
-        fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_app/gradlew');
-        fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_logic/gradlew');
-        fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_data/gradlew');
+        fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_app/gradlew');
+        fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_logic/gradlew');
+        fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/gradlew');
 
-        fs.copyFileSync(featurePath+'/gradlew.bat',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_app/gradlew.bat');
-        fs.copyFileSync(featurePath+'/gradlew.bat',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_logic/gradlew.bat');
-        fs.copyFileSync(featurePath+'/gradlew.bat',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_data/gradlew.bat');
+        fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_app/gradlew.bat');
+        fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_logic/gradlew.bat');
+        fs.copyFileSync(featurePath+'/gradlew.bat',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/gradlew.bat');
         
         
-        fs.copySync(featurePath+'/gradle/',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_app/gradle/');
-        fs.copySync(featurePath+'/gradle/',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_logic/gradle/');
-        fs.copySync(featurePath+'/gradle/',projectPath+'/db/'+ProjectManager.getInstance().getProjectNameByPath(projectPath)+'_data/gradle/');
+        fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_app/gradle/');
+        fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_logic/gradle/');
+        fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/gradle/');
 
         fs.removeSync(featurePath);
     }
-}
 
-export { Orcas };
+    public deploy(projectName:string, connection:string){
+      let project=ProjectManager.getInstance().getProject(projectName);
+      project.getUsers().get('APP')?.getName();
+      let gradleString = "./gradlew -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + project.getUsers().get('DATA')?.getPassword();
+      console.log(gradleString);
+    }
+
+    public build(projectName:string, version:string){
+      let release  = ProjectManager.getInstance().getProject(projectName).getVersion();
+      ProjectManager.getInstance().getProject(projectName).setVersion(version);
+      let path="";
+      //Read apex-folder and find the correct file
+      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/").forEach(file=>{
+        if ( fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file).isDirectory() ){
+          if(file.startsWith('f')){
+            
+            if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql")){
+              path=ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql";
+            }else if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql")){
+              path=ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql";
+            }
+
+          }
+        }else{
+          if(file.startsWith('f')){
+            path=ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file;
+          }
+        }
+  
+        if(path!=""){
+          let createApp=fs.readFileSync(path);
+  
+          if(createApp.toString().search("p_flow_version=>'" + release + "'") > 0){
+            let newCreateApp=createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
+            fs.writeFileSync(path, newCreateApp);
+          }else{
+            console.log("Replacement String was not found, Version-Number could not be set automatically!");
+          }
+        }else{
+          console.log("File could not be found!");
+        }
+      });     
+      
+    }
+
+    private installApplication(projectName:string){
+      
+    }
+}

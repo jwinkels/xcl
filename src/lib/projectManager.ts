@@ -7,6 +7,8 @@ import { ProjectNotFoundError } from "./errors/ProjectNotFoundError";
 import chalk from 'chalk'
 import { DBHelper, IConnectionProperties } from './DBHelper';
 import cli from 'cli-ux'
+import  { deliveryFactory }  from './DeliveryFactory';
+import { DeliveryMethod } from './DeliveryMethod';
 
 const Table = require('cli-table')
 
@@ -165,7 +167,7 @@ export class ProjectManager {
     // Prüfen ober es den User schon gibt
     if (await DBHelper.isProjectInstalled(p, c)) {
       if ( !flags.force) {
-        console.log(chalk.yellow(`Warning: ProjectSchemas allready exists in db!!!`));
+        console.log(chalk.yellow(`Warning: ProjectSchemas already exists in db!!!`));
         console.log(chalk.yellow(`If you wish to drop users before, you could use force flag`));
         return;
       } else { 
@@ -208,6 +210,10 @@ export class ProjectManager {
     // user erstellen
 
     // app erstellen
+  }
+
+  public async build(projectName: string, version:string){
+    deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).build(projectName,version);
   }
 
 }
