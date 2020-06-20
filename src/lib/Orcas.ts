@@ -4,7 +4,7 @@ import { DeliveryMethod } from "./DeliveryMethod";
 import { ProjectFeature } from './projectFeature';
 import * as fs from "fs-extra"
 import { ProjectManager } from './projectManager';
-
+import { exec } from "child_process";
 
 @injectable()
 export class Orcas implements DeliveryMethod{
@@ -30,40 +30,57 @@ export class Orcas implements DeliveryMethod{
         fs.removeSync(featurePath);
     }
 
-    public deploy(projectName:string, connection:string){
+    public deploy(projectName:string, connection:string, password:string){
       let project=ProjectManager.getInstance().getProject(projectName);
-      project.getUsers().get('APP')?.getName();
-      let gradleString = "./gradlew -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + project.getUsers().get('DATA')?.getPassword();
+      console.log( project.getUsers().get('DATA')?.getName());
+      
+      let gradleString = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + password;
       console.log(gradleString);
+      console.log(project.getPath()+"/db/"+project.getName()+"_data");
+     exec(gradleString,
+          {cwd: project.getPath()+"/db/"+project.getName()+"_data"}, 
+        (error, stdout, stderr) => {
+        if (error) {
+            console.log(`error: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.log(`stderr: ${stderr}`);
+            return;
+        }
+        console.log(`stdout: ${stdout}`);
+      });
     }
 
     public build(projectName:string, version:string){
       let release  = ProjectManager.getInstance().getProject(projectName).getVersion();
       ProjectManager.getInstance().getProject(projectName).setVersion(version);
-      let path="";
+      let path = "";
       //Read apex-folder and find the correct file
       fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/").forEach(file=>{
         if ( fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file).isDirectory() ){
           if(file.startsWith('f')){
-            
+            //Split
             if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql")){
-              path=ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql";
-            }else if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql")){
-              path=ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql";
+              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql";
+            }
+            //SplitFlat
+            else if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql")){
+              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql";
             }
 
           }
         }else{
           if(file.startsWith('f')){
-            path=ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file;
+            path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file;
           }
         }
   
-        if(path!=""){
-          let createApp=fs.readFileSync(path);
+        if(path != ""){
+          let createApp = fs.readFileSync(path);
   
           if(createApp.toString().search("p_flow_version=>'" + release + "'") > 0){
-            let newCreateApp=createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
+            let newCreateApp = createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
             fs.writeFileSync(path, newCreateApp);
           }else{
             console.log("Replacement String was not found, Version-Number could not be set automatically!");

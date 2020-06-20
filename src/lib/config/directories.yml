@@ -1,25 +1,72 @@
 db:
 - app:
-  - api
-  - source
-  - tests
+  - init:
+    - ddl
+    - dml
+  - pre:
+    - ddl
+    - dml
+  - sources:
+    - tests
+    - packages
+    - functions
+    - procedures
+    - trigger
+    - objects
+    - views
+  - precompile
+  - post:
+    - ddl
+    - dml
+  - finally
 - data:
-  - api
-  - constraints
-  - ddl
-  - dml
-  - indexes
-  - polcies
-  - source
+  - init:
+    - ddl
+    - dml
+  - pre:
+    - ddl
+    - dml
   - tables
+  - sequences
   - tables_ddl
+  - sources:
+    - tests
+    - packages
+    - functions
+    - procedures
+    - trigger
+    - objects
+    - views
+  - precompile
+  - post:
+    - ddl
+    - dml
+  - finally
 - logic:
-  - api
-  - contexts
-  - dml
-  - source
-  - tests
-  - views
+  - init:
+    - ddl
+    - dml
+  - pre:
+    - ddl
+    - dml
+  - sources:
+    - tests
+    - packages
+    - functions
+    - procedures
+    - trigger
+    - objects
+    - views
+  - precompile
+  - post:
+    - ddl
+    - dml
+  - finally
 apex:
-- f1000
-- f2000
+  - f1000 
+apex_files:
+  - f1000:
+    - js
+    - css
+    - img
+

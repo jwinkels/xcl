@@ -139,7 +139,7 @@ export class DBHelper {
     
     // Funzt noch nicht...
     const childProcess = spawnSync(
-      'sqlplus -s', // Sqlcl path should be in path
+      'sql', // Sqlcl path should be in path
       [DBHelper.getConnectionString(conn)], {
         encoding: 'utf8',
         input: "@" + script,

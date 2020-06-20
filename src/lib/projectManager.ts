@@ -21,7 +21,7 @@ export class ProjectManager {
   // private static project: Project;
   private static projectsYaml: yaml.ast.Document;
   private static projectsJson: any;
-  private static project:Project;
+  private static project: Project;
 
   private constructor() {
     // read projects
@@ -117,6 +117,7 @@ export class ProjectManager {
         console.log(`Path ${project.getPath()} removed`);
       }
       // todo remove from db?
+      console.log(chalk.red('TODO: REMOVE FROM DB!'));
 
     } catch (err) {
       // undefined error. what happened?
@@ -214,6 +215,10 @@ export class ProjectManager {
 
   public async build(projectName: string, version:string){
     deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).build(projectName,version);
+  }
+
+  public async deploy(projectName: string, connection:string, password:string){
+    deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).deploy(projectName,connection, password);
   }
 
 }

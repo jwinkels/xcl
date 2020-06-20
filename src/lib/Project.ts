@@ -251,7 +251,7 @@ export class Project {
     this.users=new Map<String,Schema>();
     if(this.config.xcl?.users){
       let users=this.config.xcl?.users;
-        let proxy= new Schema({name: users.schema_depl, password:"", proxy:undefined});
+        let proxy= new Schema({name: users.user_deployment, password:"", proxy:undefined});
         this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy:proxy}));
         this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
         this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));

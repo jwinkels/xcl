@@ -65,3 +65,5 @@ project:deploy -target local:123/pdb1
 
 cd projet
 xcl feature:list
+
+wenn im Hintergrund Änderungen an der Software yml gemacht worden sind werden die beim nächsten ausführen nicht gezogen, liegt am Singleton-Pattern

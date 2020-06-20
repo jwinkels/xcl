@@ -38,8 +38,9 @@ USAGE
 * [`xcl feature:versions FEATURE`](#xcl-featureversions-feature)
 * [`xcl hello [FILE]`](#xcl-hello-file)
 * [`xcl help [COMMAND]`](#xcl-help-command)
-* [`xcl project:build [FILE]`](#xcl-projectbuild-file)
+* [`xcl project:build [PROJECT] [VERSION]`](#xcl-projectbuild-project-version)
 * [`xcl project:create PROJECT`](#xcl-projectcreate-project)
+* [`xcl project:deploy [FILE]`](#xcl-projectdeploy-file)
 * [`xcl project:init [PROJECT]`](#xcl-projectinit-project)
 * [`xcl project:list [FILE]`](#xcl-projectlist-file)
 * [`xcl project:prepare [FILE]`](#xcl-projectprepare-file)
@@ -237,13 +238,13 @@ OPTIONS
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.3/src\commands\help.ts)_
 
-## `xcl project:build [FILE]`
+## `xcl project:build [PROJECT] [VERSION]`
 
 describe the command here
 
 ```
 USAGE
-  $ xcl project:build [FILE]
+  $ xcl project:build [PROJECT] [VERSION]
 
 OPTIONS
   -f, --force
@@ -269,6 +270,22 @@ OPTIONS
 ```
 
 _See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\create.ts)_
+
+## `xcl project:deploy [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl project:deploy [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src\commands\project\deploy.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\deploy.ts)_
 
 ## `xcl project:init [PROJECT]`
 

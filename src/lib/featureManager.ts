@@ -33,6 +33,7 @@ export class FeatureManager{
         FeatureManager.softwareYaml = yaml.parseDocument(fs.readFileSync(FeatureManager.xclHome + "/" 
                                                             + FeatureManager.softwareYMLfile).toString());
 
+
         // convert to json of create an empty definition
         FeatureManager.softwareJson = FeatureManager.softwareYaml.toJSON();
         FeatureManager.features = new Map();
@@ -59,7 +60,7 @@ export class FeatureManager{
     }
 
     static getInstance() {
-        if (!FeatureManager.manager) {
+        if (!FeatureManager.manager ) {
           FeatureManager.manager = new FeatureManager();
         }
         return FeatureManager.manager;
