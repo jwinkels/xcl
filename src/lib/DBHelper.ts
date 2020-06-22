@@ -151,5 +151,22 @@ export class DBHelper {
     console.log(chalk.gray(childProcess.stdout));  
   }
 
+  public static executeScriptIn(conn: IConnectionProperties, script: string, cwd:string){
+    
+    // Funzt noch nicht...
+    const childProcess = spawnSync(
+      'sql', // Sqlcl path should be in path
+      [DBHelper.getConnectionString(conn)], {
+        encoding: 'utf8',
+        cwd: cwd,
+        input: "@" + script,
+        shell: true
+      }
+    );
+    
+
+    console.log(chalk.gray(childProcess.stdout));  
+  }
+
   
 }

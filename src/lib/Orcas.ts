@@ -5,6 +5,8 @@ import { ProjectFeature } from './projectFeature';
 import * as fs from "fs-extra"
 import { ProjectManager } from './projectManager';
 import { exec } from "child_process";
+import {ShellHelper} from "./ShellHelper";
+import { DBHelper } from './DBHelper';
 
 @injectable()
 export class Orcas implements DeliveryMethod{
@@ -31,25 +33,17 @@ export class Orcas implements DeliveryMethod{
     }
 
     public deploy(projectName:string, connection:string, password:string){
-      let project=ProjectManager.getInstance().getProject(projectName);
-      console.log( project.getUsers().get('DATA')?.getName());
       
-      let gradleString = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + password;
-      console.log(gradleString);
-      console.log(project.getPath()+"/db/"+project.getName()+"_data");
-     exec(gradleString,
-          {cwd: project.getPath()+"/db/"+project.getName()+"_data"}, 
-        (error, stdout, stderr) => {
-        if (error) {
-            console.log(`error: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            console.log(`stderr: ${stderr}`);
-            return;
-        }
-        console.log(`stdout: ${stdout}`);
-      });
+      let project=ProjectManager.getInstance().getProject(projectName);
+      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + password;
+      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getName() + " -Ppassword=" + password;
+      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getName() + " -Ppassword=" + password;
+      
+      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data");
+      ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic");
+      ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app");
+
+      this.installApplication(projectName, connection, password);
     }
 
     public build(projectName:string, version:string){
@@ -92,7 +86,27 @@ export class Orcas implements DeliveryMethod{
       
     }
 
-    private installApplication(projectName:string){
-      
+    private installApplication(projectName:string,connection:string, password:string){
+      let path = "";
+      let installFileList:Map<string,string>;
+      installFileList=new Map();
+      //Read apex-folder and find the correct file
+      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/").forEach(file=>{
+          console.log(file);
+          if(fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file).isDirectory()){
+            if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/install.sql")){
+              installFileList.set(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file,
+                                  ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/install.sql");
+            }
+          }
+      });
+
+      installFileList.forEach((script, path)=>{
+        let conn=DBHelper.getConnectionProps(ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getName(),
+                                    password,
+                                    connection);
+        console.log("About to execute: " + script + " in: " + path);
+        DBHelper.executeScriptIn(conn, script, path);
+      });
     }
 }
