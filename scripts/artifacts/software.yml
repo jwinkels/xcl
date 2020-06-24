@@ -56,6 +56,10 @@ software:
     call: release
     install:
         scripts:
+          - path: create_user.sql
+            sys: true
+            arguments:
+              - credentials
           - path: OM_TAPIGEN.pks
           - path: OM_TAPIGEN.pkb
           - path: OM_TAPIGEN_ODDGEN_WRAPPER.pks
@@ -96,4 +100,3 @@ software:
     repo: bash4xcl
     call: release
     deploy: true
-

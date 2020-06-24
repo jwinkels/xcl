@@ -164,8 +164,12 @@ export class DBHelper {
       }
     );
     
+    if (!childProcess.error){
+      console.log(chalk.gray(childProcess.stdout));
+    }else{
+      console.log(chalk.red(childProcess.error.message));
+    }
 
-    console.log(chalk.gray(childProcess.stdout));  
   }
 
   

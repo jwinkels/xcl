@@ -4,6 +4,7 @@ import chalk from 'chalk'
 import { ProjectFeature } from './ProjectFeature';
 import { FeatureManager } from './FeatureManager';
 import { Schema } from './Schema';
+import { type } from 'os';
 
 export class Project {
   private name: string;
@@ -143,6 +144,7 @@ export class Project {
 
   //
   public addFeature(feature:ProjectFeature){
+    //Do not add the Feature if it is already in dependency list or if deployment method has already been configured 
     if ( ! this.features.has(feature.getName()) || !(feature.getType()==="DEPLOY" && this.hasDeployMethod())){  
       this.config=this.readConfig();
       this.features.set(feature.getName(),feature);
@@ -150,16 +152,26 @@ export class Project {
         this.config.xcl.dependencies=[];
       }
 
-      this.config.xcl.dependencies.push({
-              name: feature.getName(), 
-              version: feature.getReleaseInformation(),
-              installed: feature.getInstalled(),
-              type: feature.getType(),
-              user:{
-                  name: feature.getUser().getName(),
-                  pwd: feature.getUser().getPassword()
-                  }
-              });
+      //DEPLOY-Feature using the existing users to connect to the database and deploy the objects 
+      if(feature.getType()==="DEPLOY"){
+        this.config.xcl.dependencies.push({
+          name: feature.getName(), 
+          version: feature.getReleaseInformation(),
+          installed: feature.getInstalled(),
+          type: feature.getType()
+          });
+      }else{
+        this.config.xcl.dependencies.push({
+                name: feature.getName(), 
+                version: feature.getReleaseInformation(),
+                installed: feature.getInstalled(),
+                type: feature.getType(),
+                user:{
+                    name: feature.getUser().getName(),
+                    pwd: feature.getUser().getPassword()
+                    }
+                });
+      }
 
       this.writeConfig();
     }else{
@@ -190,7 +202,9 @@ export class Project {
     let method="";
     if(this.hasDeployMethod()){
       this.features.forEach(function(feature){
-        method=feature.getName();
+        if (feature.getType()=='DEPLOY'){
+          method=feature.getName();
+        }
       });
     }
     return method;
@@ -225,8 +239,37 @@ export class Project {
     let features: Map<String,ProjectFeature>=new Map<String,ProjectFeature>();
     this.config=this.readConfig();
     if (this.config.xcl?.dependencies){
-      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; user:any}) => {
-        features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));    
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; type:string; user:any}) => {
+        switch(element.type){
+          case "DB": { 
+            features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! )); 
+            break;
+          }
+          case "DEPLOY": {
+            features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, "", "", element.installed) ! )); 
+            break;
+          }
+          default:{
+            console.log(chalk.red("ERROR: Unkown Feature Type"));
+            break;
+          }
+        }
+           
+      });      
+    }else{
+      return features;
+    }
+    return features;
+  }
+
+  public getFeaturesOfType(type:string):Map<String,ProjectFeature>{
+    let features: Map<String,ProjectFeature>=new Map<String,ProjectFeature>();
+    this.config=this.readConfig();
+    if (this.config.xcl?.dependencies){
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; type:string; user:any}) => {
+        if (element.type==type){
+          features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));    
+        }
       });      
     }else{
       return features;

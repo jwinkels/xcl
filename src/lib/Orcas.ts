@@ -30,6 +30,7 @@ export class Orcas implements DeliveryMethod{
         fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/gradle/');
 
         fs.removeSync(featurePath);
+        feature.setInstalled(true);
     }
 
     public deploy(projectName:string, connection:string, password:string){
@@ -39,11 +40,11 @@ export class Orcas implements DeliveryMethod{
       let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getName() + " -Ppassword=" + password;
       let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getName() + " -Ppassword=" + password;
       
-      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data");
-      ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic");
-      ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app");
-
-      this.installApplication(projectName, connection, password);
+      Promise.all([ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data"),
+      ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic"),
+      ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")]).then(()=>{
+        this.installApplication(projectName, connection, password);
+      });
     }
 
     public build(projectName:string, version:string){

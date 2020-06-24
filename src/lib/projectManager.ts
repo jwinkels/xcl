@@ -191,7 +191,7 @@ export class ProjectManager {
 
     console.log(chalk.green(`OK, Schemas werden installiert`));
     DBHelper.executeScript(c, __dirname + '/scripts/create_xcl_users.sql ' + p.getName() + '_depl ' +
-                                                                           p.getName() + ' ' +
+                                                                           p.getName() + ' ' +  //TODO: Generate strong password!
                                                                            p.getName() + '_data ' +
                                                                            p.getName() + '_logic ' +
                                                                            p.getName() + '_app');
