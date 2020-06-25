@@ -40,11 +40,16 @@ export class Orcas implements DeliveryMethod{
       let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getName() + " -Ppassword=" + password;
       let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getName() + " -Ppassword=" + password;
       
-      Promise.all([ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data"),
-      ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic"),
-      ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")]).then(()=>{
-        this.installApplication(projectName, connection, password);
-      });
+      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
+        .then(function(){
+          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
+            .then(function(){
+              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
+                .then(()=>{
+                    Orcas.installApplication(projectName, connection, password);
+                })
+            })
+        });
     }
 
     public build(projectName:string, version:string){
@@ -87,7 +92,7 @@ export class Orcas implements DeliveryMethod{
       
     }
 
-    private installApplication(projectName:string,connection:string, password:string){
+    private static installApplication(projectName:string,connection:string, password:string){
       let path = "";
       let installFileList:Map<string,string>;
       installFileList=new Map();

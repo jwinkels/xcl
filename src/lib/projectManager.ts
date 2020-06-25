@@ -102,12 +102,25 @@ export class ProjectManager {
   }
 
 
-  public removeProject(projectName: string, path: boolean, database: boolean) {
+  public removeProject(projectName: string, path: boolean, database: boolean, connection:string, syspw:string) {
     // check if not allready defined
     let project;
     try {
       project = this.getProject(projectName);
 
+      if(database){// remove from db?
+        if (connection && syspw){
+          const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
+          DBHelper.executeScript(c, __dirname + '/scripts/drop_xcl_users.sql ' + project.getName() + '_data ' +
+                                                                               project.getName() + '_logic ' +
+                                                                               project.getName() + '_app ' +
+                                                                               project.getName() + '_depl');
+        }else{
+          console.log(chalk.red("ERROR: You need to provide a connection-String and the sys-user password"));
+          console.log(chalk.yellow("INFO: xcl project:remove -h to see command options"));
+          throw new Error("Could not remove project due to missing information");
+        }
+      }
       // remove from
       this.removeProjectFromGlobalConfig(project);
 
@@ -116,8 +129,6 @@ export class ProjectManager {
         fs.removeSync(project.getPath());
         console.log(`Path ${project.getPath()} removed`);
       }
-      // todo remove from db?
-      console.log(chalk.red('TODO: REMOVE FROM DB!'));
 
     } catch (err) {
       // undefined error. what happened?

@@ -204,7 +204,6 @@ export class FeatureManager{
 
       public async installAllProjectFeatures(projectName:string, connection:string, syspw:string, forceInstall:boolean){
         for (const feature of ProjectManager.getInstance().getProject(projectName).getFeaturesOfType('DB').values()){
-          console.log('LOOOP!!!');
           if(feature.getInstalled() && forceInstall){
             await FeatureManager.updateFeatureVersion(feature.getName(), feature.getReleaseInformation().toString(), projectName, connection, syspw);
           }else{
@@ -438,13 +437,22 @@ export class FeatureManager{
             let feature = ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName);
             let newFeature = feature;
             newFeature?.setReleaseInformation(version);
-            Promise.all([FeatureManager.getInstance().deinstallProjectFeature(featureName, connection, syspw, projectName),
-            FeatureManager.getInstance().dropOwnerSchema(featureName, connection, syspw, projectName),
-            FeatureManager.getInstance().removeFeatureFromProject(featureName, projectName),
-            FeatureManager.getInstance().addFeatureToProject(featureName, version, projectName, newFeature?.getUser().getName()!, newFeature?.getUser().getPassword()!),
-            FeatureManager.getInstance().installProjectFeature(featureName, connection, syspw, projectName)])
-                  .then(()=>resolve())
-                  .catch(()=>reject());
+            FeatureManager.getInstance().deinstallProjectFeature(featureName, connection, syspw, projectName)
+              .then(function(){
+                FeatureManager.getInstance().dropOwnerSchema(featureName, connection, syspw, projectName)
+                  .then(function(){
+                    FeatureManager.getInstance().removeFeatureFromProject(featureName, projectName)
+                      .then(function(){
+                        FeatureManager.getInstance().addFeatureToProject(featureName, version, projectName, newFeature?.getUser().getName()!, newFeature?.getUser().getPassword()!)
+                          .then(function(){
+                            FeatureManager.getInstance().installProjectFeature(featureName, connection, syspw, projectName)
+                              .then(function(){
+                                resolve();
+                              })
+                          })
+                      })
+                  })
+              });
           }else{
             console.log(chalk.yellow(`WARNING: Feature ${featureName} was not added to the Project!`));
             console.log(chalk.blueBright(`INFO: xcl feature:add ${featureName} ${version} ${projectName}`));

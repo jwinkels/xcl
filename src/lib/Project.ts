@@ -97,6 +97,7 @@ export class Project {
     fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}_data`);
     fs.renameSync(this.getPath() + "/db/logic", this.getPath() + `/db/${this.getName()}_logic`);
     fs.renameSync(this.getPath() + "/db/app", this.getPath() + `/db/${this.getName()}_app`);
+    fs.copySync(__dirname + "/config/readme.md", this.getPath()+"/readme.md");
   }
 
   public writeConfig() {    
