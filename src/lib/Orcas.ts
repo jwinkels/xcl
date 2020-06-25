@@ -83,7 +83,12 @@ export class Orcas implements DeliveryMethod{
             let newCreateApp = createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
             fs.writeFileSync(path, newCreateApp);
           }else{
-            console.log("Replacement String was not found, Version-Number could not be set automatically!");
+            if(createApp.toString().search("p_flow_version=>'Release 1.0'") > 0){
+              let newCreateApp = createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
+              fs.writeFileSync(path, newCreateApp);
+            }else{
+              console.log("Replacement String was not found, Version-Number could not be set automatically!");
+            }
           }
         }else{
           console.log("File could not be found!");
