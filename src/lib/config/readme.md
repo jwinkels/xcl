@@ -25,6 +25,7 @@ They will not be uploaded during deploy process. We think of them as part of the
 
 ## db
 The db folder will contain three sub-directories:
+
     - <Project_Name>_app
     - <Project_Name>_logic
     - <Project_Name>_data
@@ -33,7 +34,7 @@ these resemble the schemata in your Oracle-DB which were obligatory for every xc
 
 
 
-#### <Project_Name>_app - directory && <Project_Name>_logic
+### <Project_Name>_app - directory && <Project_Name>_logic
 The directory of these two directories are equal:
 The following table will give you an overview of the directories and whats the idea behind this. 
 

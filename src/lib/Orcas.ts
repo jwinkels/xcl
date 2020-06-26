@@ -33,7 +33,7 @@ export class Orcas implements DeliveryMethod{
         feature.setInstalled(true);
     }
 
-    public deploy(projectName:string, connection:string, password:string){
+    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean){
       
       let project=ProjectManager.getInstance().getProject(projectName);
       let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + password;
@@ -46,7 +46,9 @@ export class Orcas implements DeliveryMethod{
             .then(function(){
               ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
                 .then(()=>{
-                    Orcas.installApplication(projectName, connection, password);
+                    if (!schemaOnly){
+                      Orcas.installApplication(projectName, connection, password);
+                    }
                 })
             })
         });
@@ -106,8 +108,20 @@ export class Orcas implements DeliveryMethod{
           console.log(file);
           if(fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file).isDirectory()){
             if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/install.sql")){
+              //Get Application ID
+                  // In Zukunft: ProjectManager.getInstance().getProject(projectName).getApplicationId()
+              
+              //Jetzt mal noch über auslesen der ID vom pfad
+              let appId = file.substr(1,file.length-1);
+              //Copy PreInstall File - to this location
+              fs.copySync(__dirname+"/scripts/pre_install_application.sql",
+                          ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/pre_install_application.sql");
+              let script=ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/pre_install_application.sql " + 
+                          ProjectManager.getInstance().getProject(projectName).getWorkspace() + " " +
+                          appId +" "+
+                          ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
               installFileList.set(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file,
-                                  ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/install.sql");
+                                    script);
             }
           }
       });
@@ -117,6 +131,9 @@ export class Orcas implements DeliveryMethod{
                                     password,
                                     connection);
         console.log("About to execute: " + script + " in: " + path);
+        DBHelper.executeScript(conn, __dirname+"/scripts/create_workspace.sql "+
+                                        ProjectManager.getInstance().getProject(projectName).getWorkspace() + " "+
+                                        ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP");
         DBHelper.executeScriptIn(conn, script, path);
       });
     }

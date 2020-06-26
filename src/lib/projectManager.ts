@@ -53,7 +53,7 @@ export class ProjectManager {
     }else{
       if (ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName]) {
         let projectJSON = ProjectManager.projectsJson.projects[projectName];
-        ProjectManager.project = new Project(projectName, projectJSON.path, false);
+        ProjectManager.project = new Project(projectName, projectJSON.path,'' , false);
         return ProjectManager.project;
       } else {
         throw new ProjectNotFoundError(`project ${projectName} not found`);
@@ -63,7 +63,7 @@ export class ProjectManager {
 
   public getProjectNameByPath(projectPath: string):string{
     try {
-      return new Project('',projectPath,false).getName();
+      return new Project('',projectPath, '', false).getName();
     } catch (error) {
       return 'all';
     }
@@ -74,7 +74,7 @@ export class ProjectManager {
    * return Project, when found otherwise creates it
    * @param projectName name of project
    */
-  public createProject(projectName: string): Project {
+  public createProject(projectName: string, workspaceName: string): Project {
     // check if not allready defined
     let project;
     try {
@@ -84,7 +84,7 @@ export class ProjectManager {
       if (err instanceof ProjectNotFoundError) {
         // start to create the project
         console.log(projectName + " is to be created in: " + process.cwd());
-        project = new Project(projectName, process.cwd() + "/" + projectName, true);
+        project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true);
 
         this.addProjectToGlobalConfig(project);
       } else {
@@ -148,7 +148,7 @@ export class ProjectManager {
 
     Object.keys(ProjectManager.projectsJson.projects).forEach(function(projectName) {
       let projectJSON = ProjectManager.projectsJson.projects[projectName];
-      projects.push(new Project(projectName, projectJSON.path, false));
+      projects.push(new Project(projectName, projectJSON.path,'', false));
     });
 
     return projects;
@@ -228,8 +228,8 @@ export class ProjectManager {
     deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).build(projectName,version);
   }
 
-  public async deploy(projectName: string, connection:string, password:string){
-    deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).deploy(projectName,connection, password);
+  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean){
+    deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).deploy(projectName,connection, password, schemaOnly);
   }
 
 }

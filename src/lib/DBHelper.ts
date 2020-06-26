@@ -152,7 +152,7 @@ export class DBHelper {
   }
 
   public static executeScriptIn(conn: IConnectionProperties, script: string, cwd:string){
-    
+    console.log(script);
     // Funzt noch nicht...
     const childProcess = spawnSync(
       'sql', // Sqlcl path should be in path

@@ -5,7 +5,8 @@ export default class ProjectCreate extends Command {
   static description = 'create a project'
 
   static flags = {
-    help: flags.help({char: 'h'}),    
+    help: flags.help({char: 'h'}),
+    workspace: flags.string({char: 'w'})    
   }
 
   static args = [
@@ -18,8 +19,12 @@ export default class ProjectCreate extends Command {
 
   async run() {
     const {args, flags} = this.parse(ProjectCreate)
+    if(flags.workspace){
+      ProjectManager.getInstance().createProject(args.project, flags.workspace);
+    }else{
+      ProjectManager.getInstance().createProject(args.project, args.project);
+    }
     
-    ProjectManager.getInstance().createProject(args.project)
 
     
   }

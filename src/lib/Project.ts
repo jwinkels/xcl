@@ -14,7 +14,7 @@ export class Project {
   private features: Map<String, ProjectFeature>;
   private users: Map<String,Schema>;
 
-  constructor(name: string, path: string, create: boolean) {
+  constructor(name: string, path: string, workspaceName:string , create: boolean) {
     this.name = name;
     this.path = path;
    
@@ -64,6 +64,25 @@ export class Project {
     }
 
     this.config.xcl.version=version;
+    this.writeConfig();
+  }
+
+
+  public getWorkspace():string{
+    if(this.config){
+      return this.config.xcl.workspace;
+    }else{
+      this.config=this.readConfig();
+      return this.config.xcl.workspace;
+    }
+  }
+
+  public setWorkspace(workspaceName:string){
+    if(!this.config.xcl.workspace){
+      this.config=this.readConfig(); 
+    }
+
+    this.config.xcl.workspace=workspaceName;
     this.writeConfig();
   }
 

@@ -12,7 +12,8 @@ export default class ProjectDeploy extends Command {
     connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true}),
     password: flags.string( {char: 'p', description:'Password for Deployment User', required: true} ),
     dependencies: flags.boolean({char: 'd', description:'Deploy inclusive dependencies (you will be asked for sys-user password)'}),
-    silent: flags.string({char:'s', description:'Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users will be overwritten!]'})
+    syspw: flags.string({char:'s', description:'Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users will be overwritten!]'}),
+    'schema-only': flags.boolean({description:'Deploys only schema objects', default: false})
   }
 
   static args = [{name: 'project'}]
@@ -29,13 +30,15 @@ export default class ProjectDeploy extends Command {
       }
 
       if(ProjectManager.getInstance().getProject((args.project)).getDeployMethod()!==""){
-        if (flags.dependencies && !flags.silent){
+        if (flags.dependencies && !flags.syspw){
           let syspw=await cli.prompt('sys', {type: 'hide'});
           await FeatureManager.getInstance().installAllProjectFeatures(args.project, flags.connection, syspw, false);
         }else{
-          await FeatureManager.getInstance().installAllProjectFeatures(args.project, flags.connection, flags.silent!, true);
+          if (flags.dependencies){
+            await FeatureManager.getInstance().installAllProjectFeatures(args.project, flags.connection, flags.syspw!, true);
+          }
         }
-        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password); 
+        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"]); 
        
       }else{
         console.log(chalk.red("ERROR: Deploy-Method undefined!"));

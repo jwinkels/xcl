@@ -11,7 +11,7 @@ export default class ProjectRemove extends Command {
     path: flags.boolean({char: 'p'}),
     database: flags.boolean({char: 'd'}),
     connection: flags.string({char: 'c'}),
-    syspw: flags.string({char: 'p'})
+    syspw: flags.string({char: 's'})
   }
 
   static args = [
