@@ -5,6 +5,7 @@ import { ProjectFeature } from './ProjectFeature';
 import { FeatureManager } from './FeatureManager';
 import { Schema } from './Schema';
 import { type } from 'os';
+import { Feature } from './Feature';
 
 export class Project {
   private name: string;
@@ -20,7 +21,7 @@ export class Project {
    
 
     if (create) {
-      this.config = this.initialzeConfig();
+      this.config = this.initialzeConfig(workspaceName);
       this.features=new Map();
       this.users=new Map();
       this.createDirectoryStructure();
@@ -123,12 +124,13 @@ export class Project {
     fs.writeFileSync(this.getPath() + "/" + "xcl.yml", yaml.stringify(this.config));    
   }
 
-  private initialzeConfig() {
+  private initialzeConfig(workspaceName: string) {
     return {
       xcl: {
         project: this.getName(),
         description: "XCL- Projekt " + this.getName(),
         version: "Release 1.0",
+        workspace: workspaceName,
         users: {
           schema_app: this.getName() + "_app",
           schema_logic: this.getName() + "_logic",
@@ -239,15 +241,7 @@ export class Project {
         this.config.xcl.dependencies=[];
       }
 
-      this.config.xcl.dependencies.pop({
-        name: feature.getName(), 
-        version: feature.getReleaseInformation(),
-        installed: feature.getInstalled(),
-        user:{
-            name: feature.getUser().getName(),
-            pwd: feature.getUser().getPassword()
-            }
-    });
+      this.config.xcl.dependencies = this.config.xcl.dependencies.filter((obj: { name: string; version: String; installed: Boolean; user: { name: string; pwd: string; }; }) => obj.name !== feature.getName())
 
       this.writeConfig();
     }else{

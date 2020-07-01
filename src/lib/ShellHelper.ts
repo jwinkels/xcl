@@ -20,6 +20,11 @@ export class ShellHelper{
                     
                     if(!childProcess.error){
                         console.log(chalk.gray(childProcess.stdout)); 
+                        if(childProcess.stderr.toLocaleLowerCase().includes('failed')){
+                            console.log(chalk.redBright(childProcess.stderr));
+                        }else{
+                            console.log(chalk.yellow(childProcess.stderr));
+                        }
                         resolve();
                     }else{
                         reject(childProcess.error.message);
