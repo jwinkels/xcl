@@ -7,6 +7,8 @@ import { ProjectNotFoundError } from "./errors/ProjectNotFoundError";
 import chalk from 'chalk'
 import { DBHelper, IConnectionProperties } from './DBHelper';
 import cli from 'cli-ux'
+import  { deliveryFactory }  from './DeliveryFactory';
+import { DeliveryMethod } from './DeliveryMethod';
 
 const Table = require('cli-table')
 
@@ -19,7 +21,7 @@ export class ProjectManager {
   // private static project: Project;
   private static projectsYaml: yaml.ast.Document;
   private static projectsJson: any;
-  private static project:Project;
+  private static project: Project;
 
   private constructor() {
     // read projects
@@ -51,7 +53,7 @@ export class ProjectManager {
     }else{
       if (ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName]) {
         let projectJSON = ProjectManager.projectsJson.projects[projectName];
-        ProjectManager.project = new Project(projectName, projectJSON.path, false);
+        ProjectManager.project = new Project(projectName, projectJSON.path,'' , false);
         return ProjectManager.project;
       } else {
         throw new ProjectNotFoundError(`project ${projectName} not found`);
@@ -61,7 +63,7 @@ export class ProjectManager {
 
   public getProjectNameByPath(projectPath: string):string{
     try {
-      return new Project('',projectPath,false).getName();
+      return new Project('',projectPath, '', false).getName();
     } catch (error) {
       return 'all';
     }
@@ -72,7 +74,7 @@ export class ProjectManager {
    * return Project, when found otherwise creates it
    * @param projectName name of project
    */
-  public createProject(projectName: string): Project {
+  public createProject(projectName: string, workspaceName: string): Project {
     // check if not allready defined
     let project;
     try {
@@ -82,7 +84,7 @@ export class ProjectManager {
       if (err instanceof ProjectNotFoundError) {
         // start to create the project
         console.log(projectName + " is to be created in: " + process.cwd());
-        project = new Project(projectName, process.cwd() + "/" + projectName, true);
+        project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true);
 
         this.addProjectToGlobalConfig(project);
       } else {
@@ -100,12 +102,25 @@ export class ProjectManager {
   }
 
 
-  public removeProject(projectName: string, path: boolean, database: boolean) {
+  public removeProject(projectName: string, path: boolean, database: boolean, connection:string, syspw:string) {
     // check if not allready defined
     let project;
     try {
       project = this.getProject(projectName);
 
+      if(database){// remove from db?
+        if (connection && syspw){
+          const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
+          DBHelper.executeScript(c, __dirname + '/scripts/drop_xcl_users.sql ' + project.getName() + '_data ' +
+                                                                               project.getName() + '_logic ' +
+                                                                               project.getName() + '_app ' +
+                                                                               project.getName() + '_depl');
+        }else{
+          console.log(chalk.red("ERROR: You need to provide a connection-String and the sys-user password"));
+          console.log(chalk.yellow("INFO: xcl project:remove -h to see command options"));
+          throw new Error("Could not remove project due to missing information");
+        }
+      }
       // remove from
       this.removeProjectFromGlobalConfig(project);
 
@@ -114,7 +129,6 @@ export class ProjectManager {
         fs.removeSync(project.getPath());
         console.log(`Path ${project.getPath()} removed`);
       }
-      // todo remove from db?
 
     } catch (err) {
       // undefined error. what happened?
@@ -134,7 +148,7 @@ export class ProjectManager {
 
     Object.keys(ProjectManager.projectsJson.projects).forEach(function(projectName) {
       let projectJSON = ProjectManager.projectsJson.projects[projectName];
-      projects.push(new Project(projectName, projectJSON.path, false));
+      projects.push(new Project(projectName, projectJSON.path,'', false));
     });
 
     return projects;
@@ -165,7 +179,7 @@ export class ProjectManager {
     // Prüfen ober es den User schon gibt
     if (await DBHelper.isProjectInstalled(p, c)) {
       if ( !flags.force) {
-        console.log(chalk.yellow(`Warning: ProjectSchemas allready exists in db!!!`));
+        console.log(chalk.yellow(`Warning: ProjectSchemas already exists in db!!!`));
         console.log(chalk.yellow(`If you wish to drop users before, you could use force flag`));
         return;
       } else { 
@@ -188,7 +202,7 @@ export class ProjectManager {
 
     console.log(chalk.green(`OK, Schemas werden installiert`));
     DBHelper.executeScript(c, __dirname + '/scripts/create_xcl_users.sql ' + p.getName() + '_depl ' +
-                                                                           p.getName() + ' ' +
+                                                                           p.getName() + ' ' +  //TODO: Generate strong password!
                                                                            p.getName() + '_data ' +
                                                                            p.getName() + '_logic ' +
                                                                            p.getName() + '_app');
@@ -208,6 +222,14 @@ export class ProjectManager {
     // user erstellen
 
     // app erstellen
+  }
+
+  public async build(projectName: string, version:string){
+    deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).build(projectName,version);
+  }
+
+  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean){
+    deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).deploy(projectName,connection, password, schemaOnly);
   }
 
 }

@@ -18,7 +18,7 @@ export class ProjectFeature extends Feature{
             });
             this.version=args.version;
             this.installed=args.installed;
-            this.user=new Schema({name: args.username, password: args.password});
+            this.user=new Schema({name: args.username, password: args.password, proxy:undefined});
     }
 
     public getReleaseInformation():String{

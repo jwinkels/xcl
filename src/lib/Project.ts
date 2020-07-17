@@ -3,6 +3,9 @@ import * as fs from "fs-extra";
 import chalk from 'chalk'
 import { ProjectFeature } from './ProjectFeature';
 import { FeatureManager } from './FeatureManager';
+import { Schema } from './Schema';
+import { type } from 'os';
+import { Feature } from './Feature';
 
 export class Project {
   private name: string;
@@ -10,20 +13,23 @@ export class Project {
   private errorText: string = '';
   private config: any;
   private features: Map<String, ProjectFeature>;
+  private users: Map<String,Schema>;
 
-  constructor(name: string, path: string, create: boolean) {
+  constructor(name: string, path: string, workspaceName:string , create: boolean) {
     this.name = name;
     this.path = path;
    
 
     if (create) {
-      this.config = this.initialzeConfig();
+      this.config = this.initialzeConfig(workspaceName);
       this.features=new Map();
+      this.users=new Map();
       this.createDirectoryStructure();
       this.writeConfig();
     } else {
       this.config = this.readConfig();      
-      this.features=this.getFeatures();
+      this.features = this.getFeatures();
+      this.users = this.getUsers();
     }
   }
 
@@ -42,6 +48,43 @@ export class Project {
     }
 
     return this.name;
+  }
+
+  public getVersion():string{
+    if(this.config){
+      return this.config.xcl.version;
+    }else{
+      this.config=this.readConfig();
+      return this.config.xcl.version;
+    }
+  }
+
+  public setVersion(version:string){
+    if(!this.config.xcl.version){
+      this.config=this.readConfig(); 
+    }
+
+    this.config.xcl.version=version;
+    this.writeConfig();
+  }
+
+
+  public getWorkspace():string{
+    if(this.config){
+      return this.config.xcl.workspace;
+    }else{
+      this.config=this.readConfig();
+      return this.config.xcl.workspace;
+    }
+  }
+
+  public setWorkspace(workspaceName:string){
+    if(!this.config.xcl.workspace){
+      this.config=this.readConfig(); 
+    }
+
+    this.config.xcl.workspace=workspaceName;
+    this.writeConfig();
   }
 
   public toJSON(): any {
@@ -74,17 +117,20 @@ export class Project {
     fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}_data`);
     fs.renameSync(this.getPath() + "/db/logic", this.getPath() + `/db/${this.getName()}_logic`);
     fs.renameSync(this.getPath() + "/db/app", this.getPath() + `/db/${this.getName()}_app`);
+    fs.copySync(__dirname + "/config/readme.md", this.getPath()+"/readme.md");
   }
 
   public writeConfig() {    
     fs.writeFileSync(this.getPath() + "/" + "xcl.yml", yaml.stringify(this.config));    
   }
 
-  private initialzeConfig() {
+  private initialzeConfig(workspaceName: string) {
     return {
       xcl: {
         project: this.getName(),
         description: "XCL- Projekt " + this.getName(),
+        version: "Release 1.0",
+        workspace: workspaceName,
         users: {
           schema_app: this.getName() + "_app",
           schema_logic: this.getName() + "_logic",
@@ -120,6 +166,7 @@ export class Project {
 
   //
   public addFeature(feature:ProjectFeature){
+    //Do not add the Feature if it is already in dependency list or if deployment method has already been configured 
     if ( ! this.features.has(feature.getName()) || !(feature.getType()==="DEPLOY" && this.hasDeployMethod())){  
       this.config=this.readConfig();
       this.features.set(feature.getName(),feature);
@@ -127,16 +174,26 @@ export class Project {
         this.config.xcl.dependencies=[];
       }
 
-      this.config.xcl.dependencies.push({
-              name: feature.getName(), 
-              version: feature.getReleaseInformation(),
-              installed: feature.getInstalled(),
-              type: feature.getType(),
-              user:{
-                  name: feature.getUser().getName(),
-                  pwd: feature.getUser().getPassword()
-                  }
-              });
+      //DEPLOY-Feature using the existing users to connect to the database and deploy the objects 
+      if(feature.getType()==="DEPLOY"){
+        this.config.xcl.dependencies.push({
+          name: feature.getName(), 
+          version: feature.getReleaseInformation(),
+          installed: feature.getInstalled(),
+          type: feature.getType()
+          });
+      }else{
+        this.config.xcl.dependencies.push({
+                name: feature.getName(), 
+                version: feature.getReleaseInformation(),
+                installed: feature.getInstalled(),
+                type: feature.getType(),
+                user:{
+                    name: feature.getUser().getName(),
+                    pwd: feature.getUser().getPassword()
+                    }
+                });
+      }
 
       this.writeConfig();
     }else{
@@ -163,6 +220,18 @@ export class Project {
     return deployMethodAvailable;
   }
 
+  public getDeployMethod():string{
+    let method="";
+    if(this.hasDeployMethod()){
+      this.features.forEach(function(feature){
+        if (feature.getType()=='DEPLOY'){
+          method=feature.getName();
+        }
+      });
+    }
+    return method;
+  }
+
   public removeFeature(feature:ProjectFeature){
     if (this.features.has(feature.getName())){  
       this.config=this.readConfig();
@@ -172,15 +241,7 @@ export class Project {
         this.config.xcl.dependencies=[];
       }
 
-      this.config.xcl.dependencies.pop({
-        name: feature.getName(), 
-        version: feature.getReleaseInformation(),
-        installed: feature.getInstalled(),
-        user:{
-            name: feature.getUser().getName(),
-            pwd: feature.getUser().getPassword()
-            }
-    });
+      this.config.xcl.dependencies = this.config.xcl.dependencies.filter((obj: { name: string; version: String; installed: Boolean; user: { name: string; pwd: string; }; }) => obj.name !== feature.getName())
 
       this.writeConfig();
     }else{
@@ -192,8 +253,37 @@ export class Project {
     let features: Map<String,ProjectFeature>=new Map<String,ProjectFeature>();
     this.config=this.readConfig();
     if (this.config.xcl?.dependencies){
-      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; user:any}) => {
-        features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));    
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; type:string; user:any}) => {
+        switch(element.type){
+          case "DB": { 
+            features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! )); 
+            break;
+          }
+          case "DEPLOY": {
+            features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, "", "", element.installed) ! )); 
+            break;
+          }
+          default:{
+            console.log(chalk.red("ERROR: Unkown Feature Type"));
+            break;
+          }
+        }
+           
+      });      
+    }else{
+      return features;
+    }
+    return features;
+  }
+
+  public getFeaturesOfType(type:string):Map<String,ProjectFeature>{
+    let features: Map<String,ProjectFeature>=new Map<String,ProjectFeature>();
+    this.config=this.readConfig();
+    if (this.config.xcl?.dependencies){
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; type:string; user:any}) => {
+        if (element.type==type){
+          features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));    
+        }
       });      
     }else{
       return features;
@@ -211,5 +301,18 @@ export class Project {
       });
       this.writeConfig();
     }
+  }
+
+  public getUsers():Map<String,Schema>{
+    this.config=this.readConfig();
+    this.users=new Map<String,Schema>();
+    if(this.config.xcl?.users){
+      let users=this.config.xcl?.users;
+        let proxy= new Schema({name: users.user_deployment, password:"", proxy:undefined});
+        this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy:proxy}));
+        this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
+        this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
+    }
+    return this.users;
   }
 }  
