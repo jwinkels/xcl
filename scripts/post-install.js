@@ -31,7 +31,8 @@ options.headers = {};
 
 var filename = xclHome + '/instantclient-basic.zip';
 
-
+// TODO: Installation Instantclient, optional per YN ausführen
+// quasi, wenn irgendas vom InstantClient im Pfad ist....
 request(options)
     .pipe(
       fs.createWriteStream(filename)
@@ -40,7 +41,8 @@ request(options)
             ic.extractAllTo(xclHome+'/');
             if (os.platform()==='win32'){
               console.log(os.userInfo());
-              setPath = 'setx path "%path%";'+xclHome+'/'+ic.getEntries()[0].entryName.toString();
+              setPath = 'setx path "%path%";'+xclHome+'/'+ic.getEntries()[0].entryName.toString(); // FIXME: Wird dann eh nicht benutzt, wenn bereits vorhanden, 
+                                                                                                   //        da Path von links nach rechts benutzt wird.
             }
           })
       );
