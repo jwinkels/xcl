@@ -21,16 +21,16 @@ export default class FeatureAdd extends Command {
                   required: true
                 },
                 {
-                  name: 'project',
-                  description: 'Name of the Project (when not in a xcl-Project path)'
-                },
-                {
                   name: 'username',
                   description: 'schema name for the feature to be installed in'
                 },
                 {
                   name: 'password',
                   description: 'password for the new schema'
+                },
+                {
+                  name: 'project',
+                  description: 'Name of the Project (when not in a xcl-Project path)'
                 }
               ];
 

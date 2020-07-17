@@ -41,6 +41,25 @@ request(options)
             if (os.platform()==='win32'){
               console.log(os.userInfo());
               setPath = 'setx path "%path%";'+xclHome+'/'+ic.getEntries()[0].entryName.toString();
+              const childProcess = spawnSync(
+                setPath, 
+                [], {
+                    encoding: 'utf8',
+                    cwd: executePath,
+                    shell: false
+                }
+              );
+            }else{
+              console.log(os.userInfo());
+              setPath = 'export PATH=$PATH:'+xclHome+'/'+ic.getEntries()[0].entryName.toString();
+              const childProcess = spawnSync(
+                setPath, 
+                [], {
+                    encoding: 'utf8',
+                    cwd: executePath,
+                    shell: true
+                }
+              );
             }
           })
       );
