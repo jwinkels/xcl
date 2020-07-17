@@ -111,3 +111,5 @@ dist
 # Ignore js-Dateien
 **\*.js
 
+package-lock.json
+.vscode/settings.json
