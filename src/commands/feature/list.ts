@@ -7,7 +7,6 @@ export default class FeatureList extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    project: flags.string({char: 'p', description: 'shows all Features of a Project', required:true, default: ProjectManager.getInstance().getProjectNameByPath(process.cwd())}),
     all: flags.boolean({char: 'a', description: 'show all Features available'}),
   }
 
@@ -16,13 +15,18 @@ export default class FeatureList extends Command {
         name: 'type',
         description: 'Show all Features of type [DB or DEPLOY]',
         default: 'ALL'
+      },
+      {
+        name: 'project',
+        description: 'Show Features added to a Project (when not in a XCL-Directory it shows all Features available)',
+        default: ProjectManager.getInstance().getProjectNameByPath(process.cwd())
       }
    ]
 
   async run() {
     const {args, flags} = this.parse(FeatureList);
-    if (flags.project!=='all' && !flags.all){
-      FeatureManager.getInstance().listProjectFeatures(flags.project, args.type);
+    if (args.project!=='all' && !flags.all){
+      FeatureManager.getInstance().listProjectFeatures(args.project, args.type);
     }else{
       FeatureManager.getInstance().listFeatures(args.type);
     }

@@ -41,8 +41,27 @@ request(options)
             ic.extractAllTo(xclHome+'/');
             if (os.platform()==='win32'){
               console.log(os.userInfo());
-              setPath = 'setx path "%path%";'+xclHome+'/'+ic.getEntries()[0].entryName.toString(); // FIXME: Wird dann eh nicht benutzt, wenn bereits vorhanden, 
-                                                                                                   //        da Path von links nach rechts benutzt wird.
+              setPath = 'setx path "%path%";'+xclHome+'/'+ic.getEntries()[0].entryName.toString();// FIXME: Wird dann eh nicht benutzt, wenn bereits vorhanden, 
+                                                                                                  //        da Path von links nach rechts benutzt wird.
+              const childProcess = spawnSync(
+                setPath, 
+                [], {
+                    encoding: 'utf8',
+                    cwd: executePath,
+                    shell: false
+                }
+              );
+            }else{
+              console.log(os.userInfo());
+              setPath = 'export PATH=$PATH:'+xclHome+'/'+ic.getEntries()[0].entryName.toString();
+              const childProcess = spawnSync(
+                setPath, 
+                [], {
+                    encoding: 'utf8',
+                    cwd: executePath,
+                    shell: true
+                }
+              );
             }
           })
       );
