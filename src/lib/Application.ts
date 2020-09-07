@@ -9,13 +9,14 @@ export class Application{
         let installFileList:Map<string,string>;
         installFileList=new Map();
 
-        let baseFolderApex = "/applications/apex/"
+        let baseFolderApex = "/applications/apex/";
+        let projectPath    = ProjectManager.getInstance().getProject(projectName).getPath();
   
         //Read apex-folder and find the correct file
-        fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + baseFolderApex).forEach(file=>{
+        fs.readdirSync( projectPath + baseFolderApex).forEach(file=>{
             console.log(file);
-            if(fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + baseFolderApex + file).isDirectory()){
-              if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + baseFolderApex + file + "/install.sql")){
+            if(fs.statSync(projectPath + baseFolderApex + file).isDirectory()){
+              if(fs.existsSync(projectPath + baseFolderApex + file + "/install.sql")){
                 //Get Application ID
                     // In Zukunft: ProjectManager.getInstance().getProject(projectName).getApplicationId()
                 
@@ -23,13 +24,13 @@ export class Application{
                 let appId = file.substr(1,file.length-1);
                 //Copy PreInstall File - to this location
                 fs.copySync(__dirname+"/scripts/pre_install_application.sql",
-                            ProjectManager.getInstance().getProject(projectName).getPath() + baseFolderApex + file + "/pre_install_application.sql");
-                            
-                let script=ProjectManager.getInstance().getProject(projectName).getPath() + baseFolderApex + file + "/pre_install_application.sql " + 
-                            ProjectManager.getInstance().getProject(projectName).getWorkspace() + " " +
+                                projectPath + baseFolderApex + file + "/pre_install_application.sql");
+
+                let script= projectPath + baseFolderApex + file + "/pre_install_application.sql " + 
+                            projectPath + " " +
                             appId +" "+
                             ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
-                installFileList.set(ProjectManager.getInstance().getProject(projectName).getPath() + baseFolderApex + file,
+                installFileList.set(projectPath + baseFolderApex + file,
                                       script);
               }
             }
