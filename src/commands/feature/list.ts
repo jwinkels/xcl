@@ -11,6 +11,7 @@ export default class FeatureList extends Command {
   }
 
   static args = [ 
+    
       {
         name: 'type',
         description: 'Show all Features of type [DB or DEPLOY]',

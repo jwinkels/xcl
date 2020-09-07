@@ -7,6 +7,7 @@ import { ProjectManager } from './projectManager';
 import { exec } from "child_process";
 import {ShellHelper} from "./ShellHelper";
 import { DBHelper } from './DBHelper';
+import { Application } from './Application';
 
 @injectable()
 export class Orcas implements DeliveryMethod{
@@ -29,7 +30,9 @@ export class Orcas implements DeliveryMethod{
         fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_logic/gradle/');
         fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/gradle/');
 
+        fs.removeSync(projectPath+'/db/'+ ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/tables_ddl');
         fs.removeSync(featurePath);
+        
         feature.setInstalled(true);
     }
 
@@ -40,18 +43,33 @@ export class Orcas implements DeliveryMethod{
       let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getName() + " -Ppassword=" + password;
       let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getName() + " -Ppassword=" + password;
       
-      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
-        .then(function(){
-          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
-            .then(function(){
-              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
-                .then(()=>{
-                    if (!schemaOnly){
-                      Orcas.installApplication(projectName, connection, password);
-                    }
-                })
-            })
-        });
+      /*
+        Pre-Deploy
+      */
+    let conn=DBHelper.getConnectionProps(ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getName(),
+                                  password,
+                                  connection);
+
+    fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/hooks/").forEach(file=>{
+      DBHelper.executeScript(conn, file);
+    });
+
+    /*
+      Pre-Deploy Hook End
+    */
+
+    ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
+      .then(function(){
+        ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
+          .then(function(){
+            ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
+              .then(()=>{
+                  if (!schemaOnly){
+                    Application.installApplication(projectName, connection, password);
+                  }
+              })
+          })
+      });
     }
 
     public build(projectName:string, version:string){
@@ -98,11 +116,12 @@ export class Orcas implements DeliveryMethod{
       });     
       
     }
-
+    /*
     private static installApplication(projectName:string,connection:string, password:string){
       let path = "";
       let installFileList:Map<string,string>;
       installFileList=new Map();
+
       //Read apex-folder and find the correct file
       fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/").forEach(file=>{
           console.log(file);
@@ -137,4 +156,5 @@ export class Orcas implements DeliveryMethod{
         DBHelper.executeScriptIn(conn, script, path);
       });
     }
+    */
 }

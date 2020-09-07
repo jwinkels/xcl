@@ -62,8 +62,10 @@ db:
     - ddl
     - dml
   - finally
-apex:
-  - f1000 
+applications:
+  - apex:
+    - f1000 
+  - rest
 apex_files:
   - f1000:
     - js
