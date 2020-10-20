@@ -1,0 +1,14 @@
+TODO:
+
+    - Vergleiche Status mit Config                                                    (plan)
+        * local-Status wird nicht in die Versionskontrolle aufgenommen sondern liegt 
+          im lokalen Install-Verzeichnis, oder ist in der gitignore
+          GRUND: Eine der Dateien muss die Führende sein, imo, die xcl.yaml
+                GRUND: Weil die xcl.yaml in der Versionskontrolle ist
+    - Ableiten der notwendigen Befehle um Ziel auf den beschriebenen Stand zu bringen (plan)
+        * Ableitung schreibt befehle in eine pseudo sh-Datei
+        * es werden auch wieder xcl oder sql verwendet
+        * GRUND: Es bleibt konsistent und erzeugen des lokalen Status-File
+    - Ausführen der Befehle                                                           (apply)
+        * Erst hier wird das lokale Status - File geschrieben
+        * Nachdem die Installation der Dependencies, Schemas und Applikationen erfolgreich war
