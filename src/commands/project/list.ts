@@ -9,7 +9,7 @@ export default class ProjectList extends Command {
     help: flags.help({char: 'h'}),
   }
 
-  static args = [{name: 'file'}]
+  static args = []
 
   async run() {
     const {args, flags} = this.parse(ProjectList)

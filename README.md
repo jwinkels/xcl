@@ -28,11 +28,11 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`xcl config:defaults [FILE]`](#xcl-configdefaults-file)
+* [`xcl config:defaults [PROJECT]`](#xcl-configdefaults-project)
 * [`xcl config:github USER`](#xcl-configgithub-user)
 * [`xcl feature:add FEATURE VERSION [USERNAME] [PASSWORD] [PROJECT]`](#xcl-featureadd-feature-version-username-password-project)
 * [`xcl feature:deinstall FEATURE [PROJECT]`](#xcl-featuredeinstall-feature-project)
-* [`xcl feature:install FEATURE [PROJECT]`](#xcl-featureinstall-feature-project)
+* [`xcl feature:install FEATURE PROJECT`](#xcl-featureinstall-feature-project)
 * [`xcl feature:list [TYPE] [PROJECT]`](#xcl-featurelist-type-project)
 * [`xcl feature:remove FEATURE [PROJECT]`](#xcl-featureremove-feature-project)
 * [`xcl feature:update FEATURE VERSION [PROJECT]`](#xcl-featureupdate-feature-version-project)
@@ -43,22 +43,25 @@ USAGE
 * [`xcl project:create PROJECT`](#xcl-projectcreate-project)
 * [`xcl project:deploy [PROJECT]`](#xcl-projectdeploy-project)
 * [`xcl project:init [PROJECT]`](#xcl-projectinit-project)
-* [`xcl project:list [FILE]`](#xcl-projectlist-file)
+* [`xcl project:list`](#xcl-projectlist)
 * [`xcl project:prepare [FILE]`](#xcl-projectprepare-file)
 * [`xcl project:remove PROJECT`](#xcl-projectremove-project)
 
-## `xcl config:defaults [FILE]`
+## `xcl config:defaults [PROJECT]`
 
-describe the command here
+set xcl environment variables
 
 ```
 USAGE
-  $ xcl config:defaults [FILE]
+  $ xcl config:defaults [PROJECT]
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -h, --help         show CLI help
+  -l, --list         list environment variables
+  -r, --reset=reset  resets an environment variable
+  -s, --set=set      set the value of an environment variable
+  --reset-all        resets all environment variables
+  --set-all          set all available environment variables
 ```
 
 _See code: [src\commands\config\defaults.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\config\defaults.ts)_
@@ -119,20 +122,20 @@ OPTIONS
 
 _See code: [src\commands\feature\deinstall.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\deinstall.ts)_
 
-## `xcl feature:install FEATURE [PROJECT]`
+## `xcl feature:install FEATURE PROJECT`
 
 install a Feature to target Schema
 
 ```
 USAGE
-  $ xcl feature:install FEATURE [PROJECT]
+  $ xcl feature:install FEATURE PROJECT
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
   PROJECT  name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  connection string HOST:PORT/SERVICE_NAME
   -h, --help                   show CLI help
   -p, --syspw=syspw            (required) Password of SYS-User
 ```
@@ -149,7 +152,7 @@ USAGE
 
 ARGUMENTS
   TYPE     [default: ALL] Show all Features of type [DB or DEPLOY]
-  PROJECT  [default: all] Show Features added to a Project (when not in a XCL-Directory it shows all Features available)
+  PROJECT  Show Features added to a Project (when not in a XCL-Directory it shows all Features available)
 
 OPTIONS
   -a, --all   show all Features available
@@ -194,9 +197,9 @@ ARGUMENTS
   PROJECT  name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  (required)
-  -h, --help                   show CLI help
-  -p, --syspw=syspw            (required)
+  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
+  -h, --help                   shows this help
+  -p, --syspw=syspw            (required) Password of SYS-User
 ```
 
 _See code: [src\commands\feature\update.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\update.ts)_
@@ -263,6 +266,10 @@ create build to deploy
 USAGE
   $ xcl project:build [PROJECT] [VERSION]
 
+ARGUMENTS
+  PROJECT  The name of the project that should be build
+  VERSION
+
 OPTIONS
   -h, --help  show CLI help
 ```
@@ -294,6 +301,9 @@ deploy the project
 ```
 USAGE
   $ xcl project:deploy [PROJECT]
+
+ARGUMENTS
+  PROJECT  Name of the project that should be deployed
 
 OPTIONS
   -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
@@ -330,13 +340,13 @@ OPTIONS
 
 _See code: [src\commands\project\init.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\init.ts)_
 
-## `xcl project:list [FILE]`
+## `xcl project:list`
 
 lists all known xcl projects
 
 ```
 USAGE
-  $ xcl project:list [FILE]
+  $ xcl project:list
 
 OPTIONS
   -h, --help  show CLI help
