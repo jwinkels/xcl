@@ -19,7 +19,7 @@ $ npm install -g xcl
 $ xcl COMMAND
 running command...
 $ xcl (-v|--version|version)
-xcl/0.0.0 win32-x64 node-v13.3.0
+xcl/0.1.0 win32-x64 node-v13.3.0
 $ xcl --help [COMMAND]
 USAGE
   $ xcl COMMAND
@@ -28,11 +28,12 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
+* [`xcl config:defaults [FILE]`](#xcl-configdefaults-file)
 * [`xcl config:github USER`](#xcl-configgithub-user)
-* [`xcl feature:add FEATURE VERSION [PROJECT] [USERNAME] [PASSWORD]`](#xcl-featureadd-feature-version-project-username-password)
+* [`xcl feature:add FEATURE VERSION [USERNAME] [PASSWORD] [PROJECT]`](#xcl-featureadd-feature-version-username-password-project)
 * [`xcl feature:deinstall FEATURE [PROJECT]`](#xcl-featuredeinstall-feature-project)
 * [`xcl feature:install FEATURE [PROJECT]`](#xcl-featureinstall-feature-project)
-* [`xcl feature:list [TYPE]`](#xcl-featurelist-type)
+* [`xcl feature:list [TYPE] [PROJECT]`](#xcl-featurelist-type-project)
 * [`xcl feature:remove FEATURE [PROJECT]`](#xcl-featureremove-feature-project)
 * [`xcl feature:update FEATURE VERSION [PROJECT]`](#xcl-featureupdate-feature-version-project)
 * [`xcl feature:versions FEATURE`](#xcl-featureversions-feature)
@@ -40,11 +41,27 @@ USAGE
 * [`xcl help [COMMAND]`](#xcl-help-command)
 * [`xcl project:build [PROJECT] [VERSION]`](#xcl-projectbuild-project-version)
 * [`xcl project:create PROJECT`](#xcl-projectcreate-project)
-* [`xcl project:deploy [FILE]`](#xcl-projectdeploy-file)
+* [`xcl project:deploy [PROJECT]`](#xcl-projectdeploy-project)
 * [`xcl project:init [PROJECT]`](#xcl-projectinit-project)
 * [`xcl project:list [FILE]`](#xcl-projectlist-file)
 * [`xcl project:prepare [FILE]`](#xcl-projectprepare-file)
 * [`xcl project:remove PROJECT`](#xcl-projectremove-project)
+
+## `xcl config:defaults [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl config:defaults [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src\commands\config\defaults.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\config\defaults.ts)_
 
 ## `xcl config:github USER`
 
@@ -58,28 +75,28 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src\commands\config\github.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\config\github.ts)_
+_See code: [src\commands\config\github.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\config\github.ts)_
 
-## `xcl feature:add FEATURE VERSION [PROJECT] [USERNAME] [PASSWORD]`
+## `xcl feature:add FEATURE VERSION [USERNAME] [PASSWORD] [PROJECT]`
 
 add Feature to dependency list
 
 ```
 USAGE
-  $ xcl feature:add FEATURE VERSION [PROJECT] [USERNAME] [PASSWORD]
+  $ xcl feature:add FEATURE VERSION [USERNAME] [PASSWORD] [PROJECT]
 
 ARGUMENTS
   FEATURE   Name of the Feature to add
   VERSION   Version of the Feature
-  PROJECT   Name of the Project (when not in a xcl-Project path)
   USERNAME  schema name for the feature to be installed in
   PASSWORD  password for the new schema
+  PROJECT   Name of the Project (when not in a xcl-Project path)
 
 OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src\commands\feature\add.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\add.ts)_
+_See code: [src\commands\feature\add.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\add.ts)_
 
 ## `xcl feature:deinstall FEATURE [PROJECT]`
 
@@ -100,7 +117,7 @@ OPTIONS
   -p, --syspw=syspw            (required) Password of SYS-User
 ```
 
-_See code: [src\commands\feature\deinstall.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\deinstall.ts)_
+_See code: [src\commands\feature\deinstall.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\deinstall.ts)_
 
 ## `xcl feature:install FEATURE [PROJECT]`
 
@@ -120,26 +137,26 @@ OPTIONS
   -p, --syspw=syspw            (required) Password of SYS-User
 ```
 
-_See code: [src\commands\feature\install.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\install.ts)_
+_See code: [src\commands\feature\install.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\install.ts)_
 
-## `xcl feature:list [TYPE]`
+## `xcl feature:list [TYPE] [PROJECT]`
 
 lists all available Features
 
 ```
 USAGE
-  $ xcl feature:list [TYPE]
+  $ xcl feature:list [TYPE] [PROJECT]
 
 ARGUMENTS
-  TYPE  [default: ALL] Show all Features of type [DB or DEPLOY]
+  TYPE     [default: ALL] Show all Features of type [DB or DEPLOY]
+  PROJECT  [default: all] Show Features added to a Project (when not in a XCL-Directory it shows all Features available)
 
 OPTIONS
-  -a, --all              show all Features available
-  -h, --help             show CLI help
-  -p, --project=project  (required) [default: all] shows all Features of a Project
+  -a, --all   show all Features available
+  -h, --help  show CLI help
 ```
 
-_See code: [src\commands\feature\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\list.ts)_
+_See code: [src\commands\feature\list.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\list.ts)_
 
 ## `xcl feature:remove FEATURE [PROJECT]`
 
@@ -161,7 +178,7 @@ OPTIONS
   -p, --syspw=syspw            password of SYS-User
 ```
 
-_See code: [src\commands\feature\remove.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\remove.ts)_
+_See code: [src\commands\feature\remove.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\remove.ts)_
 
 ## `xcl feature:update FEATURE VERSION [PROJECT]`
 
@@ -182,7 +199,7 @@ OPTIONS
   -p, --syspw=syspw            (required)
 ```
 
-_See code: [src\commands\feature\update.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\update.ts)_
+_See code: [src\commands\feature\update.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\update.ts)_
 
 ## `xcl feature:versions FEATURE`
 
@@ -199,7 +216,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src\commands\feature\versions.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\feature\versions.ts)_
+_See code: [src\commands\feature\versions.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\versions.ts)_
 
 ## `xcl hello [FILE]`
 
@@ -219,7 +236,7 @@ EXAMPLE
   hello world from ./src/hello.ts!
 ```
 
-_See code: [src\commands\hello.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\hello.ts)_
+_See code: [src\commands\hello.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\hello.ts)_
 
 ## `xcl help [COMMAND]`
 
@@ -240,19 +257,17 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.3
 
 ## `xcl project:build [PROJECT] [VERSION]`
 
-describe the command here
+create build to deploy
 
 ```
 USAGE
   $ xcl project:build [PROJECT] [VERSION]
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -h, --help  show CLI help
 ```
 
-_See code: [src\commands\project\build.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\build.ts)_
+_See code: [src\commands\project\build.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\build.ts)_
 
 ## `xcl project:create PROJECT`
 
@@ -266,26 +281,33 @@ ARGUMENTS
   PROJECT  name of the project to create
 
 OPTIONS
-  -h, --help  show CLI help
+  -h, --help                 show CLI help
+  -w, --workspace=workspace
 ```
 
-_See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\create.ts)_
+_See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\create.ts)_
 
-## `xcl project:deploy [FILE]`
+## `xcl project:deploy [PROJECT]`
 
-describe the command here
+deploy the project
 
 ```
 USAGE
-  $ xcl project:deploy [FILE]
+  $ xcl project:deploy [PROJECT]
 
 OPTIONS
-  -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
+  -d, --dependencies           Deploy inclusive dependencies (you will be asked for sys-user password)
+  -h, --help                   show CLI help
+  -p, --password=password      (required) Password for Deployment User
+
+  -s, --syspw=syspw            Provide sys-password for silent mode dependency installation [IMPORTANT: All existing
+                               users will be overwritten!]
+
+  --schema-only                Deploys only schema objects
 ```
 
-_See code: [src\commands\project\deploy.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\deploy.ts)_
+_See code: [src\commands\project\deploy.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\deploy.ts)_
 
 ## `xcl project:init [PROJECT]`
 
@@ -306,7 +328,7 @@ OPTIONS
   -y, --yes                Answers force-action with yes (Use with caution)
 ```
 
-_See code: [src\commands\project\init.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\init.ts)_
+_See code: [src\commands\project\init.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\init.ts)_
 
 ## `xcl project:list [FILE]`
 
@@ -320,7 +342,7 @@ OPTIONS
   -h, --help  show CLI help
 ```
 
-_See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\list.ts)_
+_See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\list.ts)_
 
 ## `xcl project:prepare [FILE]`
 
@@ -336,7 +358,7 @@ OPTIONS
   -n, --name=name  name to print
 ```
 
-_See code: [src\commands\project\prepare.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\prepare.ts)_
+_See code: [src\commands\project\prepare.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\prepare.ts)_
 
 ## `xcl project:remove PROJECT`
 
@@ -350,10 +372,12 @@ ARGUMENTS
   PROJECT  name of the project to remove
 
 OPTIONS
+  -c, --connection=connection
   -d, --database
-  -h, --help      show CLI help
+  -h, --help                   show CLI help
   -p, --path
+  -s, --syspw=syspw
 ```
 
-_See code: [src\commands\project\remove.ts](https://github.com/MaikMichel/xcl/blob/v0.0.0/src\commands\project\remove.ts)_
+_See code: [src\commands\project\remove.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\remove.ts)_
 <!-- commandsstop -->

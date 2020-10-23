@@ -1,5 +1,6 @@
 import {Command, flags} from '@oclif/command'
 import {ProjectManager} from '../../lib/ProjectManager'
+import { Environment } from '../../lib/Environment'
 import chalk from 'chalk';
 
 export default class ProjectBuild extends Command {
@@ -9,7 +10,7 @@ export default class ProjectBuild extends Command {
     help: flags.help({char: 'h'})
   }
 
-  static args = [{name: 'project'},
+  static args = [{name: 'project', description: "The name of the project that should be build", default: Environment.readConfigFrom(process.cwd(),"project")},
                   {name: 'version'}]
 
   async run() {

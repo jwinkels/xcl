@@ -1,6 +1,7 @@
 import {Command, flags} from '@oclif/command'
 import {FeatureManager} from '../../lib/FeatureManager'
 import { ProjectManager } from '../../lib/ProjectManager'
+import { Environment } from '../../lib/Environment'
 
 export default class FeatureList extends Command {
   static description = 'lists all available Features'
@@ -20,7 +21,7 @@ export default class FeatureList extends Command {
       {
         name: 'project',
         description: 'Show Features added to a Project (when not in a XCL-Directory it shows all Features available)',
-        default: ProjectManager.getInstance().getProjectNameByPath(process.cwd())
+        default: Environment.readConfigFrom(process.cwd(),"project")
       }
    ]
 

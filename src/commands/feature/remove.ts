@@ -2,14 +2,14 @@ import {Command, flags} from '@oclif/command'
 import chalk from 'chalk'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { ProjectManager } from '../../lib/ProjectManager'
-
+import { Environment } from '../../lib/Environment'
 export default class FeatureRemove extends Command {
   static description = 'remove Feature from Project'
 
   static flags = {
     help: flags.help({char: 'h'}),
     deinstall: flags.boolean( {char: 'd', description: 'deinstall Feature from database'}),
-    connection: flags.string( {char: 'c', description: 'connection to database (required when deinstall Feature) [ HOST:PORT/SERVICE_NAME ]'} ),
+    connection: flags.string( {char: 'c', description: 'connection to database (required when deinstall Feature) [ HOST:PORT/SERVICE_NAME ]', default: Environment.readConfigFrom(process.cwd(),"connection")} ),
     syspw: flags.string( {char: 'p', description: 'password of SYS-User'}),
     owner: flags.boolean ( {char: 'o', description: 'drop Feature owner schema'} )
   }

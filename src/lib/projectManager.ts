@@ -9,6 +9,9 @@ import { DBHelper, IConnectionProperties } from './DBHelper';
 import cli from 'cli-ux'
 import  { deliveryFactory }  from './DeliveryFactory';
 import { DeliveryMethod } from './DeliveryMethod';
+import { ProjectFeature } from './ProjectFeature';
+import { Schema } from './Schema';
+import { Environment } from './Environment';
 
 const Table = require('cli-table')
 
@@ -166,7 +169,8 @@ export class ProjectManager {
     const projects:Project[] = ProjectManager.getInstance().getProjects();
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
-      table.push([ project.getName(), project.getPath(), project.getErrorText() ]);
+      var status = project.getErrorText();
+      table.push([ project.getName(), project.getPath(), status ? chalk.red(status) : chalk.green('VALID') ]);
     }
 
     console.log(table.toString());
@@ -225,7 +229,22 @@ export class ProjectManager {
   }
 
   public async build(projectName: string, version:string){
-    deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).build(projectName,version);
+    
+    let  p:Project = this.getProject(projectName);
+    p.getFeatures().forEach((feature:ProjectFeature, key:String)=>{
+      if(feature.getType()==="DB" && !p.getStatus().checkDependency(feature)){
+        console.log(chalk.green('+')+' install '+feature.getName());
+        console.log(chalk.green('+++')+' xcl feature:install ' + feature.getName() + ' --connection=' + Environment.readConfigFrom(process.cwd(),"connection") + ' --syspw=#SYSPW#')
+      }
+    });
+
+    if(!p.getStatus().checkUsers()){
+      p.getUsers().forEach((user:Schema, key:String)=>{
+          console.log(chalk.green('+') + ' create user '+key);
+      });
+    }
+    
+    //deliveryFactory.getNamed<DeliveryMethod>("Method",this.getProject(projectName).getDeployMethod().toUpperCase()).build(projectName,version);
   }
 
   public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean){

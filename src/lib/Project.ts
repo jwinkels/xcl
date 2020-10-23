@@ -4,32 +4,42 @@ import chalk from 'chalk'
 import { ProjectFeature } from './ProjectFeature';
 import { FeatureManager } from './FeatureManager';
 import { Schema } from './Schema';
-import { type } from 'os';
+import  * as os from 'os';
 import { Feature } from './Feature';
+import { ProjectManager } from './ProjectManager';
+import { DBHelper } from './DBHelper';
+import { Environment } from './Environment';
 
 export class Project {
-  private name: string;
-  private path: string;
-  private errorText: string = '';
-  private config: any;
-  private features: Map<String, ProjectFeature>;
-  private users: Map<String,Schema>;
+  private name: string;                           //Project-Name
+  private path: string; 	                        //Project-Home
+  private errorText: string = '';                 //Individual Error-Messages
+  private config: any;                            //YAML-Structure that contains all project-configuration
+  private features: Map<String, ProjectFeature>;  //Map to save the added features
+  private users: Map<String, Schema>;              //Map for Project User-List
+  private status: ProjectStatus;
+  private environment:Map<string, string>;
 
   constructor(name: string, path: string, workspaceName:string , create: boolean) {
     this.name = name;
     this.path = path;
-   
 
     if (create) {
       this.config = this.initialzeConfig(workspaceName);
       this.features=new Map();
       this.users=new Map();
       this.createDirectoryStructure();
+      this.status = new ProjectStatus(this);
       this.writeConfig();
+      this.status.serialize()
+      this.environment=Environment.initialize(name);
+
     } else {
-      this.config = this.readConfig();      
+      this.config = this.readConfig();
+      this.status = new ProjectStatus(this);      
       this.features = this.getFeatures();
       this.users = this.getUsers();
+      this.environment=Environment.initialize(name);
     }
   }
 
@@ -166,35 +176,39 @@ export class Project {
 
   //
   public addFeature(feature:ProjectFeature){
+    let dependencyConf:any = "";
+
     //Do not add the Feature if it is already in dependency list or if deployment method has already been configured 
     if ( ! this.features.has(feature.getName()) || !(feature.getType()==="DEPLOY" && this.hasDeployMethod())){  
       this.config=this.readConfig();
       this.features.set(feature.getName(),feature);
       if(!this.config.xcl.dependencies){
         this.config.xcl.dependencies=[];
+        this.status.updateStatus();
       }
 
       //DEPLOY-Feature using the existing users to connect to the database and deploy the objects 
       if(feature.getType()==="DEPLOY"){
-        this.config.xcl.dependencies.push({
-          name: feature.getName(), 
-          version: feature.getReleaseInformation(),
-          installed: feature.getInstalled(),
-          type: feature.getType()
-          });
+        dependencyConf = {
+              name: feature.getName(), 
+              version: feature.getReleaseInformation(),
+              //installed: feature.getInstalled(),
+              type: feature.getType()
+          };
+        
       }else{
-        this.config.xcl.dependencies.push({
+        dependencyConf = {
                 name: feature.getName(), 
                 version: feature.getReleaseInformation(),
-                installed: feature.getInstalled(),
+                //installed: feature.getInstalled(),
                 type: feature.getType(),
                 user:{
                     name: feature.getUser().getName(),
                     pwd: feature.getUser().getPassword()
                     }
-                });
+                };
       }
-
+      this.config.xcl.dependencies.push(dependencyConf);
       this.writeConfig();
     }else{
       if ( this.features.has(feature.getName()) ){
@@ -249,18 +263,21 @@ export class Project {
     }
   }
 
+  //INFO: Read all Features from configuration and write it to feature-Map < String, ProjectFeature >
   public getFeatures():Map<String,ProjectFeature>{
-    let features: Map<String,ProjectFeature>=new Map<String,ProjectFeature>();
+    let features: Map<String, ProjectFeature> = new Map<String, ProjectFeature>();
+    let featureManager = FeatureManager.getInstance();
     this.config=this.readConfig();
+    
     if (this.config.xcl?.dependencies){
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; type:string; user:any}) => {
         switch(element.type){
           case "DB": { 
-            features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! )); 
+            features.set(element.name,(featureManager.getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! )); 
             break;
           }
           case "DEPLOY": {
-            features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, "", "", element.installed) ! )); 
+            features.set(element.name,(featureManager.getProjectFeature(element.name,element.version, "", "", element.installed) ! )); 
             break;
           }
           default:{
@@ -277,8 +294,8 @@ export class Project {
   }
 
   public getFeaturesOfType(type:string):Map<String,ProjectFeature>{
-    let features: Map<String,ProjectFeature>=new Map<String,ProjectFeature>();
-    this.config=this.readConfig();
+    let features: Map<String,ProjectFeature> = new Map<String,ProjectFeature>();
+    this.config = this.readConfig();
     if (this.config.xcl?.dependencies){
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; type:string; user:any}) => {
         if (element.type==type){
@@ -294,12 +311,13 @@ export class Project {
   public updateFeature(feature:ProjectFeature){
     if (this.features.has(feature.getName())){  
       this.config=this.readConfig();
-      this.config.xcl.dependencies.forEach((element: { name: string; installed: Boolean; }) => {
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; }) => {
         if(element.name===feature.getName()){
-          element.installed=feature.getInstalled();
+          element.version=feature.getReleaseInformation();
         }
       });
       this.writeConfig();
+      this.status.updateStatus();
     }
   }
 
@@ -315,4 +333,111 @@ export class Project {
     }
     return this.users;
   }
-}  
+
+  public getConfig():any{
+    return this.config;
+  }
+
+  public getStatus():ProjectStatus{
+    return this.status;
+  }
+
+  public getEnvironment():Map<string, string>{
+    return this.environment;
+  }
+
+  public getEnvironmentVariable(key:string):string|undefined{
+      if (this.environment.get(key)){
+          return this.environment.get(key);
+      }else{
+          console.error('No such variable in defaults');
+      }
+  }
+
+  public setEnvironmentVariable(key:string, value:string){
+    if (this.environment.has(key)){
+        if (value !== undefined || value !==""){
+            console.log('set variable');
+            this.environment.set(key, value);
+            Environment.writeEnvironment(this.name, this.environment);
+        }else{
+            console.error(chalk.red('ERROR: variable can not be empty!'));
+        }
+    }else{
+        console.error(chalk.red('ERROR: Unkown variable ´'+key+'´'));
+    }
+  }
+} 
+class ProjectStatus {
+  private static xclHome = os.homedir + "/AppData/Roaming/xcl";
+  private static stateFileName = "";
+  private project: Project;
+  private statusConfig: any; 
+  
+  constructor(project:Project){
+    this.project = project;
+    this.statusConfig ={
+      xcl: {
+        project: project.getName(),
+        description: "XCL- Projekt " + project.getName(),
+        version: "Release 1.0",
+        workspace: project.getWorkspace(),
+        users: {
+          user_sys: "sys"
+        },
+      },
+    };
+    ProjectStatus.stateFileName = ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml';
+  }
+  
+  public updateStatus(){
+    this.statusConfig = this.project.getConfig();
+    this.serialize();
+  }
+
+  //Checks wether the dependency is already installed in the correct version
+  public checkDependency(feature: ProjectFeature):boolean{
+    this.statusConfig=this.deserialize();
+    if (this.statusConfig.xcl.dependencies[feature.getName()] &&
+        this.statusConfig.xcl.dependencies[feature.getName()].version == feature.getReleaseInformation()){
+        return true;
+    }else{
+      return false;
+    }
+  }
+
+  public checkUsers(){
+    this.statusConfig=this.deserialize();
+    if (!this.statusConfig.xcl.users.schema_app || !this.statusConfig.xcl.users.schema_logic || !this.statusConfig.xcl.users.schema_data || !this.statusConfig.xcl.users.user_deployment){
+        return true;
+    }else{
+      return false;
+    }
+  }
+
+  public serialize(){
+    fs.writeFileSync(ProjectStatus.stateFileName,yaml.stringify(this.statusConfig));
+  }
+
+  private deserialize():any{
+    let conf:string
+    let confObject;
+
+    try {
+      conf = fs.readFileSync(ProjectStatus.stateFileName).toString();      
+    } catch (err) {
+      if (err.code === 'ENOENT') {        
+        return 'File not found!';
+      } else {
+        throw err;
+      }
+      
+    }
+
+    return yaml.parse(conf);
+  }
+
+  public setFeatureStatus(featureName: string, installed: boolean){
+    this.project.getFeatures().get(featureName)?.setInstalled(installed);
+  }
+}

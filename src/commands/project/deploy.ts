@@ -1,7 +1,8 @@
 import { Command, flags } from '@oclif/command'
 import { ProjectManager } from '../../lib/ProjectManager'
-import chalk from 'chalk'
 import { FeatureManager } from '../../lib/FeatureManager'
+import { Environment } from '../../lib/Environment'
+import chalk from 'chalk'
 import { cli } from 'cli-ux';
 
 export default class ProjectDeploy extends Command {
@@ -9,14 +10,14 @@ export default class ProjectDeploy extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true}),
+    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true, default: Environment.readConfigFrom(process.cwd(),"connection")}),
     password: flags.string( {char: 'p', description:'Password for Deployment User', required: true} ),
     dependencies: flags.boolean({char: 'd', description:'Deploy inclusive dependencies (you will be asked for sys-user password)'}),
     syspw: flags.string({char:'s', description:'Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users will be overwritten!]'}),
     'schema-only': flags.boolean({description:'Deploys only schema objects', default: false})
   }
 
-  static args = [{name: 'project'}]
+  static args = [{name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom(process.cwd(),"project")}]
 
   async run() {
     const {args, flags} = this.parse(ProjectDeploy);

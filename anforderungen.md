@@ -43,7 +43,7 @@ deploy
       - grants
 
   build
-    - mit init install lässt das aktuell Projekt gegen das Ziel laufen
+    - mit init install flässt das aktuell Projekt gegen das Ziel laufen
     - mit init maj.min.fix erstellt initial.zip
     - mit patch maj.min.fix erstellt das patch.zip 
 

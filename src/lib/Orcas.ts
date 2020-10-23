@@ -46,30 +46,51 @@ export class Orcas implements DeliveryMethod{
       /*
         Pre-Deploy
       */
-    let conn=DBHelper.getConnectionProps(ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getName(),
-                                  password,
-                                  connection);
 
-    fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/hooks/").forEach(file=>{
-      DBHelper.executeScript(conn, file);
-    });
+      //TODO: Was ist wenn ich das für mehrere Schemata machen möchte
+      let conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getName(),
+                                    password,
+                                    connection);
 
-    /*
-      Pre-Deploy Hook End
-    */
-
-    ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
-      .then(function(){
-        ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
-          .then(function(){
-            ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
-              .then(()=>{
-                  if (!schemaOnly){
-                    Application.installApplication(projectName, connection, password);
-                  }
-              })
-          })
+      fs.readdirSync(project.getPath() + "/db/hooks/pre/").forEach(file=>{
+        
+        DBHelper.executeScript(conn, file);
       });
+
+      /*
+        Pre-Deploy Hook End
+      */
+
+      /*
+        Deploy Start
+      */
+      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
+        .then(function(){
+          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
+            .then(function(){
+              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
+                .then(()=>{
+                    if (!schemaOnly){
+                      Application.installApplication(projectName, connection, password);
+                    }
+                })
+            })
+        });
+      /*
+        Deploy End
+      */
+    
+      /*
+        Post-Deploy Hook Start
+      */
+        
+      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/hooks/post/").forEach(file=>{
+        DBHelper.executeScript(conn, file);
+      });
+
+      /*
+        Post-Deploy Hook End
+      */
     }
 
     public build(projectName:string, version:string){
@@ -80,11 +101,11 @@ export class Orcas implements DeliveryMethod{
       fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/").forEach(file=>{
         if ( fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file).isDirectory() ){
           if(file.startsWith('f')){
-            //Split
+            //If Application was exportet with Split-Option
             if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql")){
               path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql";
             }
-            //SplitFlat
+            //If Application was exportet with SplitFlat-Option
             else if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql")){
               path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql";
             }

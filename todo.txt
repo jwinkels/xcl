@@ -12,3 +12,11 @@ TODO:
     - Ausführen der Befehle                                                           (apply)
         * Erst hier wird das lokale Status - File geschrieben
         * Nachdem die Installation der Dependencies, Schemas und Applikationen erfolgreich war
+
+ DEFAULTS
+    - Global defaults haben kein projekt und landen in der environment.yaml
+    - Projekt defaults haben ein projekt und landen in der environment_projectName.yaml
+    - Reienfolge der Auswertung:
+        1. Befehl
+        2. Projektumgebung
+        3. Global

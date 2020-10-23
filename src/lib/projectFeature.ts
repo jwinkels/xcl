@@ -4,11 +4,11 @@ import { Schema } from './Schema';
 
 
 export class ProjectFeature extends Feature{
-    private version:String;
+    private version:string;
     private installed:Boolean;
     private user:Schema;
 
-    constructor(args : {parent:Feature, version:String, username:string, password:string, installed:Boolean}){
+    constructor(args : {parent:Feature, version:string, username:string, password:string, installed:Boolean}){
             super( {
                 name : args.parent.getName(), 
                 owner : args.parent.getOwner(), 
@@ -21,15 +21,16 @@ export class ProjectFeature extends Feature{
             this.user=new Schema({name: args.username, password: args.password, proxy:undefined});
     }
 
-    public getReleaseInformation():String{
+    public getReleaseInformation():string{
         return this.version;
     }
 
-    public setReleaseInformation(version:String){
+    public setReleaseInformation(version:string){
         this.version=version;
     }
 
     public getStatus():string{
+        
         if (this.installed){
             return chalk.green('installed');
         }else{
