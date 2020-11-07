@@ -3,7 +3,7 @@ import {ProjectManager} from '../../lib/ProjectManager'
 import { cli } from 'cli-ux';
 
 export default class ProjectRemove extends Command {
-  static description = 'removes project'
+  static description = 'removes a project'
 
   static flags = {
     help: flags.help({char: 'h'}),

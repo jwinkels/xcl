@@ -4,7 +4,7 @@ import { ProjectManager } from '../../lib/ProjectManager'
 import chalk from 'chalk';
 
 export default class ProjectPlan extends Command {
-  static description = 'describe the command here'
+  static description = 'generate commands to bring the project up to date'
 
   static flags = {
     help: flags.help({char: 'h'}),

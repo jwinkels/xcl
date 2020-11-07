@@ -28,11 +28,11 @@ export class ShellHelper{
                             console.log(chalk.yellow(childProcess.stderr));
                         }
                         
-                        /*if (script=='plan.sh'){
+                        if (script.includes('plan.sh')){
                             fs.appendFileSync(executePath+'/apply.log', 'apply '+Date.now().toLocaleString());
                             fs.appendFileSync(executePath+'/apply.log', childProcess.stdout);
                             resolve();
-                        }*/
+                        }
                     }else{
                         reject(childProcess.error.message);
                     }

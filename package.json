@@ -75,13 +75,13 @@
     ],
     "topics": {
       "project": {
-        "description": "Adds, manages projects"
+        "description": "add, manage projects"
       },
       "feature": {
-        "description": "Adds, manages features"
+        "description": "add, manage features"
       },
       "config": {
-        "description": "Configure xcl defaults, connection to Github or dockerhub"
+        "description": "configure xcl defaults, connection to Github or dockerhub"
       }
     }
   },

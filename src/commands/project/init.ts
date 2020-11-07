@@ -8,7 +8,7 @@ export default class ProjectInit extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    password: flags.string({char: 'p', description: 'Password of user sys'}),
+    syspw: flags.string({char: 'p', description: 'Password of user sys'}),
     connection: flags.string({char: 'c', description: 'Connectstring ex. localhost:1521/xepdb1', default: Environment.readConfigFrom( process.cwd(),"connection") }),
     force: flags.boolean({char: 'f', description: 'Attention: forces dropping existing schemas'}),
     yes: flags.boolean({char: 'y', description: 'Answers force-action with yes (Use with caution)'}),

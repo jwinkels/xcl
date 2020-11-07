@@ -26,7 +26,6 @@ export default class ConfigDefaults extends Command {
   async run() {
     const {args, flags} = this.parse(ConfigDefaults)
     let project:any = undefined;
-    console.log(process.env.XCL_CONNECTION);
     if (args.project){
       project = ProjectManager.getInstance().getProject(args.project);
     }else{
@@ -96,7 +95,6 @@ export default class ConfigDefaults extends Command {
   async setVariable(variableName:string, project:Project, value:string){
     let input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"');
     project.setEnvironmentVariable(variableName, input);
-    //console.log(chalk.green('\nVariable ´'+variableName!.toUpperCase()+'´ set!'));
     console.log(chalk.green('\nOK'));
   }
 

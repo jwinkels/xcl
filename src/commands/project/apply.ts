@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { Environment } from '../../lib/Environment';
 
 export default class ProjectApply extends Command {
-  static description = 'describe the command here'
+  static description = 'apply changes to project'
 
   static flags = {
     help: flags.help({char: 'h'}),
@@ -13,7 +13,7 @@ export default class ProjectApply extends Command {
   static args = [
     {
       name: 'project',
-      description: "The name of the project that should be build", 
+      description: "project name that the changes should be applied to", 
       default: Environment.readConfigFrom( process.cwd(), "project" )
     }
   ]

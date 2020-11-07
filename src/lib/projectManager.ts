@@ -190,12 +190,12 @@ export class ProjectManager {
     return "";
   }
 
-  public async initializeProject(projectName: string, flags: { help: void; password: string | undefined; connection: string | undefined; force: boolean; yes: boolean}) {
+  public async initializeProject(projectName: string, flags: { help: void; syspw: string | undefined; connection: string | undefined; force: boolean; yes: boolean}) {
     const p:Project = this.getProject(projectName);
     
-    flags.password = flags.password ? flags.password : Environment.readConfigFrom(p.getPath() , "syspw");
+    flags.syspw = flags.syspw ? flags.syspw : Environment.readConfigFrom(p.getPath() , "syspw");
 
-    const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.password, flags.connection);    
+    const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.syspw, flags.connection);    
 
     // Prüfen ober es den User schon gibt
     if (await DBHelper.isProjectInstalled(p, c)) {
@@ -214,7 +214,7 @@ export class ProjectManager {
         }
         
         console.log(chalk.yellow(`Dropping existing schemas`));
-        DBHelper.executeScript(c, __dirname + '/scripts/drop_xcl_users.sql ' + p.getName() + '_data ' +
+        await DBHelper.executeScript(c, __dirname + '/scripts/drop_xcl_users.sql ' + p.getName() + '_data ' +
                                                                            p.getName() + '_logic ' +
                                                                            p.getName() + '_app ' +
                                                                            p.getName() + '_depl');
@@ -222,7 +222,7 @@ export class ProjectManager {
     }
 
     console.log(chalk.green(`OK, Schemas werden installiert`));
-    DBHelper.executeScript(c, __dirname + '/scripts/create_xcl_users.sql ' + p.getName() + '_depl ' +
+    await DBHelper.executeScript(c, __dirname + '/scripts/create_xcl_users.sql ' + p.getName() + '_depl ' +
                                                                            p.getName() + ' ' +  //TODO: Generate strong password!
                                                                            p.getName() + '_data ' +
                                                                            p.getName() + '_logic ' +
@@ -322,16 +322,22 @@ export class ProjectManager {
     
     let project:Project = this.getProject(projectName);
     if( project.getStatus().hasChanged()){
-      ShellHelper.executeScript('plan.sh',project.getPath())
-      .then(()=>{
-        project.getStatus().updateStatus();
-        if (!project.getStatus().hasChanged()){
-          console.log(chalk.green('SUCCESS: Everything up to date!'));
-        }      
-      })
-      .catch(()=>{
-        console.log(chalk.red('ERROR: Update was not successfull! There are still changes!'));
-      });
+      if (fs.pathExistsSync(project.getPath()+'/plan.sh')){
+        ShellHelper.executeScript('plan.sh',project.getPath())
+        .then(()=>{
+          project.getStatus().updateStatus();
+          if (!project.getStatus().hasChanged()){
+            console.log(chalk.green('SUCCESS: Everything up to date!'));
+          }      
+        })
+        .catch(()=>{
+          console.log(chalk.red('ERROR: Update was not successfull! There are still changes!'));
+        });
+      }else{
+        console.log(chalk.yellow('Execute xcl project:plan first!'));
+      }
+    }else{
+      console.log(chalk.yellow("INFO: No dependencies have changed! Proceed with xcl project:deploy!"));
     }
   }
 
