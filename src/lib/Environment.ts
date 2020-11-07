@@ -16,6 +16,7 @@ export class Environment{
         variables=new Map<string, string>();
         variables.set('connection','');
         variables.set('project','');
+        variables.set('syspw','');
         
         // Decide which environment variables context should be loaded 
         if(projectName.toLocaleLowerCase()!=="all"){

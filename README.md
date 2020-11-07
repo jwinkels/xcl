@@ -39,11 +39,13 @@ USAGE
 * [`xcl feature:versions FEATURE`](#xcl-featureversions-feature)
 * [`xcl hello [FILE]`](#xcl-hello-file)
 * [`xcl help [COMMAND]`](#xcl-help-command)
+* [`xcl project:apply [FILE]`](#xcl-projectapply-file)
 * [`xcl project:build [PROJECT] [VERSION]`](#xcl-projectbuild-project-version)
 * [`xcl project:create PROJECT`](#xcl-projectcreate-project)
 * [`xcl project:deploy [PROJECT]`](#xcl-projectdeploy-project)
 * [`xcl project:init [PROJECT]`](#xcl-projectinit-project)
 * [`xcl project:list`](#xcl-projectlist)
+* [`xcl project:plan [PROJECT]`](#xcl-projectplan-project)
 * [`xcl project:prepare [FILE]`](#xcl-projectprepare-file)
 * [`xcl project:remove PROJECT`](#xcl-projectremove-project)
 
@@ -93,7 +95,7 @@ ARGUMENTS
   VERSION   Version of the Feature
   USERNAME  schema name for the feature to be installed in
   PASSWORD  password for the new schema
-  PROJECT   Name of the Project (when not in a xcl-Project path)
+  PROJECT   [default: test] Name of the Project (when not in a xcl-Project path)
 
 OPTIONS
   -h, --help  show CLI help
@@ -111,7 +113,7 @@ USAGE
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
-  PROJECT  name of the Project (when not in a xcl-Project path)
+  PROJECT  [default: test] name of the Project (when not in a xcl-Project path)
 
 OPTIONS
   -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
@@ -132,10 +134,10 @@ USAGE
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
-  PROJECT  name of the Project (when not in a xcl-Project path)
+  PROJECT  [default: test] name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  [default: localhost:1521/XEPDB2] connection string HOST:PORT/SERVICE_NAME
   -h, --help                   show CLI help
   -p, --syspw=syspw            (required) Password of SYS-User
 ```
@@ -152,7 +154,9 @@ USAGE
 
 ARGUMENTS
   TYPE     [default: ALL] Show all Features of type [DB or DEPLOY]
-  PROJECT  Show Features added to a Project (when not in a XCL-Directory it shows all Features available)
+
+  PROJECT  [default: test] Show Features added to a Project (when not in a XCL-Directory it shows all Features
+           available)
 
 OPTIONS
   -a, --all   show all Features available
@@ -171,13 +175,18 @@ USAGE
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
-  PROJECT  Name of the Project (when not in a xcl-Project path)
+  PROJECT  [default: test] Name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  connection to database (required when deinstall Feature) [ HOST:PORT/SERVICE_NAME ]
+  -c, --connection=connection  [default: localhost:1521/XEPDB2] connection to database (required when deinstall Feature)
+                               [ HOST:PORT/SERVICE_NAME ]
+
   -d, --deinstall              deinstall Feature from database
+
   -h, --help                   show CLI help
+
   -o, --owner                  drop Feature owner schema
+
   -p, --syspw=syspw            password of SYS-User
 ```
 
@@ -194,10 +203,10 @@ USAGE
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
   VERSION  Version of the Feature
-  PROJECT  name of the Project (when not in a xcl-Project path)
+  PROJECT  [default: test] name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  (required) [default: localhost:1521/XEPDB2] connection string HOST:PORT/SERVICE_NAME
   -h, --help                   shows this help
   -p, --syspw=syspw            (required) Password of SYS-User
 ```
@@ -258,6 +267,22 @@ OPTIONS
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.3/src\commands\help.ts)_
 
+## `xcl project:apply [FILE]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl project:apply [FILE]
+
+OPTIONS
+  -f, --force
+  -h, --help       show CLI help
+  -n, --name=name  name to print
+```
+
+_See code: [src\commands\project\apply.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\apply.ts)_
+
 ## `xcl project:build [PROJECT] [VERSION]`
 
 create build to deploy
@@ -267,7 +292,7 @@ USAGE
   $ xcl project:build [PROJECT] [VERSION]
 
 ARGUMENTS
-  PROJECT  The name of the project that should be build
+  PROJECT  [default: test] The name of the project that should be build
   VERSION
 
 OPTIONS
@@ -303,10 +328,10 @@ USAGE
   $ xcl project:deploy [PROJECT]
 
 ARGUMENTS
-  PROJECT  Name of the project that should be deployed
+  PROJECT  [default: test] Name of the project that should be deployed
 
 OPTIONS
-  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  (required) [default: localhost:1521/XEPDB2] connection string HOST:PORT/SERVICE_NAME
   -d, --dependencies           Deploy inclusive dependencies (you will be asked for sys-user password)
   -h, --help                   show CLI help
   -p, --password=password      (required) Password for Deployment User
@@ -328,10 +353,10 @@ USAGE
   $ xcl project:init [PROJECT]
 
 ARGUMENTS
-  PROJECT  name of the project to initialze
+  PROJECT  [default: test] name of the project to initialze
 
 OPTIONS
-  -c, --connect=connect    Connectstring ex. localhost:1521/xepdb1
+  -c, --connect=connect    [default: localhost:1521/XEPDB2] Connectstring ex. localhost:1521/xepdb1
   -f, --force              Attention: forces dropping existing schemas
   -h, --help               show CLI help
   -p, --password=password  Password of user sys
@@ -353,6 +378,23 @@ OPTIONS
 ```
 
 _See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\list.ts)_
+
+## `xcl project:plan [PROJECT]`
+
+describe the command here
+
+```
+USAGE
+  $ xcl project:plan [PROJECT]
+
+ARGUMENTS
+  PROJECT  [default: test] The name of the project that should be build
+
+OPTIONS
+  -h, --help  show CLI help
+```
+
+_See code: [src\commands\project\plan.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\plan.ts)_
 
 ## `xcl project:prepare [FILE]`
 

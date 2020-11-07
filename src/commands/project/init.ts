@@ -8,11 +8,8 @@ export default class ProjectInit extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    // flag with a value (-n, --name=VALUE)
-    //username: flags.string({char: 'u', description: 'machine or ip of database'}),
     password: flags.string({char: 'p', description: 'Password of user sys'}),
-    connect: flags.string({char: 'c', description: 'Connectstring ex. localhost:1521/xepdb1', default: Environment.readConfigFrom(process.cwd(),"connection")}),
-    // flag with no value (-f, --force)
+    connection: flags.string({char: 'c', description: 'Connectstring ex. localhost:1521/xepdb1', default: Environment.readConfigFrom( process.cwd(),"connection") }),
     force: flags.boolean({char: 'f', description: 'Attention: forces dropping existing schemas'}),
     yes: flags.boolean({char: 'y', description: 'Answers force-action with yes (Use with caution)'}),
   }
@@ -31,7 +28,7 @@ export default class ProjectInit extends Command {
     // Wenn kein Projekt angegeben wurde gehen wir davon aus, das der letzte Teil des 
     // aktuellen Pfads, der Projektname ist
     if (!args.project) {      
-      args.project = path.basename(path.resolve(process.cwd()));
+      args.project = path.basename( path.resolve( process.cwd() ) );
     }
     
     ProjectManager.getInstance().initializeProject(args.project, flags)

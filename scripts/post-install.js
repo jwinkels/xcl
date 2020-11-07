@@ -11,11 +11,16 @@ if (!fs.existsSync(xclHome)) {
 }
 
 fs.copySync('./scripts/artifacts/software.yml', xclHome + '/software.yml');
-fs.closeSync(fs.openSync(xclHome + '/projects.yml', 'w'));
-fs.closeSync(fs.openSync(xclHome + '/local.yml', 'w'));
+if (!fs.existsSync(xclHome+'/projects.yml')) {
+  fs.closeSync(fs.openSync(xclHome + '/projects.yml', 'w'));
+}
+
+if (!fs.existsSync(xclHome+'/local.yml')) {
+  fs.closeSync(fs.openSync(xclHome + '/local.yml', 'w'));
+}
 
 var options = {};
-
+/*
 var setPath = "";
 
 if (os.platform() === 'win32'){
@@ -41,7 +46,7 @@ request(options)
             ic.extractAllTo(xclHome+'/');
             if (os.platform()==='win32'){
               console.log(os.userInfo());
-              setPath = 'setx path "%path%";'+xclHome+'/'+ic.getEntries()[0].entryName.toString();// FIXME: Wird dann eh nicht benutzt, wenn bereits vorhanden, 
+              setPath = 'setx path "%path%";'+xclHome+'/'+ic.getEntries()[0].entryName.toString();// TODO: Wird dann eh nicht benutzt, wenn bereits vorhanden, 
                                                                                                   //        da Path von links nach rechts benutzt wird.
               const childProcess = spawnSync(
                 setPath, 
@@ -65,3 +70,4 @@ request(options)
             }
           })
       );
+*/

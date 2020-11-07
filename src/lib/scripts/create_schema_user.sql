@@ -19,7 +19,7 @@ set termout off
 alter user ^1 quota unlimited on users;
 
 -- 2 roles for ^1
-grant imp_full_database to ^1;
+--grant imp_full_database to ^1;
 alter user ^1 default role all;
 
 -- 11 system privileges for ^1
@@ -36,6 +36,7 @@ grant create table to ^1;
 grant create trigger to ^1;
 grant create type to ^1;
 grant create view to ^1;
+grant create session to ^1;
 
 -- 5 object privileges for ^1
 grant read, write on directory datapump_dir to ^1;

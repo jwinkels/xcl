@@ -10,7 +10,7 @@ export default class FeatureInstall extends Command {
   static flags = {
     help: flags.help({char: 'h'}),
     connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', default: Environment.readConfigFrom(process.cwd(),"connection")} ),
-    syspw: flags.string( {char: 'p', description:'Password of SYS-User', required: true})
+    syspw: flags.string( {char: 'p', description:'Password of SYS-User'})
   }
 
   static args = [
@@ -32,7 +32,7 @@ export default class FeatureInstall extends Command {
     if (FeatureManager.getInstance().getFeatureType(args.feature) ==="DB" && (!flags.connection || flags.connection === "")){
       console.log(chalk.red("ERROR: Provide a connection string to install "+args.name));
     }else{
-      FeatureManager.getInstance().installProjectFeature(args.feature, flags.connection, flags.syspw ,args.project);
+      FeatureManager.getInstance().installProjectFeature(args.feature, flags.connection, flags.syspw!,args.project);
     }
   }
 }

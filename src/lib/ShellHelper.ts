@@ -3,6 +3,8 @@ import * as path from 'path'
 import chalk from 'chalk'
 import cli from 'cli-ux'
 import { resolve } from 'dns';
+import { fstat, fstatSync } from 'fs';
+import * as fs from "fs-extra";
 
 export class ShellHelper{
 
@@ -25,7 +27,12 @@ export class ShellHelper{
                         }else{
                             console.log(chalk.yellow(childProcess.stderr));
                         }
-                        resolve();
+                        
+                        /*if (script=='plan.sh'){
+                            fs.appendFileSync(executePath+'/apply.log', 'apply '+Date.now().toLocaleString());
+                            fs.appendFileSync(executePath+'/apply.log', childProcess.stdout);
+                            resolve();
+                        }*/
                     }else{
                         reject(childProcess.error.message);
                     }

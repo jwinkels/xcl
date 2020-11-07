@@ -52,7 +52,7 @@ export class Orcas implements DeliveryMethod{
                                     password,
                                     connection);
 
-      fs.readdirSync(project.getPath() + "/db/hooks/pre/").forEach(file=>{
+      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/hooks/").filter(f=>f.toLowerCase().includes("pre_")).forEach(file=>{
         
         DBHelper.executeScript(conn, file);
       });
@@ -84,7 +84,7 @@ export class Orcas implements DeliveryMethod{
         Post-Deploy Hook Start
       */
         
-      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/hooks/post/").forEach(file=>{
+      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/hooks/").filter(f=>f.toLowerCase().includes("post_")).forEach(file=>{
         DBHelper.executeScript(conn, file);
       });
 

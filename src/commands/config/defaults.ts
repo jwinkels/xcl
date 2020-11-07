@@ -20,12 +20,13 @@ export default class ConfigDefaults extends Command {
     "reset-all": flags.boolean({description: 'resets all environment variables'})
   }
 
-  static args = [{name: 'project'}]
+  static args = [{name: 'project'},
+                  {name: 'value'}]
 
   async run() {
     const {args, flags} = this.parse(ConfigDefaults)
     let project:any = undefined;
-    
+    console.log(process.env.XCL_CONNECTION);
     if (args.project){
       project = ProjectManager.getInstance().getProject(args.project);
     }else{
@@ -46,7 +47,7 @@ export default class ConfigDefaults extends Command {
         this.setAllVariables(project);
       }else{
         if (flags.set && flags.set !==""){
-          this.setVariable(flags.set, project);
+          this.setVariable(flags.set, project, args.value);
         }
       }
 
@@ -92,8 +93,8 @@ export default class ConfigDefaults extends Command {
     }
   }
 
-  async setVariable(variableName:string, project:Project){
-    let input = await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"');
+  async setVariable(variableName:string, project:Project, value:string){
+    let input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"');
     project.setEnvironmentVariable(variableName, input);
     //console.log(chalk.green('\nVariable ´'+variableName!.toUpperCase()+'´ set!'));
     console.log(chalk.green('\nOK'));
@@ -107,7 +108,11 @@ export default class ConfigDefaults extends Command {
       ]
     });
     project.getEnvironment().forEach((value: string, key: string)=>{
-      table.push([key, value ? value : 'unset'])
+      if ( key != 'syspw' ){
+        table.push([key, value ? value : 'unset']);
+      }else{
+        table.push([key, value ? '*******' : 'unset']);
+      }
     });
     console.log(table.toString());
   }
@@ -170,7 +175,11 @@ export default class ConfigDefaults extends Command {
         });
         let globals=Environment.initialize('all');
         globals.forEach((value:string, key:string)=>{
-          table.push([ key, value ? value : 'unset'])
+          if ( key != 'syspw' ){
+            table.push([ key, value ? value : 'unset']);
+          }else{
+            table.push([key, value ? '*******' : 'unset']);
+          }
         });
         console.log(table.toString());
   }

@@ -2,7 +2,6 @@
 import * as yaml from "yaml";
 import * as fs from "fs-extra";
 import * as os from "os";
-import * as https from "https";
 import * as request from "request-promise-native";
 import chalk from 'chalk'
 import { Feature } from './Feature';
@@ -19,6 +18,7 @@ import  { deliveryFactory }  from './DeliveryFactory';
 import { DeliveryMethod } from './DeliveryMethod';
 import {Project} from './Project';
 import e = require('express');
+import { Environment } from './Environment';
 const Table = require('cli-table');
 
 export class FeatureManager{
@@ -26,7 +26,7 @@ export class FeatureManager{
 
     private static manager: FeatureManager;
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
-    private static softwareYaml: yaml.ast.Document;
+    private static softwareYaml: yaml.Document;
     private static softwareJson: any;
     private static features: Map<String, Feature>;
  
@@ -245,12 +245,13 @@ export class FeatureManager{
           return new Promise((resolve, reject)=>{
             var connectionWithUser="";
             var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
-            var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection);
+            syspw = syspw ? syspw : Environment.readConfigFrom(projectPath, "syspw");
             var project = ProjectManager.getInstance().getProject(projectName);
             if (project.getFeatures().has(featureName)){
-
               let feature:ProjectFeature=project.getFeatures().get(featureName)!;
+              
               if (feature.getType()==="DB"){
+                var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection);
                 if (!project.getStatus().checkDependency(feature)){
                   DBHelper.isFeatureInstalled(feature,c)
                     .then((installed) => {
@@ -314,6 +315,7 @@ export class FeatureManager{
                   .finally( function(){
                       feature.setInstalled(true);
                       ProjectManager.getInstance().getProject(projectName).updateFeature(feature);
+                      ProjectManager.getInstance().getProject(projectName).getStatus().updateDependencyStatus(feature);
                       resolve();
                     }
                 );
@@ -322,7 +324,7 @@ export class FeatureManager{
                 if(feature.getType() === "DEPLOY"){
                   FeatureManager.unzipFeature(undefined, projectPath, feature).then(()=>{
                     deliveryFactory.getNamed<DeliveryMethod>("Method",featureName.toUpperCase()).install(feature, projectPath);
-                    //TODO: Status-File Update
+                    ProjectManager.getInstance().getProject(projectPath).getStatus().updateDependencyStatus(feature);
                     resolve();
                   });
                 }
@@ -453,7 +455,7 @@ export class FeatureManager{
         if(FeatureManager.softwareJson.software[featureName]){
           return FeatureManager.softwareJson.software[featureName].install;
         }else{
-          throw Error('Could not find installation information! Please update your software.yml File!');
+          throw Error('Could not find install information! Please update your software.yml File!');
         }
       }
 
@@ -462,6 +464,20 @@ export class FeatureManager{
           return FeatureManager.softwareJson.software[featureName].uninstall;
         }else{
           throw Error('Could not find deinstall information! Please update your software.yml File!');
+        }
+      }
+
+      public static priviledgedInstall(featureName:string):boolean{
+        if(FeatureManager.softwareJson.software[featureName]){
+          let installSteps = FeatureManager.softwareJson.software[featureName].install
+          for (var i=0; i<installSteps.scripts.length; i++){
+            if(installSteps.scripts[i].syspw){
+              return true;
+            }
+          }
+          return false;
+        }else{
+          throw Error('Could not find install information! Please update your software.yml File!');
         }
       }
 

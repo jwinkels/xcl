@@ -9,9 +9,25 @@ TODO:
         * Ableitung schreibt befehle in eine pseudo sh-Datei
         * es werden auch wieder xcl oder sql verwendet
         * GRUND: Es bleibt konsistent und erzeugen des lokalen Status-File
+        * VORSCHLAG: Falls sys gebraucht wird, wird das passwort als Variable eingelesen und am ende wieder resettet
+
     - Ausführen der Befehle                                                           (apply)
         * Erst hier wird das lokale Status - File geschrieben
         * Nachdem die Installation der Dependencies, Schemas und Applikationen erfolgreich war
+    - Einspielen des aktuellen Projektstands                                          (deploy)
+        * Ein Entwickler pusht Änderungen, die vom Rest des Teams gepullt werden
+        * Update nimmt den Code-Stand und spielt diesen auf der lokalen umgebung ein
+        * Die Änderungen werden nur für APP, LOGIC, DATA gemacht + APEX Applikation
+        * Kann auch manuell ausgeführt werden, wenn sich aber die xcl.yaml ändert muss plan / apply gemacht werden
+    
+    - Bauen eines neuen Releases                                                    (build)
+        * Es wird eine neue Versionsnummer festgelegt
+        * Projektstand gepusht
+        * Eingespielt wird das release dann wieder über plan / apply
+        GRUND: Plan erkennt die Änderung an der Versionsnummer und generiert die notwendigen Befehle...
+
+    - Passwort für Benutzer generieren
+
 
  DEFAULTS
     - Global defaults haben kein projekt und landen in der environment.yaml
@@ -20,3 +36,5 @@ TODO:
         1. Befehl
         2. Projektumgebung
         3. Global
+
+

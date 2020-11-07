@@ -10,8 +10,12 @@ export default class ProjectBuild extends Command {
     help: flags.help({char: 'h'})
   }
 
-  static args = [{name: 'project', description: "The name of the project that should be build", default: Environment.readConfigFrom(process.cwd(),"project")},
-                  {name: 'version'}]
+  static args = [{
+                  name: 'project', 
+                  description: "The name of the project that should be build", 
+                  default: Environment.readConfigFrom(process.cwd(),"project")
+                },
+                {name: 'version'}]
 
   async run() {
     const {args, flags} = this.parse(ProjectBuild)

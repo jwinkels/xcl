@@ -2,6 +2,7 @@ import {Command, flags} from '@oclif/command'
 import {FeatureManager} from '../../lib/FeatureManager'
 import { ProjectManager } from '../../lib/ProjectManager';
 import chalk from 'chalk';
+import { Environment } from '../../lib/Environment';
 
 export default class FeatureAdd extends Command {
   static description = 'add Feature to dependency list'
@@ -30,7 +31,8 @@ export default class FeatureAdd extends Command {
                 },
                 {
                   name: 'project',
-                  description: 'Name of the Project (when not in a xcl-Project path)'
+                  description: 'Name of the Project (when not in a xcl-Project path)',
+                  default: Environment.readConfigFrom(process.cwd(),"project")              
                 }
               ];
 

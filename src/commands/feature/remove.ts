@@ -22,7 +22,8 @@ export default class FeatureRemove extends Command {
     },
     {
       name: 'project',
-      description: 'Name of the Project (when not in a xcl-Project path)'
+      description: 'Name of the Project (when not in a xcl-Project path)',
+      default: Environment.readConfigFrom( process.cwd(), "project" ) 
     }
   ]
 

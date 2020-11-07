@@ -5,10 +5,10 @@ import { ProjectFeature } from './ProjectFeature';
 import { FeatureManager } from './FeatureManager';
 import { Schema } from './Schema';
 import  * as os from 'os';
-import { Feature } from './Feature';
-import { ProjectManager } from './ProjectManager';
-import { DBHelper } from './DBHelper';
 import { Environment } from './Environment';
+import { Md5 } from 'ts-md5/dist/md5';
+import md5 = require('md5');
+import { version } from 'process';
 
 export class Project {
   private name: string;                           //Project-Name
@@ -376,29 +376,62 @@ class ProjectStatus {
   
   constructor(project:Project){
     this.project = project;
-    this.statusConfig ={
-      xcl: {
-        project: project.getName(),
-        description: "XCL- Projekt " + project.getName(),
-        version: "Release 1.0",
-        workspace: project.getWorkspace(),
-        users: {
-          user_sys: "sys"
+    if (!fs.existsSync(ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml')){
+      this.statusConfig ={
+        xcl: {
+          version: "Release 1.0",
+          workspace: project.getWorkspace(),
+          users: {},
+          dependencies: {}
         },
-      },
-    };
-    ProjectStatus.stateFileName = ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml';
+      };
+      ProjectStatus.stateFileName = ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml';
+    }else{
+      ProjectStatus.stateFileName = ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml';
+      this.statusConfig=this.deserialize();
+    }
+  }
+
+  public hasChanged():boolean{
+    this.statusConfig=this.deserialize();
+    if(this.statusConfig.xcl.hash==Md5.hashStr(this.project.getConfig()).toString()){
+      return false;
+    }else{
+      return true;
+    }
+  }
+
+  public updateDependencyStatus(feature:ProjectFeature){
+    if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
+      console.log('ADD TO STATUS FILE!');
+      this.statusConfig.xcl.dependencies[feature.getName()]={};
+      this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+      console.log(yaml.stringify(this.statusConfig));
+    }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
+      console.log('UPDATE IN STATUS FILE!');
+      this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+    }
+    this.serialize();
+  }
+
+  public updateUserStatus(){
+    this.statusConfig.xcl.users.schema_app      = this.project.getName()+"_app";
+    this.statusConfig.xcl.users.schema_logic    = this.project.getName()+"_logic";
+    this.statusConfig.xcl.users.schema_data     = this.project.getName()+"_data";
+    this.statusConfig.xcl.users.user_deployment = this.project.getName()+"_depl";
+    this.serialize();
   }
   
   public updateStatus(){
-    this.statusConfig = this.project.getConfig();
+    this.statusConfig.xcl.hash = Md5.hashStr(this.project.getConfig()).toString();
     this.serialize();
   }
 
   //Checks wether the dependency is already installed in the correct version
   public checkDependency(feature: ProjectFeature):boolean{
     this.statusConfig=this.deserialize();
-    if (this.statusConfig.xcl.dependencies[feature.getName()] &&
+    if (this.statusConfig.xcl.dependencies &&
+        this.statusConfig.xcl.dependencies[feature.getName()] &&
         this.statusConfig.xcl.dependencies[feature.getName()].version == feature.getReleaseInformation()){
         return true;
     }else{
@@ -408,21 +441,24 @@ class ProjectStatus {
 
   public checkUsers(){
     this.statusConfig=this.deserialize();
-    if (!this.statusConfig.xcl.users.schema_app || !this.statusConfig.xcl.users.schema_logic || !this.statusConfig.xcl.users.schema_data || !this.statusConfig.xcl.users.user_deployment){
-        return true;
+    if (!this.statusConfig.xcl.users.schema_app || !this.statusConfig.xcl.users.schema_logic || !this.statusConfig.xcl.users.schema_data || !this.statusConfig.xcl.users.user_deployment ){
+        return false;
     }else{
-      return false;
+      return true;
     }
   }
 
   public serialize(){
-    fs.writeFileSync(ProjectStatus.stateFileName,yaml.stringify(this.statusConfig));
+    try {
+      fs.writeFileSync(ProjectStatus.stateFileName,yaml.stringify(this.statusConfig));
+    }catch(err){
+      console.log(err);
+    }
   }
 
   private deserialize():any{
     let conf:string
     let confObject;
-
     try {
       conf = fs.readFileSync(ProjectStatus.stateFileName).toString();      
     } catch (err) {
