@@ -2,7 +2,6 @@ import { Feature } from './Feature';
 import chalk from 'chalk'
 import { Schema } from './Schema';
 
-
 export class ProjectFeature extends Feature{
     private version:string;
     private installed:Boolean;
@@ -38,7 +37,7 @@ export class ProjectFeature extends Feature{
         }
     }
 
-    public getInstalled():Boolean{
+    public isInstalled():Boolean{
         return this.installed;
     }
 

@@ -9,6 +9,7 @@ import { Environment } from './Environment';
 import { Md5 } from 'ts-md5/dist/md5';
 import md5 = require('md5');
 import { version } from 'process';
+import {Operation} from './Operation';
 
 export class Project {
   private name: string;                           //Project-Name
@@ -317,7 +318,6 @@ export class Project {
         }
       });
       this.writeConfig();
-      this.status.updateStatus();
     }
   }
 
@@ -368,11 +368,12 @@ export class Project {
     }
   }
 } 
+
 class ProjectStatus {
   private static xclHome = os.homedir + "/AppData/Roaming/xcl";
   private static stateFileName = "";
   private project: Project;
-  private statusConfig: any; 
+  private statusConfig: any;
   
   constructor(project:Project){
     this.project = project;
@@ -394,7 +395,7 @@ class ProjectStatus {
 
   public hasChanged():boolean{
     this.statusConfig=this.deserialize();
-    if(this.statusConfig.xcl.hash==Md5.hashStr(this.project.getConfig()).toString()){
+    if(this.statusConfig.xcl.hash==Md5.hashStr(yaml.stringify(this.project.getConfig())).toString()){
       return false;
     }else{
       return true;
@@ -403,12 +404,10 @@ class ProjectStatus {
 
   public updateDependencyStatus(feature:ProjectFeature){
     if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
-      console.log('ADD TO STATUS FILE!');
       this.statusConfig.xcl.dependencies[feature.getName()]={};
       this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
-      console.log(yaml.stringify(this.statusConfig));
+      this.statusConfig.xcl.dependencies[feature.getName()].owner = feature.getOwner();
     }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
-      console.log('UPDATE IN STATUS FILE!');
       this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
     }
     this.serialize();
@@ -428,15 +427,35 @@ class ProjectStatus {
   }
 
   //Checks wether the dependency is already installed in the correct version
-  public checkDependency(feature: ProjectFeature):boolean{
+  public checkDependency(feature: ProjectFeature):Operation{
+    
     this.statusConfig=this.deserialize();
     if (this.statusConfig.xcl.dependencies &&
         this.statusConfig.xcl.dependencies[feature.getName()] &&
         this.statusConfig.xcl.dependencies[feature.getName()].version == feature.getReleaseInformation()){
-        return true;
+        return Operation.NONE;
+    }else if(this.statusConfig.xcl.dependencies &&
+             !this.statusConfig.xcl.dependencies[feature.getName()]){
+        return Operation.INSTALL;
+
+    }else if(this.statusConfig.xcl.dependencies &&
+            this.statusConfig.xcl.dependencies[feature.getName()] &&
+            this.statusConfig.xcl.dependencies[feature.getName()].version != feature.getReleaseInformation()){
+        return Operation.UPDATE;
     }else{
-      return false;
+      throw Error("Error Checking Dependency, please Check your status-File for errors!");
     }
+  }
+
+  public getRemovedDependencies(){
+    let features:Map<String,ProjectFeature>= new Map();
+    this.statusConfig=this.deserialize();
+    features = this.project.getFeatures();
+      Object.keys(this.statusConfig.xcl.dependencies).forEach(key=>{
+          if(!features.has(key)){
+            console.log(chalk.yellow('WARNING: You have unused dependencies! (' + key + ')'));
+          }
+      });
   }
 
   public checkUsers(){

@@ -1,4 +1,5 @@
 import {Command, flags} from '@oclif/command'
+import { Environment } from '../../lib/Environment'
 import {ProjectManager} from '../../lib/ProjectManager'
 
 export default class ProjectCreate extends Command {
@@ -6,7 +7,7 @@ export default class ProjectCreate extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    workspace: flags.string({char: 'w'})    
+    workspace: flags.string({char: 'w', description: 'workspace name the application should be installed in', default: Environment.readConfigFrom(process.cwd(),'project')})    
   }
 
   static args = [
@@ -23,9 +24,6 @@ export default class ProjectCreate extends Command {
       ProjectManager.getInstance().createProject(args.project, flags.workspace);
     }else{
       ProjectManager.getInstance().createProject(args.project, args.project);
-    }
-    
-
-    
+    }   
   }
 }

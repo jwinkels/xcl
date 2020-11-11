@@ -13,7 +13,7 @@ export default class ProjectApply extends Command {
   static args = [
     {
       name: 'project',
-      description: "project name that the changes should be applied to", 
+      description: "name of the project that the changes should be applied to", 
       default: Environment.readConfigFrom( process.cwd(), "project" )
     }
   ]

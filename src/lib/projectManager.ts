@@ -15,6 +15,7 @@ import { Environment } from './Environment';
 import { FeatureManager } from './FeatureManager';
 import { cpuUsage, exit } from 'process';
 import { ShellHelper } from './ShellHelper';
+import {Operation} from './Operation';
 
 const Table = require('cli-table')
 
@@ -273,16 +274,31 @@ export class ProjectManager {
     if( p.getStatus().hasChanged()){
 
       p.getFeatures().forEach((feature:ProjectFeature, key:String)=>{
-        if(feature.getType()==="DB" && !p.getStatus().checkDependency(feature) ){
+        if(feature.getType()==="DB" ){
           if (FeatureManager.priviledgedInstall(feature.getName())&& !commands[0]){
               commands[0]='xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
           }
-          console.log(chalk.green('+')+' install '+feature.getName());
-          console.log(chalk.green('+++')+' xcl feature:install ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection"));
-          commands[commandCount]='xcl feature:install ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection");
+          
+          let operation = p.getStatus().checkDependency(feature);
+          if(operation === Operation.INSTALL){
+            console.log(chalk.green('+')+' install '+feature.getName());
+            console.log(chalk.green('+++')+' xcl feature:install ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection"));
+            commands[commandCount]='xcl feature:install ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection");
+          }else if(operation === Operation.UPDATE){
+            console.log(chalk.yellow('*')+' update '+feature.getName());
+            console.log(chalk.yellow('***')+' xcl feature:update ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection"));
+            commands[commandCount]='xcl feature:update ' + feature.getName() +' '+ feature.getReleaseInformation() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection");
+          }else{
+            console.log(chalk.red('-')+' deinstall '+feature.getName());
+            console.log(chalk.red('---')+' xcl feature:deinstall ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection"));
+            commands[commandCount]='xcl feature:deinstall ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection");
+          }
           commandCount=commandCount+1;
+          
         }
       });
+
+      p.getStatus().getRemovedDependencies();
 
       if(!p.getStatus().checkUsers()){        
         p.getUsers().forEach((user:Schema, key:String)=>{
@@ -313,8 +329,9 @@ export class ProjectManager {
     fs.removeSync(fileName);
     fs.writeFileSync(fileName,'#!/bin/bash'+"\n");
     for (let i = 0; i<commands.length; i++){
-        console.log(commands[i]);
-        fs.appendFileSync(fileName,commands[i]+"\n");
+      if(commands[i]){
+          fs.appendFileSync(fileName,commands[i]+"\n");
+      }
     }
   }
 

@@ -94,7 +94,7 @@ ARGUMENTS
   VERSION   Version of the Feature
   USERNAME  schema name for the feature to be installed in
   PASSWORD  password for the new schema
-  PROJECT   [default: test1] Name of the Project (when not in a xcl-Project path)
+  PROJECT   Name of the Project (when not in a xcl-Project path)
 
 OPTIONS
   -h, --help  show CLI help
@@ -112,7 +112,7 @@ USAGE
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
-  PROJECT  [default: test1] name of the Project (when not in a xcl-Project path)
+  PROJECT  name of the Project (when not in a xcl-Project path)
 
 OPTIONS
   -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
@@ -133,10 +133,10 @@ USAGE
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
-  PROJECT  [default: test1] name of the Project (when not in a xcl-Project path)
+  PROJECT  name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  [default: 111.111.111.111] connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  connection string HOST:PORT/SERVICE_NAME
   -h, --help                   show CLI help
   -p, --syspw=syspw            Password of SYS-User
 ```
@@ -153,9 +153,7 @@ USAGE
 
 ARGUMENTS
   TYPE     [default: ALL] Show all Features of type [DB or DEPLOY]
-
-  PROJECT  [default: test1] Show Features added to a Project (when not in a XCL-Directory it shows all Features
-           available)
+  PROJECT  Show Features added to a Project (when not in a XCL-Directory it shows all Features available)
 
 OPTIONS
   -a, --all   show all Features available
@@ -174,18 +172,13 @@ USAGE
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
-  PROJECT  [default: test1] Name of the Project (when not in a xcl-Project path)
+  PROJECT  Name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  [default: 111.111.111.111] connection to database (required when deinstall Feature) [
-                               HOST:PORT/SERVICE_NAME ]
-
+  -c, --connection=connection  connection to database (required when deinstall Feature) [ HOST:PORT/SERVICE_NAME ]
   -d, --deinstall              deinstall Feature from database
-
   -h, --help                   show CLI help
-
   -o, --owner                  drop Feature owner schema
-
   -p, --syspw=syspw            password of SYS-User
 ```
 
@@ -202,10 +195,10 @@ USAGE
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
   VERSION  Version of the Feature
-  PROJECT  [default: test1] name of the Project (when not in a xcl-Project path)
+  PROJECT  name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  (required) [default: 111.111.111.111] connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
   -h, --help                   shows this help
   -p, --syspw=syspw            (required) Password of SYS-User
 ```
@@ -255,7 +248,7 @@ USAGE
   $ xcl project:apply [PROJECT]
 
 ARGUMENTS
-  PROJECT  [default: test1] project name that the changes should be applied to
+  PROJECT  project name that the changes should be applied to
 
 OPTIONS
   -h, --help  show CLI help
@@ -272,7 +265,7 @@ USAGE
   $ xcl project:build [PROJECT] [VERSION]
 
 ARGUMENTS
-  PROJECT  [default: test1] The name of the project that should be build
+  PROJECT  The name of the project that should be build
   VERSION
 
 OPTIONS
@@ -294,7 +287,7 @@ ARGUMENTS
 
 OPTIONS
   -h, --help                 show CLI help
-  -w, --workspace=workspace
+  -w, --workspace=workspace  workspace name the application should be installed in
 ```
 
 _See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\create.ts)_
@@ -308,10 +301,10 @@ USAGE
   $ xcl project:deploy [PROJECT]
 
 ARGUMENTS
-  PROJECT  [default: test1] Name of the project that should be deployed
+  PROJECT  Name of the project that should be deployed
 
 OPTIONS
-  -c, --connection=connection  (required) [default: 111.111.111.111] connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
   -d, --dependencies           Deploy inclusive dependencies (you will be asked for sys-user password)
   -h, --help                   show CLI help
   -p, --password=password      (required) Password for Deployment User
@@ -333,10 +326,10 @@ USAGE
   $ xcl project:init [PROJECT]
 
 ARGUMENTS
-  PROJECT  [default: test1] name of the project to initialze
+  PROJECT  name of the project to initialze
 
 OPTIONS
-  -c, --connection=connection  [default: 111.111.111.111] Connectstring ex. localhost:1521/xepdb1
+  -c, --connection=connection  Connectstring ex. localhost:1521/xepdb1
   -f, --force                  Attention: forces dropping existing schemas
   -h, --help                   show CLI help
   -p, --syspw=syspw            Password of user sys
@@ -368,7 +361,7 @@ USAGE
   $ xcl project:plan [PROJECT]
 
 ARGUMENTS
-  PROJECT  [default: test1] The name of the project that should be build
+  PROJECT  the name of the project
 
 OPTIONS
   -h, --help  show CLI help

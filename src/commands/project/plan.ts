@@ -13,7 +13,7 @@ export default class ProjectPlan extends Command {
   static args = [
       {
         name: 'project',
-        description: "The name of the project that should be build", 
+        description: "name of the project", 
         default: Environment.readConfigFrom( process.cwd(), "project" )
       }
     ]

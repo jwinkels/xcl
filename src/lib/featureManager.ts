@@ -233,7 +233,7 @@ export class FeatureManager{
 
       public async installAllProjectFeatures(projectName:string, connection:string, syspw:string, forceInstall:boolean){
         for (const feature of ProjectManager.getInstance().getProject(projectName).getFeaturesOfType('DB').values()){
-          if(feature.getInstalled() && forceInstall){
+          if(feature.isInstalled() && forceInstall){
             await FeatureManager.updateFeatureVersion(feature.getName(), feature.getReleaseInformation().toString(), projectName, connection, syspw);
           }else{
             FeatureManager.getInstance().installProjectFeature(feature.getName(), connection, syspw, projectName);
@@ -341,7 +341,7 @@ export class FeatureManager{
           var connectionWithUser="";
           var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
           var c:IConnectionProperties;
-            
+          syspw = syspw ? syspw : Environment.readConfigFrom(projectPath, "syspw");  
             if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
 
               let feature:ProjectFeature=ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)!;

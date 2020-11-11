@@ -30,6 +30,10 @@ software:
               sys: true
               arguments:
                 - username
+            - path: drop_user.sql
+              sys: true
+              arguments:
+                  - username
   oos-utils:
     owner: OraOpenSource
     repo: oos-utils
