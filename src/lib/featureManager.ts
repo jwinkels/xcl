@@ -484,8 +484,10 @@ export class FeatureManager{
       public static updateFeatureVersion(featureName:string, version:string, projectName:string, connection:string, syspw:string){
         return new Promise((resolve, reject)=>{
           if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
-            let feature = ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName);
+            let p:Project = ProjectManager.getInstance().getProject(projectName);
+            let feature = p.getFeatures().get(featureName);
             let newFeature = feature;
+            syspw = syspw ? syspw : Environment.readConfigFrom( p.getPath(), "syspw");
             newFeature?.setReleaseInformation(version);
             FeatureManager.getInstance().deinstallProjectFeature(featureName, connection, syspw, projectName)
               .then(function(){

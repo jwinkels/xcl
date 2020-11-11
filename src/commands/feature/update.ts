@@ -33,6 +33,6 @@ export default class FeatureUpdate extends Command {
   async run() {
     const {args, flags} = this.parse(FeatureUpdate)
     
-    FeatureManager.updateFeatureVersion(args.feature, args.version, args.project, flags.connection, flags.syspw);
+    FeatureManager.updateFeatureVersion(args.feature, args.version, args.project, flags.connection, flags.syspw!);
   }
 }
