@@ -471,7 +471,7 @@ export class FeatureManager{
         if(FeatureManager.softwareJson.software[featureName]){
           let installSteps = FeatureManager.softwareJson.software[featureName].install
           for (var i=0; i<installSteps.scripts.length; i++){
-            if(installSteps.scripts[i].syspw){
+            if(installSteps.scripts[i].sys){
               return true;
             }
           }

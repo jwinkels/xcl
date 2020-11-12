@@ -275,8 +275,10 @@ export class ProjectManager {
 
       p.getFeatures().forEach((feature:ProjectFeature, key:String)=>{
         if(feature.getType()==="DB" ){
-          if (FeatureManager.priviledgedInstall(feature.getName())&& !commands[0]){
+          if (FeatureManager.priviledgedInstall(feature.getName()) && !commands[0]){
               commands[0]='xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
+          }else{
+            console.log("SYS NOt needed for feature : "+feature.getName());
           }
           
           let operation = p.getStatus().checkDependency(feature);
