@@ -357,7 +357,6 @@ export class Project {
   public setEnvironmentVariable(key:string, value:string){
     if (this.environment.has(key)){
         if (value !== undefined || value !==""){
-            console.log('set variable');
             this.environment.set(key, value);
             Environment.writeEnvironment(this.name, this.environment);
         }else{

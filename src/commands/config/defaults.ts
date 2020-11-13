@@ -46,7 +46,7 @@ export default class ConfigDefaults extends Command {
         this.setAllVariables(project);
       }else{
         if (flags.set && flags.set !==""){
-          this.setVariable(flags.set, project, args.value);
+          await this.setVariable(flags.set, project, args.value);
         }
       }
 
@@ -93,9 +93,9 @@ export default class ConfigDefaults extends Command {
   }
 
   async setVariable(variableName:string, project:Project, value:string){
-    let input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"');
-    project.setEnvironmentVariable(variableName, input);
-    console.log(chalk.green('\nOK'));
+    let input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'hide'});
+    await project.setEnvironmentVariable(variableName, input);
+    console.log(chalk.green('OK'));
   }
 
   async listVariables(project:Project){

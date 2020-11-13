@@ -49,7 +49,7 @@ TODO:
         * Wenn sich dinge in der DirectoryStruktur ändern, sollte xcl automatisch die Änderungen vornehmen können,
           solange, die Ordner nicht mit Dateien befüllt sind. Ansonsten sollte eine Hilfe-Meldung ausgegeben werden 
 
-    - PROBLEM:
+    - PROBLEME:
         * Ein Feature wird entfernt
             GRUND: Plan kann zwar erkennen, dass das Feature entfernt wurde, kennt aber den Benutzer nicht mehr unter dem es installiert wurde
                    Deswegen kann der Befehl zum entfernen des Features nicht generiert werden.

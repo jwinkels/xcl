@@ -60,15 +60,13 @@ export class Environment{
             env[key]=value;
         });
 
-        fs.writeFileSync(envFileName,yaml.stringify(env)); 
-       
+        fs.writeFileSync(envFileName,yaml.stringify(env));
     }
 
     public static readConfigFrom(path:string, variableName:string):string{
         let envFileName = "";
         let env:any;
         let projectName:string=ProjectManager.getInstance().getProjectNameByPath(path);
-       
         // Decide which environment variables context should be loaded 
         if (projectName==="all"){
             envFileName = this.xclHome+"/environment.yml";
@@ -84,7 +82,7 @@ export class Environment{
                 env=yaml.parse(fs.readFileSync(envFileName).toString());
                 return env[variableName];
             }catch(err){
-                return "";
+               throw Error(err);
             }
         }
     }

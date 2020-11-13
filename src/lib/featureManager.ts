@@ -324,7 +324,7 @@ export class FeatureManager{
                 if(feature.getType() === "DEPLOY"){
                   FeatureManager.unzipFeature(undefined, projectPath, feature).then(()=>{
                     deliveryFactory.getNamed<DeliveryMethod>("Method",featureName.toUpperCase()).install(feature, projectPath);
-                    ProjectManager.getInstance().getProject(projectPath).getStatus().updateDependencyStatus(feature);
+                    //ProjectManager.getInstance().getProject(projectPath).getStatus().updateDependencyStatus(feature);
                     resolve();
                   });
                 }
