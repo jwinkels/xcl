@@ -19,6 +19,7 @@ import { DeliveryMethod } from './DeliveryMethod';
 import {Project} from './Project';
 import e = require('express');
 import { Environment } from './Environment';
+import { Operation } from './Operation';
 const Table = require('cli-table');
 
 export class FeatureManager{
@@ -249,10 +250,10 @@ export class FeatureManager{
             var project = ProjectManager.getInstance().getProject(projectName);
             if (project.getFeatures().has(featureName)){
               let feature:ProjectFeature=project.getFeatures().get(featureName)!;
-              
+             
               if (feature.getType()==="DB"){
                 var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection);
-                if (!project.getStatus().checkDependency(feature)){
+                if (project.getStatus().checkDependency(feature) === Operation.INSTALL){
                   DBHelper.isFeatureInstalled(feature,c)
                     .then((installed) => {
                       if(! installed){

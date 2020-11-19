@@ -93,7 +93,14 @@ export default class ConfigDefaults extends Command {
   }
 
   async setVariable(variableName:string, project:Project, value:string){
-    let input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'hide'});
+    let input = "";
+    
+    if (variableName.toUpperCase()==="SYSPW"){
+      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'hide'});
+    }else{
+      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'normal'});
+    } 
+
     await project.setEnvironmentVariable(variableName, input);
     console.log(chalk.green('OK'));
   }

@@ -30,7 +30,7 @@ export class ShellHelper{
                         
                         if (script.includes('plan.sh')){
                             fs.appendFileSync(executePath+'/apply.log', 'apply '+Date.now().toLocaleString());
-                            fs.appendFileSync(executePath+'/apply.log', childProcess.stdout);
+                            fs.appendFileSync(executePath+'/apply.log', childProcess.stderr);
                             resolve();
                         }
                     }else{
