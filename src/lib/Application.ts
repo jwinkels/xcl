@@ -9,7 +9,7 @@ export class Application{
         let installFileList:Map<string,string>;
         installFileList=new Map();
 
-        let baseFolderApex = "/applications/apex/";
+        let baseFolderApex = "/apps/apex/";
         let projectPath    = ProjectManager.getInstance().getProject(projectName).getPath();
   
         //Read apex-folder and find the correct file
@@ -27,7 +27,7 @@ export class Application{
                                 projectPath + baseFolderApex + file + "/pre_install_application.sql");
 
                 let script= projectPath + baseFolderApex + file + "/pre_install_application.sql " + 
-                            projectPath + " " +
+                            ProjectManager.getInstance().getProject(projectName).getWorkspace() + " " +
                             appId +" "+
                             ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
                 installFileList.set(projectPath + baseFolderApex + file,
@@ -47,4 +47,21 @@ export class Application{
           DBHelper.executeScriptIn(conn, script, path);
         });
       }
+
+    public static generateCreateWorkspaceFile(projectName:string, workspace:string){
+        let path=ProjectManager.getInstance().getProject(projectName).getPath()+'/db/.setup/workspaces';
+        let filename = path+'/create_'+workspace+'.sql'
+
+        if(!fs.pathExistsSync(path)){
+            fs.mkdirSync(path);
+        }
+
+        let script = '@' + __dirname+"/scripts/create_workspace.sql "+
+                          workspace + " "+
+                          ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
+
+        if(!fs.existsSync(filename)){
+          fs.writeFileSync(filename,script);
+        }
+    }
 } 

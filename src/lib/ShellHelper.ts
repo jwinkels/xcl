@@ -22,17 +22,19 @@ export class ShellHelper{
                     
                     if(!childProcess.error){
                         console.log(chalk.gray(childProcess.stdout)); 
+                        fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
                         if(childProcess.stderr.toLocaleLowerCase().includes('failed')){
                             console.log(chalk.redBright(childProcess.stderr));
+                            fs.appendFileSync(executePath+'/xcl.log','FAILURE: '+ childProcess.stderr); 
                         }else{
                             console.log(chalk.yellow(childProcess.stderr));
+                            fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
                         }
                         
                         if (script.includes('plan.sh')){
-                            fs.appendFileSync(executePath+'/apply.log', 'apply '+Date.now().toLocaleString());
-                            fs.appendFileSync(executePath+'/apply.log', childProcess.stderr);
-                            resolve();
+                            fs.appendFileSync(executePath+'/xcl.log', 'APPLY STARTED: '); 
                         }
+                        resolve(childProcess.stdout);
                     }else{
                         reject(childProcess.error.message);
                     }

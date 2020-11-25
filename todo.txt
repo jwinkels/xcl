@@ -49,9 +49,24 @@ TODO:
         * Wenn sich dinge in der DirectoryStruktur ändern, sollte xcl automatisch die Änderungen vornehmen können,
           solange, die Ordner nicht mit Dateien befüllt sind. Ansonsten sollte eine Hilfe-Meldung ausgegeben werden 
 
+    - setup 
+        * Der Ordner setup beinhaltet alle Maßnahmen, die für die Installation der Application notwendig sind, für die aber Admin Rechte auf der DB erforderlich sind
+          wie zum Beispiel: ACLs, Workspace anlegen, User anlegen etc. pp.
+        * IDEE:
+            - Benenne init um in setup
+            - flags:
+                -- schemata
+                -- objects
+
+    - LOGGING-Klasse schreiben:
+        * damit die Logs während des Deploys weggeschrieben werden brauchen wir eine Logging-Klasse!
+
+
     - PROBLEME:
         * Ein Feature wird entfernt
             GRUND: Plan kann zwar erkennen, dass das Feature entfernt wurde, kennt aber den Benutzer nicht mehr unter dem es installiert wurde
                    Deswegen kann der Befehl zum entfernen des Features nicht generiert werden.
             MÖGLICHER WORKAROUND: Schema Only Accounts (erst ab 18c)
             MÖGLICHE LÖSUNG: Status file bekommt auch das schema und das passwort mit damit Features deinstalliert werden können
+
+

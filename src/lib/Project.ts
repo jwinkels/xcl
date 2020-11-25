@@ -8,8 +8,11 @@ import  * as os from 'os';
 import { Environment } from './Environment';
 import { Md5 } from 'ts-md5/dist/md5';
 import md5 = require('md5');
-import { version } from 'process';
+import { config, version } from 'process';
 import {Operation} from './Operation';
+import { YAMLError } from 'yaml/util';
+import { string } from '@oclif/command/lib/flags';
+import { Application } from './Application';
 
 export class Project {
   private name: string;                           //Project-Name
@@ -30,6 +33,7 @@ export class Project {
       this.features=new Map();
       this.users=new Map();
       this.createDirectoryStructure();
+      Application.generateCreateWorkspaceFile(name, workspaceName);
       this.status = new ProjectStatus(this);
       this.writeConfig();
       this.status.serialize()
@@ -223,6 +227,32 @@ export class Project {
     }
   }
 
+  public addSetupStep(file:string, path:string, hash:string){
+      if (!this.config.xcl.setup){
+        console.log('SETUP SETUP');
+        this.config.xcl.setup=[];
+      }
+      let newStep = {name: file, path: path, hash: hash};
+      
+      let stepIndex = this.config.xcl.setup.findIndex(
+                        (
+                          e: { name: string; hash: any; path: string; }
+                        ) => e.name == newStep.name && e.hash && e.path == newStep.path
+                      );
+      
+      if(stepIndex==-1){
+        console.log('NICHT IN DER LISTE');
+        this.config.xcl.setup.push(newStep);   
+        this.getStatus().addToChanges('SETUP');
+      }else{
+        if (this.config.xcl.setup[stepIndex].hash !== hash){
+          console.log('IN DER LISTE! UPDATE!');
+          this.config.xcl.setup[stepIndex].hash=hash;
+          this.getStatus().addToChanges('SETUP');
+        }
+      }      
+  }
+
   private hasDeployMethod():Boolean{
     let deployMethodAvailable=false;
     this.features.forEach(function(feature){
@@ -373,9 +403,16 @@ class ProjectStatus {
   private static stateFileName = "";
   private project: Project;
   private statusConfig: any;
+  private changeList:Map<string, Boolean>;
   
   constructor(project:Project){
     this.project = project;
+    this.changeList = new Map<string,Boolean>();
+
+    this.changeList.set('FEATURE',false);
+    this.changeList.set('SETUP',false);
+    this.changeList.set('USER',false);
+
     if (!fs.existsSync(ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml')){
       this.statusConfig ={
         xcl: {
@@ -392,13 +429,42 @@ class ProjectStatus {
     }
   }
 
+  public addToChanges(change:string){
+    this.changeList.set(change, true);
+  }
+
   public hasChanged():boolean{
+    this.changeList=new Map<string, Boolean>();
+    
     this.statusConfig=this.deserialize();
+    this.checkSetup("./db/.setup");
+    
     if(this.statusConfig.xcl.hash==Md5.hashStr(yaml.stringify(this.project.getConfig())).toString()){
       return false;
     }else{
       return true;
     }
+  }
+
+  public checkSetup(path:string){
+    fs.readdirSync(path).forEach(file=>{
+      if(fs.lstatSync(path+'/'+file).isFile()){
+        let content = fs.readFileSync(path+'/'+file);
+        let contentHash = Md5.hashStr(content.toString()).toString();
+        this.project.addSetupStep(file, path, contentHash);
+      }else{
+        this.checkSetup(path+"/"+file);
+      }
+    });
+
+    //Write config only when SETUP-Directory has changes!
+    if(this.changeList.get('SETUP')){
+      this.project.writeConfig();
+    }
+  }
+
+  public getChanges():Map<string, Boolean>{
+    return this.changeList;
   }
 
   public updateDependencyStatus(feature:ProjectFeature){
@@ -421,7 +487,8 @@ class ProjectStatus {
   }
   
   public updateStatus(){
-    this.statusConfig.xcl.hash = Md5.hashStr(this.project.getConfig()).toString();
+    this.statusConfig=this.deserialize();
+    this.statusConfig.xcl.hash = Md5.hashStr(yaml.stringify(this.project.getConfig())).toString();
     this.serialize();
   }
 
@@ -432,15 +499,21 @@ class ProjectStatus {
     if (this.statusConfig.xcl.dependencies &&
         this.statusConfig.xcl.dependencies[feature.getName()] &&
         this.statusConfig.xcl.dependencies[feature.getName()].version == feature.getReleaseInformation()){
-        return Operation.NONE;
+
+              return Operation.NONE;
+
     }else if(this.statusConfig.xcl.dependencies &&
              !this.statusConfig.xcl.dependencies[feature.getName()]){
-        return Operation.INSTALL;
+        
+              this.addToChanges('FEATURE');
+              return Operation.INSTALL;
 
     }else if(this.statusConfig.xcl.dependencies &&
             this.statusConfig.xcl.dependencies[feature.getName()] &&
             this.statusConfig.xcl.dependencies[feature.getName()].version != feature.getReleaseInformation()){
-        return Operation.UPDATE;
+        
+              this.addToChanges('FEATURE');
+              return Operation.UPDATE;
     }else{
       throw Error("Error Checking Dependency, please Check your status-File for errors!");
     }
@@ -460,6 +533,7 @@ class ProjectStatus {
   public checkUsers(){
     this.statusConfig=this.deserialize();
     if (!this.statusConfig.xcl.users.schema_app || !this.statusConfig.xcl.users.schema_logic || !this.statusConfig.xcl.users.schema_data || !this.statusConfig.xcl.users.user_deployment ){
+        this.addToChanges('USER');
         return false;
     }else{
       return true;
@@ -474,7 +548,7 @@ class ProjectStatus {
     }
   }
 
-  private deserialize():any{
+  protected deserialize():any{
     let conf:string
     let confObject;
     try {

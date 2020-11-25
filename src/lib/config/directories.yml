@@ -1,5 +1,6 @@
 db:
-- hooks
+- .hooks
+- .setup
 - app:
   - init:
     - ddl
@@ -63,7 +64,7 @@ db:
     - ddl
     - dml
   - finally
-applications:
+apps:
   - apex:
     - f1000 
   - rest

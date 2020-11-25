@@ -12,6 +12,8 @@ export default class ProjectInit extends Command {
     connection: flags.string({char: 'c', description: 'Connectstring ex. localhost:1521/xepdb1', default: Environment.readConfigFrom( process.cwd(),"connection") }),
     force: flags.boolean({char: 'f', description: 'Attention: forces dropping existing schemas'}),
     yes: flags.boolean({char: 'y', description: 'Answers force-action with yes (Use with caution)'}),
+    objects: flags.boolean({char: 'o', description: 'Install Basic Objects defined in setup-Directory'}),
+    users: flags.boolean({char: 'u', description: 'Install standard Schemas APP, LOGIC, DATA, DEPL'}),
   }
 
   static args = [

@@ -16,6 +16,7 @@ import { FeatureManager } from './FeatureManager';
 import { cpuUsage, exit } from 'process';
 import { ShellHelper } from './ShellHelper';
 import {Operation} from './Operation';
+import { Application } from './Application';
 
 const Table = require('cli-table')
 
@@ -191,7 +192,7 @@ export class ProjectManager {
     return "";
   }
 
-  public async initializeProject(projectName: string, flags: { help: void; syspw: string | undefined; connection: string | undefined; force: boolean; yes: boolean}) {
+  public async initializeProject(projectName: string, flags: { help: void; syspw: string | undefined; connection: string | undefined; force: boolean; yes: boolean; objects: boolean; users:boolean;}) {
     const p:Project = this.getProject(projectName);
     
     flags.syspw = flags.syspw ? flags.syspw : Environment.readConfigFrom(p.getPath() , "syspw");
@@ -199,10 +200,11 @@ export class ProjectManager {
     const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.syspw, flags.connection);    
 
     // Prüfen ober es den User schon gibt
-    if (await DBHelper.isProjectInstalled(p, c)) {
+    if (await DBHelper.isProjectInstalled(p, c) && flags.users) {
       if ( !flags.force) {
         console.log(chalk.yellow(`Warning: ProjectSchemas already exists in db!!!`));
         console.log(chalk.yellow(`If you wish to drop users before, you could use force flag`));
+        await p.getStatus().updateUserStatus();
         return;
       } else { 
         if (flags.force && !flags.yes) {
@@ -222,18 +224,27 @@ export class ProjectManager {
       }
     }
 
-    console.log(chalk.green(`OK, Schemas werden installiert`));
-    await DBHelper.executeScript(c, __dirname + '/scripts/create_xcl_users.sql ' + p.getName() + '_depl ' +
-                                                                           p.getName() + ' ' +  //TODO: Generate strong password!
-                                                                           p.getName() + '_data ' +
-                                                                           p.getName() + '_logic ' +
-                                                                           p.getName() + '_app');
+    if (flags.users){
+      console.log(chalk.green(`OK, Schemas werden installiert`));
+      await DBHelper.executeScript(c, __dirname + '/scripts/create_xcl_users.sql ' + p.getName() + '_depl ' +
+                                                                            p.getName() + ' ' +  //TODO: Generate strong password!
+                                                                            p.getName() + '_data ' +
+                                                                            p.getName() + '_logic ' +
+                                                                            p.getName() + '_app');
 
-    if (await DBHelper.isProjectInstalled(p, c)) {
-      console.log(chalk.green(`Project successfully installed`));
-      p.getStatus().updateUserStatus();
+      if (await DBHelper.isProjectInstalled(p, c)) {
+        console.log(chalk.green(`Project successfully installed`));
+        p.getStatus().updateUserStatus();
+      }
     }
 
+    if (flags.objects){
+      //Execute setup files 
+      const config = p.getConfig();
+      await config.xcl.setup.forEach((element: { name: string; path: string; }) => {
+        DBHelper.executeScriptIn(c, element.name, element.path);
+      });
+    }
     // TODO: Abfrage nach syspwd?
 
     // Indextablespace auslagern
@@ -258,11 +269,11 @@ export class ProjectManager {
     let p:Project = this.getProject(projectName);
     let path:string = this.getProjectPath(projectName);
 
-    //if (!p.getStatus().hasChanged()){
+    if (!p.getStatus().hasChanged()){
       deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly);
-    //}else{
-    //  console.log(chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!'));
-    //}
+    }else{
+      console.log(chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!'));
+    }
   }
 
   public async plan(projectName: string){
@@ -290,11 +301,15 @@ export class ProjectManager {
             console.log(chalk.yellow('*')+' update '+feature.getName());
             console.log(chalk.yellow('***')+' xcl feature:update ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection"));
             commands[commandCount]='xcl feature:update ' + feature.getName() +' '+ feature.getReleaseInformation() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection");
-          }else{
+          }
+          
+          //WE DONT DO THAT HERE!
+          /*else{
             console.log(chalk.red('-')+' deinstall '+feature.getName());
             console.log(chalk.red('---')+' xcl feature:deinstall ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection"));
             commands[commandCount]='xcl feature:deinstall ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection");
-          }
+          }*/
+
           commandCount=commandCount+1;
           
         }
@@ -306,19 +321,36 @@ export class ProjectManager {
         p.getUsers().forEach((user:Schema, key:String)=>{
             console.log(chalk.green('+') + ' create user '+ key);
         });
-        console.log(chalk.green('+++')+' xcl project:init ' + projectName + ' --connection=' + Environment.readConfigFrom(path, "connection"));
-        commands[commandCount] =  'xcl project:init ' + projectName + ' --connection=' + Environment.readConfigFrom(path, "connection");
+        console.log(chalk.green('+++')+' xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom(path, "connection"));
+        commands[commandCount] =  'xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom(path, "connection");
         
         commandCount=commandCount+1;
         
         if (!commands[0]){
           commands[0]='xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
         }
+      }
 
-        if (commands[0]){
-          console.log(chalk.green('+')+' xcl config:defaults ' + projectName + ' --reset syspw');
-          commands[commandCount]='xcl config:defaults ' + projectName + ' --reset syspw';
+      if(p.getStatus().getChanges().get('SETUP')){
+        
+        console.log(chalk.green('+') + ' SETUP ');
+        console.log(chalk.green('+++')+' xcl project:init ' + projectName + ' --objects --connection=' + Environment.readConfigFrom(path, "connection"));
+        commands[commandCount] =  'xcl project:init ' + projectName + ' --objects --connection=' + Environment.readConfigFrom(path, "connection");
+
+        commandCount=commandCount+1;
+
+        if (!commands[0]){
+          commands[0]='xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
         }
+      }
+    
+      commands[commandCount] ='xcl project:deploy '+ projectName + ' --connection=' + Environment.readConfigFrom(path, "connection") + ' --password=' + Environment.readConfigFrom(path, "password");
+      console.log(chalk.green('+')+' deploy application');
+      console.log(chalk.green('+++ ')+commands[commandCount]);
+      if (commands[0]){
+        commandCount=commandCount+1;
+        console.log(chalk.green('+')+' xcl config:defaults ' + projectName + ' --reset syspw');
+        commands[commandCount]='xcl config:defaults ' + projectName + ' --reset syspw';
       }
     }else{
       console.log(chalk.yellow('INFO: Project dependencies have no changes!'));
@@ -340,23 +372,23 @@ export class ProjectManager {
   public async apply(projectName: string){
     
     let project:Project = this.getProject(projectName);
-    if( project.getStatus().hasChanged()){
-      if (fs.pathExistsSync(project.getPath()+'/plan.sh')){
-        ShellHelper.executeScript('plan.sh',project.getPath())
-        .then(()=>{
-          project.getStatus().updateStatus();
-          if (!project.getStatus().hasChanged()){
-            console.log(chalk.green('SUCCESS: Everything up to date!'));
-          }      
-        })
-        .catch(()=>{
-          console.log(chalk.red('ERROR: Update was not successfull! There are still changes!'));
-        });
-      }else{
-        console.log(chalk.yellow('Execute xcl project:plan first!'));
-      }
+    if (fs.existsSync(project.getPath()+'/plan.sh')){
+      ShellHelper.executeScript('plan.sh',project.getPath())
+      .then((output)=>{
+        project.getStatus().updateStatus();
+        if (!project.getStatus().hasChanged()){
+          console.log(chalk.green('SUCCESS: Everything up to date!'));
+          fs.removeSync('plan.sh');
+          console.log(output);
+        }else{
+          console.log(chalk.red('FAILURE: apply was made but there are still changes!'));
+        }      
+      })
+      .catch(()=>{
+        console.log(chalk.red('ERROR: Update was not successfull! There are still changes!'));
+      });
     }else{
-      console.log(chalk.yellow("INFO: No dependencies have changed! Proceed with xcl project:deploy!"));
+      console.log(chalk.yellow('Execute xcl project:plan first!'));
     }
   }
 

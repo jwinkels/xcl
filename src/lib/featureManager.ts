@@ -310,12 +310,14 @@ export class FeatureManager{
                       });
                       }else{
                         console.warn(chalk.yellow(`WARNING: Feature '${feature.getName()}' is already installed! First remove feature or use xcl feature:update!`));
-                        reject();
+                        //ProjectManager.getInstance().getProject(projectName).updateFeature(feature);
+                        ProjectManager.getInstance().getProject(projectName).getStatus().updateDependencyStatus(feature);
+                        resolve();
                       }
                   })
                   .finally( function(){
                       feature.setInstalled(true);
-                      ProjectManager.getInstance().getProject(projectName).updateFeature(feature);
+                      //ProjectManager.getInstance().getProject(projectName).updateFeature(feature);
                       ProjectManager.getInstance().getProject(projectName).getStatus().updateDependencyStatus(feature);
                       resolve();
                     }

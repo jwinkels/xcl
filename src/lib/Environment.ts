@@ -17,6 +17,7 @@ export class Environment{
         variables.set('connection','');
         variables.set('project','');
         variables.set('syspw','');
+        variables.set('password','');
         
         // Decide which environment variables context should be loaded 
         if(projectName.toLocaleLowerCase()!=="all"){
