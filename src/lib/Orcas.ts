@@ -84,7 +84,7 @@ export class Orcas implements DeliveryMethod{
         Post-Deploy Hook Start
       */
         
-      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/hooks/").filter(f=>f.toLowerCase().includes("post_")).forEach(file=>{
+      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/").filter(f=>f.toLowerCase().includes("post_")).forEach(file=>{
         DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
       });
 

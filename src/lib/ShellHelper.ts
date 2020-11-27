@@ -22,13 +22,13 @@ export class ShellHelper{
                     
                     if(!childProcess.error){
                         console.log(chalk.gray(childProcess.stdout)); 
-                        fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
+                        //fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
                         if(childProcess.stderr.toLocaleLowerCase().includes('failed')){
                             console.log(chalk.redBright(childProcess.stderr));
-                            fs.appendFileSync(executePath+'/xcl.log','FAILURE: '+ childProcess.stderr); 
+                          //  fs.appendFileSync(executePath+'/xcl.log','FAILURE: '+ childProcess.stderr); 
                         }else{
                             console.log(chalk.yellow(childProcess.stderr));
-                            fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
+                            //fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
                         }
                         
                         if (script.includes('plan.sh')){

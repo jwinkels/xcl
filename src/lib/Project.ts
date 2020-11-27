@@ -33,12 +33,10 @@ export class Project {
       this.features=new Map();
       this.users=new Map();
       this.createDirectoryStructure();
-      Application.generateCreateWorkspaceFile(name, workspaceName);
       this.status = new ProjectStatus(this);
       this.writeConfig();
       this.status.serialize()
       this.environment=Environment.initialize(name);
-
     } else {
       this.config = this.readConfig();
       this.status = new ProjectStatus(this);      
@@ -157,6 +155,10 @@ export class Project {
     };
   }
 
+  public reloadConfig(){
+    this.config = this.readConfig();
+  }
+
   private readConfig():any{
     let conf:string
     let confObject;
@@ -229,28 +231,47 @@ export class Project {
 
   public addSetupStep(file:string, path:string, hash:string){
       if (!this.config.xcl.setup){
-        console.log('SETUP SETUP');
         this.config.xcl.setup=[];
       }
-      let newStep = {name: file, path: path, hash: hash};
+      let newStep = {name: file, path: path, hash: ""};
       
       let stepIndex = this.config.xcl.setup.findIndex(
                         (
-                          e: { name: string; hash: any; path: string; }
-                        ) => e.name == newStep.name && e.hash && e.path == newStep.path
+                          e: { name: string; path: string; }
+                        ) => e.name == newStep.name && e.path == newStep.path
                       );
       
       if(stepIndex==-1){
-        console.log('NICHT IN DER LISTE');
         this.config.xcl.setup.push(newStep);   
         this.getStatus().addToChanges('SETUP');
       }else{
         if (this.config.xcl.setup[stepIndex].hash !== hash){
-          console.log('IN DER LISTE! UPDATE!');
-          this.config.xcl.setup[stepIndex].hash=hash;
           this.getStatus().addToChanges('SETUP');
         }
       }      
+  }
+
+
+  public updateSetupStep (file:string, path:string){
+    try{
+      let content = fs.readFileSync(path+'/'+file);
+      let contentHash = Md5.hashStr(content.toString()).toString();
+
+      console.log('HASH: '+contentHash);
+
+      let newStep = {name: file, path: path, hash: contentHash};
+
+      let stepIndex = this.config.xcl.setup.findIndex(
+        (
+          e: { name: string; path: string; }
+        ) => e.name == newStep.name && e.path == newStep.path
+      );
+
+      this.config.xcl.setup[stepIndex].hash=contentHash;
+      this.writeConfig();
+    }catch(error){
+      console.log(error);
+    }
   }
 
   private hasDeployMethod():Boolean{
@@ -435,11 +456,11 @@ class ProjectStatus {
 
   public hasChanged():boolean{
     this.changeList=new Map<string, Boolean>();
-    
+    this.project.reloadConfig();
     this.statusConfig=this.deserialize();
     this.checkSetup("./db/.setup");
     
-    if(this.statusConfig.xcl.hash==Md5.hashStr(yaml.stringify(this.project.getConfig())).toString()){
+    if(this.statusConfig.xcl.hash==Md5.hashStr(yaml.stringify(this.project.getConfig())).toString() && !this.changeList.get("SETUP")){
       return false;
     }else{
       return true;
@@ -487,6 +508,7 @@ class ProjectStatus {
   }
   
   public updateStatus(){
+    this.project.reloadConfig();
     this.statusConfig=this.deserialize();
     this.statusConfig.xcl.hash = Md5.hashStr(yaml.stringify(this.project.getConfig())).toString();
     this.serialize();
@@ -549,8 +571,9 @@ class ProjectStatus {
   }
 
   protected deserialize():any{
-    let conf:string
+    let conf:string="";
     let confObject;
+
     try {
       conf = fs.readFileSync(ProjectStatus.stateFileName).toString();      
     } catch (err) {

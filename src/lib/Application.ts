@@ -40,10 +40,6 @@ export class Application{
           let conn=DBHelper.getConnectionProps(ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getName(),
                                       password,
                                       connection);
-          console.log("About to execute: " + script + " in: " + path);
-          DBHelper.executeScript(conn, __dirname+"/scripts/create_workspace.sql "+
-                                          ProjectManager.getInstance().getProject(projectName).getWorkspace() + " "+
-                                          ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP");
           DBHelper.executeScriptIn(conn, script, path);
         });
       }
@@ -56,7 +52,7 @@ export class Application{
             fs.mkdirSync(path);
         }
 
-        let script = '@' + __dirname+"/scripts/create_workspace.sql "+
+        let script = "@&XCLBIN/scripts/create_workspace.sql "+
                           workspace + " "+
                           ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
 
@@ -64,4 +60,30 @@ export class Application{
           fs.writeFileSync(filename,script);
         }
     }
+
+    public static generateSQLEnvironment(projectName:string, xclHomePath:string){
+      let path=ProjectManager.getInstance().getProject(projectName).getPath()+'/db/.setup/workspaces';
+      let filename = path + '/env.sql';
+
+      
+      if(!fs.pathExistsSync(path)){
+        fs.mkdirSync(path);
+      }
+
+      let script  = 'define XCLBIN = ' + xclHomePath;
+      
+      if(!fs.existsSync(filename)){
+        fs.writeFileSync(filename,script);
+      }
+    }
+
+    public static removeSQLEnvironmentFile(projectName:string){
+      let path=ProjectManager.getInstance().getProject(projectName).getPath()+'/db/.setup/workspaces';
+      let filename = path + '/env.sql';
+      if(fs.existsSync(filename)){
+        fs.unlinkSync(filename);
+      }
+    }
+
+
 } 

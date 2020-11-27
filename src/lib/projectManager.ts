@@ -17,6 +17,8 @@ import { cpuUsage, exit } from 'process';
 import { ShellHelper } from './ShellHelper';
 import {Operation} from './Operation';
 import { Application } from './Application';
+import { string } from '@oclif/command/lib/flags';
+import { interfaces } from 'inversify';
 
 const Table = require('cli-table')
 
@@ -71,7 +73,15 @@ export class ProjectManager {
 
   public getProjectNameByPath(projectPath: string):string{
     try {
-      return new Project('',projectPath, '', false).getName();
+      let index=-1;
+      let name ="all";
+      //Unsauber!! Überdenke projects.yaml
+      for (let i=0; i<Object.values(ProjectManager.projectsJson.projects).length; i++){
+        if(Object.values(ProjectManager.projectsJson.projects)[i].path==projectPath){
+          name=Object.keys(ProjectManager.projectsJson.projects)[i];
+        }
+      }
+      return name;
     } catch (error) {
       return 'all';
     }
@@ -92,9 +102,14 @@ export class ProjectManager {
       if (err instanceof ProjectNotFoundError) {
         // start to create the project
         console.log(projectName + " is to be created in: " + process.cwd());
-        project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true);
+        if (os.platform() === 'win32'){
+          project = new Project(projectName, process.cwd() + "\\" + projectName, workspaceName, true);
+        }else{
+          project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true);
+        }
 
         this.addProjectToGlobalConfig(project);
+        Application.generateCreateWorkspaceFile(projectName, workspaceName);
       } else {
         // undefined error. what happened?
         throw err;
@@ -243,6 +258,7 @@ export class ProjectManager {
       const config = p.getConfig();
       await config.xcl.setup.forEach((element: { name: string; path: string; }) => {
         DBHelper.executeScriptIn(c, element.name, element.path);
+        p.updateSetupStep(element.name, element.path);
       });
     }
     // TODO: Abfrage nach syspwd?
@@ -266,8 +282,9 @@ export class ProjectManager {
   }
 
   public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean){
+    console.log(projectName);
     let p:Project = this.getProject(projectName);
-    let path:string = this.getProjectPath(projectName);
+    let path:string = p.getPath();
 
     if (!p.getStatus().hasChanged()){
       deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly);
@@ -283,7 +300,7 @@ export class ProjectManager {
     let commandCount=1;
 
     if( p.getStatus().hasChanged()){
-
+      
       p.getFeatures().forEach((feature:ProjectFeature, key:String)=>{
         if(feature.getType()==="DB" ){
           if (FeatureManager.priviledgedInstall(feature.getName()) && !commands[0]){
@@ -344,9 +361,9 @@ export class ProjectManager {
         }
       }
     
-      commands[commandCount] ='xcl project:deploy '+ projectName + ' --connection=' + Environment.readConfigFrom(path, "connection") + ' --password=' + Environment.readConfigFrom(path, "password");
+      //commands[commandCount] ='xcl project:deploy '+ projectName + ' --connection=' + Environment.readConfigFrom(path, "connection") + ' --password=' + Environment.readConfigFrom(path, "password");
       console.log(chalk.green('+')+' deploy application');
-      console.log(chalk.green('+++ ')+commands[commandCount]);
+      //console.log(chalk.green('+++ ')+commands[commandCount]);
       if (commands[0]){
         commandCount=commandCount+1;
         console.log(chalk.green('+')+' xcl config:defaults ' + projectName + ' --reset syspw');
@@ -373,13 +390,19 @@ export class ProjectManager {
     
     let project:Project = this.getProject(projectName);
     if (fs.existsSync(project.getPath()+'/plan.sh')){
+      Application.generateSQLEnvironment(projectName, __dirname);
       ShellHelper.executeScript('plan.sh',project.getPath())
       .then((output)=>{
+        Application.removeSQLEnvironmentFile(projectName);
         project.getStatus().updateStatus();
         if (!project.getStatus().hasChanged()){
           console.log(chalk.green('SUCCESS: Everything up to date!'));
           fs.removeSync('plan.sh');
-          console.log(output);
+          console.log('DEPLOY APPLICATION: ');
+          this.deploy(projectName, 
+                      Environment.readConfigFrom(project.getPath(),'connection'),
+                      Environment.readConfigFrom(project.getPath(),'password'),false
+                      );
         }else{
           console.log(chalk.red('FAILURE: apply was made but there are still changes!'));
         }      
