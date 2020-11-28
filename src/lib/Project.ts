@@ -246,6 +246,7 @@ export class Project {
         this.getStatus().addToChanges('SETUP');
       }else{
         if (this.config.xcl.setup[stepIndex].hash !== hash){
+          console.log('File (' + file +') has changed!');
           this.getStatus().addToChanges('SETUP');
         }
       }      
@@ -469,12 +470,14 @@ class ProjectStatus {
 
   public checkSetup(path:string){
     fs.readdirSync(path).forEach(file=>{
-      if(fs.lstatSync(path+'/'+file).isFile()){
+      if(fs.lstatSync(path+'/'+file).isFile() && !file.startsWith(".")){
         let content = fs.readFileSync(path+'/'+file);
         let contentHash = Md5.hashStr(content.toString()).toString();
         this.project.addSetupStep(file, path, contentHash);
       }else{
-        this.checkSetup(path+"/"+file);
+        if(fs.lstatSync(path+'/'+file).isDirectory()){
+          this.checkSetup(path+"/"+file);
+        }
       }
     });
 

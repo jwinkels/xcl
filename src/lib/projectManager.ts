@@ -298,7 +298,7 @@ export class ProjectManager {
     let path:string =  p.getPath();
     let commands:Array<String> = new Array<String>();
     let commandCount=1;
-
+    
     if( p.getStatus().hasChanged()){
       
       p.getFeatures().forEach((feature:ProjectFeature, key:String)=>{
@@ -386,23 +386,24 @@ export class ProjectManager {
     }
   }
 
-  public async apply(projectName: string){
+  public async apply(projectName: string, setupOnly:boolean){
     
     let project:Project = this.getProject(projectName);
     if (fs.existsSync(project.getPath()+'/plan.sh')){
       Application.generateSQLEnvironment(projectName, __dirname);
       ShellHelper.executeScript('plan.sh',project.getPath())
       .then((output)=>{
-        Application.removeSQLEnvironmentFile(projectName);
         project.getStatus().updateStatus();
         if (!project.getStatus().hasChanged()){
           console.log(chalk.green('SUCCESS: Everything up to date!'));
           fs.removeSync('plan.sh');
-          console.log('DEPLOY APPLICATION: ');
-          this.deploy(projectName, 
-                      Environment.readConfigFrom(project.getPath(),'connection'),
-                      Environment.readConfigFrom(project.getPath(),'password'),false
-                      );
+          if(!setupOnly){
+            console.log('DEPLOY APPLICATION: ');
+            this.deploy(projectName, 
+                        Environment.readConfigFrom(project.getPath(),'connection'),
+                        Environment.readConfigFrom(project.getPath(),'password'),false
+                        );
+          }
         }else{
           console.log(chalk.red('FAILURE: apply was made but there are still changes!'));
         }      

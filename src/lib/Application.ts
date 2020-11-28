@@ -1,6 +1,7 @@
 import { ProjectManager } from './ProjectManager';
 import * as fs from "fs-extra"
 import { DBHelper } from './DBHelper';
+import { Md5 } from 'ts-md5';
 
 export class Application{
 
@@ -52,7 +53,8 @@ export class Application{
             fs.mkdirSync(path);
         }
 
-        let script = "@&XCLBIN/scripts/create_workspace.sql "+
+        let script =      "@.env.sql" + "\n" +
+                          "@&XCLBIN/scripts/create_workspace.sql "+
                           workspace + " "+
                           ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
 
@@ -63,7 +65,7 @@ export class Application{
 
     public static generateSQLEnvironment(projectName:string, xclHomePath:string){
       let path=ProjectManager.getInstance().getProject(projectName).getPath()+'/db/.setup/workspaces';
-      let filename = path + '/env.sql';
+      let filename = path + '/.env.sql';
 
       
       if(!fs.pathExistsSync(path)){
@@ -71,15 +73,17 @@ export class Application{
       }
 
       let script  = 'define XCLBIN = ' + xclHomePath;
-      
-      if(!fs.existsSync(filename)){
+
+      if(!fs.existsSync(filename) ||  
+          Md5.hashStr(script) != Md5.hashStr(fs.readFileSync(filename).toString())
+      ){
         fs.writeFileSync(filename,script);
       }
     }
 
     public static removeSQLEnvironmentFile(projectName:string){
       let path=ProjectManager.getInstance().getProject(projectName).getPath()+'/db/.setup/workspaces';
-      let filename = path + '/env.sql';
+      let filename = path + '/.env.sql';
       if(fs.existsSync(filename)){
         fs.unlinkSync(filename);
       }

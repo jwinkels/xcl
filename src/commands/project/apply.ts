@@ -8,6 +8,7 @@ export default class ProjectApply extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
+    "setup-only": flags.boolean({description:'Deploys only dependeny changes', default: false})
   }
 
   static args = [
@@ -22,10 +23,10 @@ export default class ProjectApply extends Command {
     const {args, flags} = this.parse(ProjectApply);
 
     if ( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ) !== 'all' ){
-      ProjectManager.getInstance().apply( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ) );
+      ProjectManager.getInstance().apply( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ), flags["setup-only"] );
     }else{
       if ( args.project ){
-        ProjectManager.getInstance().apply( args.project );
+        ProjectManager.getInstance().apply( args.project, flags["setup-only"]);
       }else{
         console.log( chalk.red('ERROR: You need to specify a project or be in a xcl-Project managed directory!') );
       }
