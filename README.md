@@ -200,7 +200,7 @@ ARGUMENTS
 OPTIONS
   -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
   -h, --help                   shows this help
-  -p, --syspw=syspw            (required) Password of SYS-User
+  -p, --syspw=syspw            Password of SYS-User
 ```
 
 _See code: [src\commands\feature\update.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\update.ts)_
@@ -248,10 +248,11 @@ USAGE
   $ xcl project:apply [PROJECT]
 
 ARGUMENTS
-  PROJECT  project name that the changes should be applied to
+  PROJECT  name of the project that the changes should be applied to
 
 OPTIONS
-  -h, --help  show CLI help
+  -h, --help    show CLI help
+  --setup-only  Deploys only dependeny changes
 ```
 
 _See code: [src\commands\project\apply.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\apply.ts)_
@@ -265,7 +266,7 @@ USAGE
   $ xcl project:build [PROJECT] [VERSION]
 
 ARGUMENTS
-  PROJECT  The name of the project that should be build
+  PROJECT  name of the project that should be build
   VERSION
 
 OPTIONS
@@ -332,7 +333,9 @@ OPTIONS
   -c, --connection=connection  Connectstring ex. localhost:1521/xepdb1
   -f, --force                  Attention: forces dropping existing schemas
   -h, --help                   show CLI help
+  -o, --objects                Install Basic Objects defined in setup-Directory
   -p, --syspw=syspw            Password of user sys
+  -u, --users                  Install standard Schemas APP, LOGIC, DATA, DEPL
   -y, --yes                    Answers force-action with yes (Use with caution)
 ```
 
@@ -361,7 +364,7 @@ USAGE
   $ xcl project:plan [PROJECT]
 
 ARGUMENTS
-  PROJECT  the name of the project
+  PROJECT  name of the project
 
 OPTIONS
   -h, --help  show CLI help
