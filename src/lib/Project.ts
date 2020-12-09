@@ -39,7 +39,7 @@ export class Project {
       this.environment=Environment.initialize(this.name);
     } else {
       this.config = this.readConfig();
-      this.name   = this.config.project;
+      this.name   = this.config.xcl.project;
       this.status = new ProjectStatus(this);      
       this.features = this.getFeatures();
       this.users = this.getUsers();
