@@ -36,13 +36,14 @@ export class Project {
       this.status = new ProjectStatus(this);
       this.writeConfig();
       this.status.serialize()
-      this.environment=Environment.initialize(name);
+      this.environment=Environment.initialize(this.name);
     } else {
       this.config = this.readConfig();
+      this.name   = this.config.project;
       this.status = new ProjectStatus(this);      
       this.features = this.getFeatures();
       this.users = this.getUsers();
-      this.environment=Environment.initialize(name);
+      this.environment=Environment.initialize(this.name);
     }
   }
 

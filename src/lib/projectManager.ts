@@ -81,6 +81,12 @@ export class ProjectManager {
           name=Object.keys(ProjectManager.projectsJson.projects)[i];
         }
       }
+
+      if (name == "all" && fs.existsSync(projectPath + 'xcl.yml')){
+        let tmpProject:Project = new Project('',projectPath,'',false);
+        this.addProjectToGlobalConfig(tmpProject);
+        name = tmpProject.getName();
+      }
       return name;
     } catch (error) {
       return 'all';
