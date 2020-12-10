@@ -7,7 +7,7 @@ var os = require ('os');
 
 
 if (!fs.existsSync(xclHome)) {
-  fs.mkdirSync(xclHome);
+  fs.mkdirSync(xclHome, { recursive: true });
 }
 
 fs.copySync('./scripts/artifacts/software.yml', xclHome + '/software.yml');
@@ -43,7 +43,7 @@ request(options)
             var ic = new zip(filename);
             ic.extractAllTo(xclHome+'/');
             if (os.platform() === 'win32'){
-              fs.writeFile(xclHome + '/.instantClient','\\'+ic.getEntries()[0].entryName);
+              fs.writeFile(xclHome + '/.instantClient','\\\\'+ic.getEntries()[0].entryName);
             }else{
               fs.writeFile(xclHome + '/.instantClient','/'+ic.getEntries()[0].entryName);
             }
