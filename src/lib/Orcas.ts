@@ -1,9 +1,9 @@
 import { injectable, inject } from "inversify";
 import "reflect-metadata";
 import { DeliveryMethod } from "./DeliveryMethod";
-import { ProjectFeature } from './projectFeature';
+import { ProjectFeature } from './ProjectFeature';
 import * as fs from "fs-extra"
-import { ProjectManager } from './projectManager';
+import { ProjectManager } from './ProjectManager';
 import { exec } from "child_process";
 import {ShellHelper} from "./ShellHelper";
 import { DBHelper } from './DBHelper';

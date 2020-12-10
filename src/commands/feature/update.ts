@@ -1,6 +1,6 @@
 import {Command, flags} from '@oclif/command'
 import { FeatureManager } from '../../lib/FeatureManager'
-import { ProjectManager } from '../../lib/projectManager'
+import { ProjectManager } from '../../lib/ProjectManager'
 import { Environment } from '../../lib/Environment'
 
 export default class FeatureUpdate extends Command {

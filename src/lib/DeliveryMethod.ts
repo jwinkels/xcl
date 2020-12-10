@@ -1,5 +1,5 @@
 import { injectable, inject, targetName } from 'inversify';
-import { ProjectFeature } from './projectFeature';
+import { ProjectFeature } from './ProjectFeature';
 
 export interface DeliveryMethod{
     install(feature:ProjectFeature, projectPath:string)   : void;
