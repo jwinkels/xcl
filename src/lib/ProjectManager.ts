@@ -81,8 +81,10 @@ export class ProjectManager {
           name=Object.keys(ProjectManager.projectsJson.projects)[i];
         }
       }
-
-      if (name == "all" && fs.existsSync(projectPath + 'xcl.yml')){
+      //Wenn in der Liste nichts gefunden ist kann es trotzdem sein, dass es ein XCL-Projekt ist
+      //Aber es ist noch nicht in der Projektliste, aufgrund git clone o.ä.
+      //Daher prüfen ob eine xcl.yaml existiert, wenn ja, laden und in die Projektliste aufnehmen
+      if (name == "all" && fs.existsSync(projectPath + '/xcl.yml')){
         let tmpProject:Project = new Project('',projectPath,'',false);
         this.addProjectToGlobalConfig(tmpProject);
         name = tmpProject.getName();
