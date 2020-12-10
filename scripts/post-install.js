@@ -20,54 +20,32 @@ if (!fs.existsSync(xclHome+'/local.yml')) {
 }
 
 var options = {};
-/*
+
 var setPath = "";
 
 if (os.platform() === 'win32'){
-  options.uri = "https://download.oracle.com/otn_software/nt/instantclient/19500/instantclient-basic-windows.x64-19.5.0.0.0dbru.zip";
+  options.uri = "https://download.oracle.com/otn_software/nt/instantclient/19900/instantclient-basic-windows.x64-19.9.0.0.0dbru.zip";
   
 }
 
 if (os.platform() === 'linux'){
-  options.uri = "https://download.oracle.com/otn_software/linux/instantclient/19600/instantclient-basic-linux.x64-19.6.0.0.0dbru.zip";
+  options.uri = "https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basic-linux.x64-21.1.0.0.0.zip";
 }
 
 options.headers = {};
 
 var filename = xclHome + '/instantclient-basic.zip';
 
-// TODO: Installation Instantclient, optional per YN ausführen
-// quasi, wenn irgendas vom InstantClient im Pfad ist....
 request(options)
     .pipe(
       fs.createWriteStream(filename)
           .on('close', function(){
             var ic = new zip(filename);
             ic.extractAllTo(xclHome+'/');
-            if (os.platform()==='win32'){
-              console.log(os.userInfo());
-              setPath = 'setx path "%path%";'+xclHome+'/'+ic.getEntries()[0].entryName.toString();// TODO: Wird dann eh nicht benutzt, wenn bereits vorhanden, 
-                                                                                                  //        da Path von links nach rechts benutzt wird.
-              const childProcess = spawnSync(
-                setPath, 
-                [], {
-                    encoding: 'utf8',
-                    cwd: executePath,
-                    shell: false
-                }
-              );
+            if (os.platform() === 'win32'){
+              fs.writeFile(xclHome + '/.instantClient','\\'+ic.getEntries()[0].entryName);
             }else{
-              console.log(os.userInfo());
-              setPath = 'export PATH=$PATH:'+xclHome+'/'+ic.getEntries()[0].entryName.toString();
-              const childProcess = spawnSync(
-                setPath, 
-                [], {
-                    encoding: 'utf8',
-                    cwd: executePath,
-                    shell: true
-                }
-              );
+              fs.writeFile(xclHome + '/.instantClient','/'+ic.getEntries()[0].entryName);
             }
           })
       );
-*/

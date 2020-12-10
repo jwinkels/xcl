@@ -4,9 +4,13 @@ import * as path from 'path'
 import { ProjectFeature } from './ProjectFeature';
 import chalk from 'chalk'
 import cli from 'cli-ux'
+import * as fs from "fs-extra";
+import * as os from "os";
 
 const oracledb = require('oracledb');
-
+const xclHome = os.homedir + "/AppData/Roaming/xcl";
+const instant_client_path = xclHome + fs.readFileSync(xclHome+'/.instantClient').toString();
+oracledb.initOracleClient({libDir: instant_client_path});
 export interface IConnectionProperties {
   user: string,
   password: string,
