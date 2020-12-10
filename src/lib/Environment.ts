@@ -74,7 +74,11 @@ export class Environment{
         }else{
             envFileName = this.xclHome+"/environment_" + projectName + ".yml";
         }
-        
+
+        if(!fs.existsSync(envFileName)){
+            this.initialize(projectName);
+        }
+
         if (projectName!=="all" && variableName==="project"){
             return projectName;
         }else{

@@ -19,6 +19,10 @@ if (!fs.existsSync(xclHome+'/local.yml')) {
   fs.closeSync(fs.openSync(xclHome + '/local.yml', 'w'));
 }
 
+if (!fs.existsSync(xclHome+'/environment.yml')) {
+  fs.closeSync(fs.openSync(xclHome + '/environment.yml', 'w'));
+}
+
 var options = {};
 
 var setPath = "";
@@ -29,7 +33,7 @@ if (os.platform() === 'win32'){
 }
 
 if (os.platform() === 'linux'){
-  options.uri = "https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basic-linux.x64-21.1.0.0.0.zip";
+  options.uri = "https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-basic-linux.x64-19.9.0.0.0dbru.zip";
 }
 
 options.headers = {};

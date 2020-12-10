@@ -8,9 +8,9 @@ import * as fs from "fs-extra";
 import * as os from "os";
 
 const oracledb = require('oracledb');
-const xclHome = os.homedir + "/AppData/Roaming/xcl";
-const instant_client_path = xclHome + fs.readFileSync(xclHome+'/.instantClient').toString();
-oracledb.initOracleClient({libDir: instant_client_path});
+const xclHome = os.homedir() + "/AppData/Roaming/xcl";
+const instant_client_path:string = xclHome + fs.readFileSync(xclHome+"/.instantClient").toString().trimEnd();
+fs.existsSync(instant_client_path)?oracledb.initOracleClient({libDir: instant_client_path}):console.log('No Instant Client Installed in '+instant_client_path);
 export interface IConnectionProperties {
   user: string,
   password: string,
