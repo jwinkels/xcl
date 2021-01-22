@@ -119,6 +119,7 @@ export class Project {
       if (!fs.existsSync(this.getPath() + fullPath + path)) {
         fullPath = this.getPath() + fullPath + path;        
         fs.mkdirSync(fullPath, { recursive: true });
+        fs.createFileSync(fullPath+'/.gitkeep');
       }
     }
   }
@@ -442,6 +443,7 @@ class ProjectStatus {
           version: "Release 1.0",
           workspace: project.getWorkspace(),
           users: {},
+          hash: "",
           dependencies: {}
         },
       };
