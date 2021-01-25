@@ -1,4 +1,4 @@
-import { injectable, inject } from "inversify";
+import { injectable } from "inversify";
 import "reflect-metadata";
 import { DeliveryMethod } from "./DeliveryMethod";
 import { ProjectFeature } from './ProjectFeature';
@@ -36,7 +36,7 @@ export class Orcas implements DeliveryMethod{
         feature.setInstalled(true);
     }
 
-    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean){
+    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string){
       
       let project=ProjectManager.getInstance().getProject(projectName);
       let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + password;
@@ -53,7 +53,6 @@ export class Orcas implements DeliveryMethod{
                                     connection);
 
       fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/").filter(f=>f.toLowerCase().includes("pre_")).forEach(file=>{
-        
         DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
       });
 
@@ -71,7 +70,7 @@ export class Orcas implements DeliveryMethod{
               ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
                 .then(()=>{
                     if (!schemaOnly){
-                      Application.installApplication(projectName, connection, password);
+                      Application.installApplication(projectName, connection, password, ords);
                     }
                 })
             })

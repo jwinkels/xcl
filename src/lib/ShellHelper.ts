@@ -32,7 +32,7 @@ export class ShellHelper{
                         }
                         
                         if (script.includes('plan.sh')){
-                            fs.appendFileSync(executePath+'/xcl.log', 'APPLY STARTED: '); 
+                            fs.appendFileSync(executePath+'/xcl.log', 'APPLY STARTED: '+new Date().toLocaleString()); 
                         }
                         resolve(childProcess.stdout);
                     }else{

@@ -448,6 +448,7 @@ class ProjectStatus {
         },
       };
       ProjectStatus.stateFileName = ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml';
+      this.serialize();
     }else{
       ProjectStatus.stateFileName = ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml';
       this.statusConfig=this.deserialize();

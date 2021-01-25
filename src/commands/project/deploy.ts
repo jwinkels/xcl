@@ -14,7 +14,8 @@ export default class ProjectDeploy extends Command {
     password: flags.string( {char: 'p', description:'Password for Deployment User', required: true} ),
     dependencies: flags.boolean({char: 'd', description:'Deploy inclusive dependencies (you will be asked for sys-user password)'}),
     syspw: flags.string({char:'s', description:'Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users will be overwritten!]'}),
-    'schema-only': flags.boolean({description:'Deploys only schema objects', default: false})
+    'schema-only': flags.boolean({description:'Deploys only schema objects', default: false}),
+    'ords-url': flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords')})    
   }
 
   static args = [{name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom(process.cwd(),"project")}]
@@ -39,7 +40,7 @@ export default class ProjectDeploy extends Command {
             await FeatureManager.getInstance().installAllProjectFeatures(args.project, flags.connection, flags.syspw!, true);
           }
         }
-        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"]); 
+        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"], flags['ords-url']); 
        
       }else{
         console.log(chalk.red("ERROR: Deploy-Method undefined!"));
