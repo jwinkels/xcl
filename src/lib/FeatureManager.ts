@@ -20,6 +20,7 @@ import {Project} from './Project';
 import e = require('express');
 import { Environment } from './Environment';
 import { Operation } from './Operation';
+import { Utils } from './Utils';
 const Table = require('cli-table');
 
 export class FeatureManager{
@@ -287,16 +288,16 @@ export class FeatureManager{
 
                             var executeString="";
                             if (fs.existsSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '/' + installSteps.scripts[i].path)){
-                              executeString = projectPath + '/dependencies/' 
+                              executeString = Utils.checkPathForSpaces(projectPath + '/dependencies/' 
                                                           + feature.getName() 
                                                           + '_' 
                                                           + feature.getReleaseInformation() 
                                                           + '/' 
-                                                          + installSteps.scripts[i].path 
+                                                          + installSteps.scripts[i].path) 
                                                           + argumentString;
                             }else{
                               if(fs.existsSync(__dirname + "/scripts/" + installSteps.scripts[i].path)){
-                                executeString=__dirname + "/scripts/" + installSteps.scripts[i].path + argumentString;
+                                executeString=Utils.checkPathForSpaces(__dirname + "/scripts/" + installSteps.scripts[i].path) + argumentString;
                               }else{
                                 throw Error("Script couldn't be found!");
                               }
@@ -379,16 +380,16 @@ export class FeatureManager{
 
                       var executeString="";
                       if (fs.existsSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '/' + deinstallSteps.scripts[i].path)){
-                        executeString = projectPath + '/dependencies/' 
+                        executeString = Utils.checkPathForSpaces(projectPath + '/dependencies/' 
                                                     + feature.getName() 
                                                     + '_' 
                                                     + feature.getReleaseInformation() 
                                                     + '/' 
-                                                    + deinstallSteps.scripts[i].path 
+                                                    + deinstallSteps.scripts[i].path) +
                                                     + argumentString;
                       }else{
                         if(fs.existsSync(__dirname + "/scripts/" + deinstallSteps.scripts[i].path)){
-                          executeString=__dirname + "/scripts/" + deinstallSteps.scripts[i].path + argumentString;
+                          executeString=Utils.checkPathForSpaces(__dirname + "/scripts/" + deinstallSteps.scripts[i].path) + argumentString;
                         }else{
                           throw Error("Script couldn't be found!");
                         }
