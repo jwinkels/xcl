@@ -3,6 +3,7 @@ import * as fs from "fs-extra"
 import { DBHelper } from './DBHelper';
 import { Md5 } from 'ts-md5';
 import { Environment } from './Environment';
+import { Utils } from './Utils';
 
 export class Application{
 
@@ -75,12 +76,9 @@ export class Application{
         fs.mkdirSync(path);
       }
 
-      let script  = 'define XCLBIN = \'';
-      if (xclHomePath.indexOf(' ')){
-        script =  script + '"' + xclHomePath + '"\'';
-      }else{
-        script = script + xclHomePath;
-      }
+      let script  = 'define XCLBIN = ';
+
+      script = script + Utils.checkPathForSpaces(xclHomePath);
 
       if(!fs.existsSync(filename) ||  
         Md5.hashStr(script) != Md5.hashStr(fs.readFileSync(filename).toString())

@@ -19,6 +19,7 @@ import {Operation} from './Operation';
 import { Application } from './Application';
 import { string } from '@oclif/command/lib/flags';
 import { interfaces } from 'inversify';
+import { Utils } from './Utils';
 
 const Table = require('cli-table')
 
@@ -141,7 +142,7 @@ export class ProjectManager {
       if(database){// remove from db?
         if (connection && syspw){
           const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
-          DBHelper.executeScript(c, __dirname + '/scripts/drop_xcl_users.sql ' + project.getName() + '_data ' +
+          DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/drop_xcl_users.sql')+ ' ' + project.getName() + '_data ' +
                                                                                project.getName() + '_logic ' +
                                                                                project.getName() + '_app ' +
                                                                                project.getName() + '_depl');
@@ -239,7 +240,7 @@ export class ProjectManager {
         }
         
         console.log(chalk.yellow(`Dropping existing schemas`));
-        await DBHelper.executeScript(c, __dirname + '/scripts/drop_xcl_users.sql ' + p.getName() + '_data ' +
+        await DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/drop_xcl_users.sql')+' ' + p.getName() + '_data ' +
                                                                            p.getName() + '_logic ' +
                                                                            p.getName() + '_app ' +
                                                                            p.getName() + '_depl');
@@ -248,7 +249,7 @@ export class ProjectManager {
 
     if (flags.users){
       console.log(chalk.green(`OK, Schemas werden installiert`));
-      await DBHelper.executeScript(c, __dirname + '/scripts/create_xcl_users.sql ' + p.getName() + '_depl ' +
+      await DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/create_xcl_users.sql')+ ' ' + p.getName() + '_depl ' +
                                                                             p.getName() + ' ' +  //TODO: Generate strong password!
                                                                             p.getName() + '_data ' +
                                                                             p.getName() + '_logic ' +
