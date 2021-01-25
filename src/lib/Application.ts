@@ -75,9 +75,9 @@ export class Application{
         fs.mkdirSync(path);
       }
 
-      let script  = 'define XCLBIN = ';
+      let script  = 'define XCLBIN = \'';
       if (xclHomePath.indexOf(' ')){
-        script =  script + '"' + xclHomePath + '"';
+        script =  script + '"' + xclHomePath + '"\'';
       }else{
         script = script + xclHomePath;
       }
