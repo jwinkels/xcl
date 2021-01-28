@@ -58,7 +58,7 @@ export class Application{
         }
 
         let script =      "@.env.sql" + "\n" +
-                          "@&XCLBIN/scripts/create_workspace.sql "+
+                          '@'+Utils.enwrapInQuotes('&XCLBIN/scripts/create_workspace.sql')+' '+
                           workspace + " "+
                           ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
 
@@ -78,7 +78,7 @@ export class Application{
 
       let script  = 'define XCLBIN = ';
 
-      script = script + Utils.checkPathForSpaces(xclHomePath);
+      script = script + xclHomePath;
 
       if(!fs.existsSync(filename) ||  
         Md5.hashStr(script) != Md5.hashStr(fs.readFileSync(filename).toString())
