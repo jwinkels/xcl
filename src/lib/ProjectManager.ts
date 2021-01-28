@@ -289,13 +289,13 @@ export class ProjectManager {
     deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).build(projectName,version);
   }
 
-  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string){
+  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean){
     console.log(projectName);
     let p:Project = this.getProject(projectName);
     let path:string = p.getPath();
     
     if (!p.getStatus().hasChanged()){
-      deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, ords);
+      deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, ords, silentMode);
     }else{
       console.log(chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!'));
     }
@@ -412,7 +412,7 @@ export class ProjectManager {
                         Environment.readConfigFrom(project.getPath(),'password'),
                         false,
                         Environment.readConfigFrom(project.getPath(),'ords'),
-                        );
+                        true);
           }
         }else{
           console.log(chalk.red('FAILURE: apply was made but there are still changes!'));
