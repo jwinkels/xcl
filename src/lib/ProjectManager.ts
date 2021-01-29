@@ -19,6 +19,7 @@ import {Operation} from './Operation';
 import { Application } from './Application';
 import { string } from '@oclif/command/lib/flags';
 import { interfaces } from 'inversify';
+import { Utils } from './Utils';
 
 const Table = require('cli-table')
 
@@ -28,7 +29,6 @@ export class ProjectManager {
 
   private static manager: ProjectManager;
   private static xclHome = os.homedir + "/AppData/Roaming/xcl";
-  // private static project: Project;
   private static projectsYaml: yaml.Document;
   private static projectsJson: any;
   private static project: Project;
@@ -142,7 +142,7 @@ export class ProjectManager {
       if(database){// remove from db?
         if (connection && syspw){
           const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
-          DBHelper.executeScript(c, __dirname + '/scripts/drop_xcl_users.sql ' + project.getName() + '_data ' +
+          DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/drop_xcl_users.sql')+ ' ' + project.getName() + '_data ' +
                                                                                project.getName() + '_logic ' +
                                                                                project.getName() + '_app ' +
                                                                                project.getName() + '_depl');
@@ -240,7 +240,7 @@ export class ProjectManager {
         }
         
         console.log(chalk.yellow(`Dropping existing schemas`));
-        await DBHelper.executeScript(c, __dirname + '/scripts/drop_xcl_users.sql ' + p.getName() + '_data ' +
+        await DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/drop_xcl_users.sql')+' ' + p.getName() + '_data ' +
                                                                            p.getName() + '_logic ' +
                                                                            p.getName() + '_app ' +
                                                                            p.getName() + '_depl');
@@ -249,7 +249,7 @@ export class ProjectManager {
 
     if (flags.users){
       console.log(chalk.green(`OK, Schemas werden installiert`));
-      await DBHelper.executeScript(c, __dirname + '/scripts/create_xcl_users.sql ' + p.getName() + '_depl ' +
+      await DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/create_xcl_users.sql')+ ' ' + p.getName() + '_depl ' +
                                                                             p.getName() + ' ' +  //TODO: Generate strong password!
                                                                             p.getName() + '_data ' +
                                                                             p.getName() + '_logic ' +
@@ -288,13 +288,13 @@ export class ProjectManager {
     deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).build(projectName, version, mode);
   }
 
-  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, version:string, mode:string){
-    console.log(projectName);
+
+  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string){    
     let p:Project = this.getProject(projectName);
     let path:string = p.getPath();
-
-    if (!p.getStatus().hasChanged()){
-      deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, version, mode);
+    
+    if (!p.getStatus().hasChanged()){      
+      deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, ords, silentMode, version, mode);
     }else{
       console.log(chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!'));
     }
@@ -410,7 +410,9 @@ export class ProjectManager {
                         Environment.readConfigFrom(project.getPath(),'connection'),
                         Environment.readConfigFrom(project.getPath(),'password'),
                         false,
-                        "a", "b"); // FIXME: version und mode noch in apply einbauen
+                        Environment.readConfigFrom(project.getPath(),'ords'),
+                        true,
+                        "a", "b"); // FIXME: version und mode noch in apply einbauen);
           }
         }else{
           console.log(chalk.red('FAILURE: apply was made but there are still changes!'));

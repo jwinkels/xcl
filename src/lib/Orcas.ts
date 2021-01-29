@@ -1,10 +1,11 @@
-import { injectable, inject } from "inversify";
+import { injectable } from "inversify";
 import "reflect-metadata";
 import { DeliveryMethod } from "./DeliveryMethod";
 import { ProjectFeature } from './ProjectFeature';
 import * as fs from "fs-extra"
 import { ProjectManager } from './ProjectManager';
-import { exec } from "child_process";
+import { Project } from './Project';
+import cli from 'cli-ux';
 import {ShellHelper} from "./ShellHelper";
 import { DBHelper } from './DBHelper';
 import { Application } from './Application';
@@ -36,13 +37,13 @@ export class Orcas implements DeliveryMethod{
         feature.setInstalled(true);
     }
 
-    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean){
+    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean){
       
       let project=ProjectManager.getInstance().getProject(projectName);
       let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + password;
       let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getName() + " -Ppassword=" + password;
       let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getName() + " -Ppassword=" + password;
-      
+      let confirmed:boolean;
       /*
         Pre-Deploy
       */
@@ -53,7 +54,6 @@ export class Orcas implements DeliveryMethod{
                                     connection);
 
       fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/").filter(f=>f.toLowerCase().includes("pre_")).forEach(file=>{
-        
         DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
       });
 
@@ -64,6 +64,14 @@ export class Orcas implements DeliveryMethod{
       /*
         Deploy Start
       */
+
+      if (silentMode){
+        this.silentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly);
+      }else{
+        this.unsilentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly);
+      }
+
+      /*
       ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
         .then(function(){
           ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
@@ -71,11 +79,12 @@ export class Orcas implements DeliveryMethod{
               ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
                 .then(()=>{
                     if (!schemaOnly){
-                      Application.installApplication(projectName, connection, password);
+                      Application.installApplication(projectName, connection, password, ords);
                     }
                 })
             })
         });
+      */
       /*
         Deploy End
       */
@@ -91,6 +100,49 @@ export class Orcas implements DeliveryMethod{
       /*
         Post-Deploy Hook End
       */
+    }
+
+
+    public unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean){
+      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
+      .then(function(){
+        cli.confirm('Proceed with '+projectName.toUpperCase()+'_LOGIC? (y/n)').then(function(proceed){
+          if (proceed){
+            ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
+              .then(function(){
+                cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)').then(function(proceed){
+                  if (proceed){
+                    ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
+                    .then(()=>{
+                        if (!schemaOnly){
+                          Application.installApplication(projectName, connection, password, ords);
+                        }
+                    })
+                  }
+                })
+              })
+          }
+        })
+      });
+    }
+
+    public silentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean){
+      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
+        .then(function(){
+          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
+            .then(function(){
+              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
+                .then(()=>{
+                  if (!schemaOnly){
+                    Application.installApplication(projectName, connection, password, ords);
+                  }
+                })
+            })
+        });
+    }
+
+    public deploySchema(){
+      //TODO: Implement single Schema Deploy
     }
 
     public build(projectName:string, version:string){

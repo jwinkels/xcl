@@ -20,7 +20,9 @@ export default class ProjectDeploy extends Command {
                         default:      'init'}),
     version: flags.string({char:        'v',
                            description: 'Version to tag build',
-                           required:    true})                        
+                           required:    true}),                        
+    yes: flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),   
+    'ords-url': flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords')})    
   }
 
   static args = [{name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom(process.cwd(),"project")}]
@@ -44,9 +46,8 @@ export default class ProjectDeploy extends Command {
           if (flags.dependencies){
             await FeatureManager.getInstance().installAllProjectFeatures(args.project, flags.connection, flags.syspw!, true);
           }
-        }
-        console.log('deploy.ts', flags.version, flags.mode);
-        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"], flags.version, flags.mode); 
+        }        
+        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"], flags['ords-url'], flags.yes, flags.version, flags.mode); 
        
       }else{
         console.log(chalk.red("ERROR: Deploy-Method undefined!"));

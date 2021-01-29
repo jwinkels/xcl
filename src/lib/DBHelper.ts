@@ -141,7 +141,8 @@ export class DBHelper {
 
   public static executeScript(conn: IConnectionProperties, script: string){
     
-    // Funzt noch nicht...
+    fs.appendFileSync(process.cwd()+'/xcl.log', 'Start script: '+script); 
+    
     const childProcess = spawnSync(
       'sql', // Sqlcl path should be in path
       [DBHelper.getConnectionString(conn)], {
@@ -152,12 +153,23 @@ export class DBHelper {
     );
     
 
-    console.log(chalk.gray(childProcess.stdout));  
+    if (!childProcess.error){
+      console.log(chalk.gray(childProcess.stdout));
+      fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.stdout); 
+    }else{
+      console.log(chalk.red(childProcess.error.message));
+      fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.error.message); 
+    }
+    
   }
 
   public static executeScriptIn(conn: IConnectionProperties, script: string, cwd:string){
+    
     console.log(script);
-    // Funzt noch nicht...
+    console.log(process.cwd());
+    
+    fs.appendFileSync(process.cwd()+'/xcl.log', 'Start script: '+script); 
+
     const childProcess = spawnSync(
       'sql', // Sqlcl path should be in path
       [DBHelper.getConnectionString(conn)], {
@@ -170,8 +182,10 @@ export class DBHelper {
     
     if (!childProcess.error){
       console.log(chalk.gray(childProcess.stdout));
+      fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.stdout); 
     }else{
       console.log(chalk.red(childProcess.error.message));
+      fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.error.message); 
     }
 
   }

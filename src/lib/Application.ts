@@ -2,16 +2,19 @@ import { ProjectManager } from './ProjectManager';
 import * as fs from "fs-extra"
 import { DBHelper } from './DBHelper';
 import { Md5 } from 'ts-md5';
+import { Environment } from './Environment';
+import { Utils } from './Utils';
 
 export class Application{
 
-    public static installApplication(projectName:string,connection:string, password:string){
+    public static installApplication(projectName:string,connection:string, password:string, ords:string){
         let path = "";
         let installFileList:Map<string,string>;
         installFileList=new Map();
 
         let baseFolderApex = "/apps/apex/";
         let projectPath    = ProjectManager.getInstance().getProject(projectName).getPath();
+        let baseUrlIp      = connection.substr(0,connection.indexOf(':'));
   
         //Read apex-folder and find the correct file
         fs.readdirSync( projectPath + baseFolderApex).forEach(file=>{
@@ -30,7 +33,8 @@ export class Application{
                 let script= projectPath + baseFolderApex + file + "/pre_install_application.sql " + 
                             ProjectManager.getInstance().getProject(projectName).getWorkspace() + " " +
                             appId +" "+
-                            ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
+                            ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP" + " "+
+                            ords + " " + projectName;
                 installFileList.set(projectPath + baseFolderApex + file,
                                       script);
               }
@@ -54,7 +58,7 @@ export class Application{
         }
 
         let script =      "@.env.sql" + "\n" +
-                          "@&XCLBIN/scripts/create_workspace.sql "+
+                          '@'+Utils.enwrapInQuotes('&XCLBIN/scripts/create_workspace.sql')+' '+
                           workspace + " "+
                           ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
 
@@ -72,10 +76,12 @@ export class Application{
         fs.mkdirSync(path);
       }
 
-      let script  = 'define XCLBIN = ' + xclHomePath;
+      let script  = 'define XCLBIN = ';
+
+      script = script + xclHomePath;
 
       if(!fs.existsSync(filename) ||  
-          Md5.hashStr(script) != Md5.hashStr(fs.readFileSync(filename).toString())
+        Md5.hashStr(script) != Md5.hashStr(fs.readFileSync(filename).toString())
       ){
         fs.writeFileSync(filename,script);
       }
