@@ -21,6 +21,10 @@ export class Schema{
         return this.name;
     }
 
+    public getProxy():Schema|undefined{
+        return this.proxy;
+    }
+
     public getPassword():string{
         if (this.proxy){
             return this.proxy.getPassword();

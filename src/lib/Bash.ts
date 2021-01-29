@@ -24,6 +24,7 @@ class Bash implements DeliveryMethod{
         const appSchema = project.getUsers().get('APP')?.getName();
         const dataSchema = project.getUsers().get('DATA')?.getName();
         const logicSchema = project.getUsers().get('LOGIC')?.getName();
+        const proxyUserName = project.getUsers().get('DATA')?.getProxy()?.getName() || `${projectName}_depl`;
         ShellHelper.executeScriptWithEnv(`bash .bash4xcl/apply.sh ${mode} ${version}`, 
                                          project.getPath(), 
                                          {
@@ -36,8 +37,8 @@ class Bash implements DeliveryMethod{
                                            "BRANCHES": `( develop test master )`, // TODO: das muss ausgelagert werden
                                            "DEPOT_PATH": `_depot`, // TODO: das muss ausgelagert werden
                                            "STAGE": `master`, // TODO: das muss ausgelagert werden
-                                           "DB_APP_USER":project.getUsers().get('LOGIC')?.getConnectionName(),
-                                           "DB_APP_PWD":`${projectName}_depl`,
+                                           "DB_APP_USER": proxyUserName,
+                                           "DB_APP_PWD":`${password}`,
                                            "DB_TNS":`${connection}`,
                                            "USE_PROXY": "TRUE",
                                            "APP_OFFSET": 0
