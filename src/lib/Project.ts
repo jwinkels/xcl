@@ -212,7 +212,7 @@ export class Project {
                 //installed: feature.getInstalled(),
                 type: feature.getType(),
                 user:{
-                    name: feature.getUser().getName(),
+                    name: feature.getUser().getConnectionName(),
                     pwd: feature.getUser().getPassword()
                     }
                 };

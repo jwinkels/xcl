@@ -37,19 +37,19 @@ export class Orcas implements DeliveryMethod{
         feature.setInstalled(true);
     }
 
-    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean){
+    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string){
       
       let project=ProjectManager.getInstance().getProject(projectName);
-      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + password;
-      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getName() + " -Ppassword=" + password;
-      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getName() + " -Ppassword=" + password;
+      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password;
+      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password;
+      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password;
       let confirmed:boolean;
       /*
         Pre-Deploy
       */
 
       //TODO: Was ist wenn ich das für mehrere Schemata machen möchte
-      let conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getName(),
+      let conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(),
                                     password,
                                     connection);
 

@@ -16,7 +16,7 @@ class Bash implements DeliveryMethod{
                     projectPath + '/.bash4xcl');
     }
 
-    public deploy(projectName:string, connection:string, password:string, schemaOnly:boolean, version:string, mode:string) : void {
+    public deploy(projectName:string, connection:string, password:string, schemaOnly:boolean, ords:string, silentMode:boolean, version:string, mode:string) {
         console.log("projectName", projectName);
         console.log("version", version);
         console.log("mode", mode);
@@ -36,7 +36,7 @@ class Bash implements DeliveryMethod{
                                            "BRANCHES": `( develop test master )`, // TODO: das muss ausgelagert werden
                                            "DEPOT_PATH": `_depot`, // TODO: das muss ausgelagert werden
                                            "STAGE": `master`, // TODO: das muss ausgelagert werden
-                                           "DB_APP_USER":project.getUsers().get('LOGIC')?.getName(),
+                                           "DB_APP_USER":project.getUsers().get('LOGIC')?.getConnectionName(),
                                            "DB_APP_PWD":`${projectName}_depl`,
                                            "DB_TNS":`${connection}`,
                                            "USE_PROXY": "TRUE",
@@ -51,9 +51,9 @@ class Bash implements DeliveryMethod{
         console.log("version", version);
         console.log("mode", mode);
         let project=ProjectManager.getInstance().getProject(projectName);
-        const appSchema = project.getUsers().get('APP')?.getName();
-        const dataSchema = project.getUsers().get('DATA')?.getName();
-        const logicSchema = project.getUsers().get('LOGIC')?.getName();
+        const appSchema = project.getUsers().get('APP')?.getConnectionName();
+        const dataSchema = project.getUsers().get('DATA')?.getConnectionName();
+        const logicSchema = project.getUsers().get('LOGIC')?.getConnectionName();
         ShellHelper.executeScriptWithEnv(`bash .bash4xcl/build.sh ${mode} ${version}`, 
                                          project.getPath(), 
                                          {

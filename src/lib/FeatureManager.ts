@@ -268,10 +268,10 @@ export class FeatureManager{
                             if (installSteps.scripts[i].arguments){
                               for (var j=0; j<installSteps.scripts[i].arguments.length; j++){
                                 if (installSteps.scripts[i].arguments[j] == 'credentials'){
-                                  argumentString = " " + feature.getUser().getName() + " ";
+                                  argumentString = " " + feature.getUser().getConnectionName() + " ";
                                   argumentString = argumentString+feature.getUser().getPassword();
                                 }else if(installSteps.scripts[i].arguments[j] == 'username'){
-                                  argumentString = " " + feature.getUser().getName(); 
+                                  argumentString = " " + feature.getUser().getConnectionName(); 
                                 }else{
                                   argumentString = argumentString + " " + installSteps.parameters[installSteps.scripts[i].arguments[j]];
                                 }
@@ -282,8 +282,8 @@ export class FeatureManager{
                               connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
                               c = DBHelper.getConnectionProps('sys',syspw,connection);
                             }else{
-                              connectionWithUser=feature.getUser().getName() + "/" + feature.getUser().getPassword() + "@" + connection;
-                              c = DBHelper.getConnectionProps(feature.getUser().getName(),feature.getUser().getPassword(),connection);
+                              connectionWithUser=feature.getUser().getConnectionName() + "/" + feature.getUser().getPassword() + "@" + connection;
+                              c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection);
                             }
 
                             var executeString="";
@@ -360,10 +360,10 @@ export class FeatureManager{
                       if (deinstallSteps.scripts[i].arguments){
                         for (var j=0; j<deinstallSteps.scripts[i].arguments.length; j++){
                           if (deinstallSteps.scripts[i].arguments[j] == 'credentials'){
-                            argumentString = " " + feature.getUser().getName() + " ";
+                            argumentString = " " + feature.getUser().getConnectionName() + " ";
                             argumentString = argumentString+feature.getUser().getPassword();
                           }else if(deinstallSteps.scripts[i].arguments[j] == 'username'){
-                            argumentString = " " + feature.getUser().getName(); 
+                            argumentString = " " + feature.getUser().getConnectionName(); 
                           }else{
                             argumentString = argumentString + " " + deinstallSteps.parameters[deinstallSteps.scripts[i].arguments[j]];
                           }
@@ -374,8 +374,8 @@ export class FeatureManager{
                         connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
                         c = DBHelper.getConnectionProps('sys',syspw,connection);
                       }else{
-                        connectionWithUser=feature.getUser().getName() + "/" + feature.getUser().getPassword() + "@" + connection;
-                        c = DBHelper.getConnectionProps(feature.getUser().getName(),feature.getUser().getPassword(),connection);
+                        connectionWithUser=feature.getUser().getConnectionName() + "/" + feature.getUser().getPassword() + "@" + connection;
+                        c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection);
                       }
 
                       var executeString="";
@@ -420,7 +420,7 @@ export class FeatureManager{
           var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
           const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
           if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
-            DBHelper.executeScript(c,`${__dirname}/scripts/drop_user.sql ${ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)?.getUser().getName()}` );
+            DBHelper.executeScript(c,`${__dirname}/scripts/drop_user.sql ${ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)?.getUser().getConnectionName()}` );
             resolve();
           }else{
             reject();
@@ -499,7 +499,7 @@ export class FeatureManager{
                   .then(function(){
                     FeatureManager.getInstance().removeFeatureFromProject(featureName, projectName)
                       .then(function(){
-                        FeatureManager.getInstance().addFeatureToProject(featureName, version, projectName, newFeature?.getUser().getName()!, newFeature?.getUser().getPassword()!)
+                        FeatureManager.getInstance().addFeatureToProject(featureName, version, projectName, newFeature?.getUser().getConnectionName()!, newFeature?.getUser().getPassword()!)
                           .then(function(){
                             FeatureManager.getInstance().installProjectFeature(featureName, connection, syspw, projectName)
                               .then(function(){

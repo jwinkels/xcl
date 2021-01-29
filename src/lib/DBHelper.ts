@@ -84,7 +84,7 @@ export class DBHelper {
     try{
       connection = await oracledb.getConnection(conn);
 
-      const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${feature.getUser().getName().toUpperCase()}'`);
+      const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${feature.getUser().getConnectionName().toUpperCase()}'`);
       userCount = result.rows[0][0];
     }catch(err){
       console.error(err,"{color:red}");
