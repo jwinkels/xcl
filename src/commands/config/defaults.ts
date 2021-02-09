@@ -4,11 +4,11 @@ import { ProjectManager } from '../../lib/ProjectManager'
 import cli from 'cli-ux'
 import chalk from 'chalk'
 import { Environment } from '../../lib/Environment'
-import e = require('express')
-import { promises } from 'dns'
+import { injectable } from 'inversify'
+import { resolve } from 'dns'
 const Table = require('cli-table')
 
-export default class ConfigDefaults extends Command {
+export default class ConfigDefaults extends Command{
   static description = 'set xcl environment variables'
 
   static flags = {
@@ -205,5 +205,8 @@ export default class ConfigDefaults extends Command {
     console.log(chalk.green('OK'));
   }
 
+  public async runCommand(argv:string[]){
+    return await ConfigDefaults.run(argv);
+  }
 
 }

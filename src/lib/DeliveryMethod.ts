@@ -1,4 +1,3 @@
-import { injectable, inject, targetName } from 'inversify';
 import { ProjectFeature } from './ProjectFeature';
 
 export interface DeliveryMethod{

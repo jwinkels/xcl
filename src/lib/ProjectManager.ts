@@ -20,6 +20,9 @@ import { Application } from './Application';
 import { string } from '@oclif/command/lib/flags';
 import { interfaces } from 'inversify';
 import { Utils } from './Utils';
+import ConfigDefaults from "../commands/config/defaults";
+import ProjectInit from "../commands/project/init";
+//import FeatureInstall from "../commands/feature/install";
 
 const Table = require('cli-table')
 
@@ -399,8 +402,33 @@ export class ProjectManager {
     let project:Project = this.getProject(projectName);
     if (fs.existsSync(project.getPath()+'/plan.sh')){
       Application.generateSQLEnvironment(projectName, __dirname);
-      ShellHelper.executeScript('plan.sh',project.getPath())
+      const plansh = fs.readFileSync(project.getPath()+'/plan.sh').toString();
+      const commands = plansh.split("\n");
+      if (commands.length > 1){
+        for (let i=1; i<=commands.length-1; i++){
+
+          //SPLIT COMMAND FROM ARGUMENTS
+          const command = commands[i].substr(0, commands[i].indexOf(" ", 5)).trim();
+          const argv = commands[i].substr(command.length+1, commands[i].length).split(" ");
+
+          //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
+          switch (command){
+            case "xcl config:defaults":  
+                  await ConfigDefaults.run(argv);
+                  break;
+            default:
+                  await ShellHelper.executeScript(commands[i], project.getPath());
+                  break;
+          }
+
+        }
+      }else{
+        console.log("Error reading XCL Commands!");
+      }
+      
+      /*ShellHelper.executeScript('plan.sh',project.getPath())
       .then((output)=>{
+      */
         project.getStatus().updateStatus();
         if (!project.getStatus().hasChanged()){
           console.log(chalk.green('SUCCESS: Everything up to date!'));
@@ -417,10 +445,10 @@ export class ProjectManager {
         }else{
           console.log(chalk.red('FAILURE: apply was made but there are still changes!'));
         }      
-      })
+      /*})
       .catch(()=>{
         console.log(chalk.red('ERROR: Update was not successfull! There are still changes!'));
-      });
+      });*/
     }else{
       console.log(chalk.yellow('Execute xcl project:plan first!'));
     }
