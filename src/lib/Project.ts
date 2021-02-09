@@ -7,20 +7,17 @@ import { Schema } from './Schema';
 import  * as os from 'os';
 import { Environment } from './Environment';
 import { Md5 } from 'ts-md5/dist/md5';
-import md5 = require('md5');
-import { config, version } from 'process';
 import {Operation} from './Operation';
-import { YAMLError } from 'yaml/util';
-import { string } from '@oclif/command/lib/flags';
-import { Application } from './Application';
+import { string } from "@oclif/command/lib/flags";
+
 
 export class Project {
   private name: string;                           //Project-Name
   private path: string; 	                        //Project-Home
-  private errorText: string = '';                 //Individual Error-Messages
+  private errorText = '';                        //Individual Error-Messages
   private config: any;                            //YAML-Structure that contains all project-configuration
-  private features: Map<String, ProjectFeature>;  //Map to save the added features
-  private users: Map<String, Schema>;              //Map for Project User-List
+  private features: Map<string, ProjectFeature>;  //Map to save the added features
+  private users: Map<string, Schema>;              //Map for Project User-List
   private status: ProjectStatus;
   private environment:Map<string, string>;
 
@@ -73,7 +70,7 @@ export class Project {
     }
   }
 
-  public setVersion(version:string){
+  public setVersion(version:string):void{
     if(!this.config.xcl.version){
       this.config=this.readConfig(); 
     }
@@ -92,7 +89,7 @@ export class Project {
     }
   }
 
-  public setWorkspace(workspaceName:string){
+  public setWorkspace(workspaceName:string):void{
     if(!this.config.xcl.workspace){
       this.config=this.readConfig(); 
     }
@@ -105,14 +102,14 @@ export class Project {
     return { path: this.getPath() };
   }
 
-  private createDirectoryPath(path: any, fullPath: string) {
+  private createDirectoryPath(path: any, fullPath: string):void {
     if (path instanceof Array) {
       for (let i = 0; i < path.length; i++) {
         this.createDirectoryPath(path[i], fullPath);
       }
     } else if (path instanceof Object) {
       for (let i = 0; i < Object.keys(path).length; i++) {
-        let objName = Object.keys(path)[i];
+        const objName = Object.keys(path)[i];
         this.createDirectoryPath(path[objName], fullPath + objName + "/");
       }
     } else {
@@ -124,8 +121,8 @@ export class Project {
     }
   }
 
-  private createDirectoryStructure() {
-    let parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories.yml").toString());
+  private createDirectoryStructure():void {
+    const parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories.yml").toString());
 
     this.createDirectoryPath(parsedDirs.toJSON(), "/");
     
@@ -135,11 +132,11 @@ export class Project {
     fs.copySync(__dirname + "/config/readme.md", this.getPath()+"/readme.md");
   }
 
-  public writeConfig() {    
+  public writeConfig():void {    
     fs.writeFileSync(this.getPath() + "/" + "xcl.yml", yaml.stringify(this.config));    
   }
 
-  private initialzeConfig(workspaceName: string) {
+  private initialzeConfig(workspaceName: string):any {
     return {
       xcl: {
         project: this.getName(),
@@ -157,13 +154,12 @@ export class Project {
     };
   }
 
-  public reloadConfig(){
+  public reloadConfig():void{
     this.config = this.readConfig();
   }
 
   private readConfig():any{
     let conf:string
-    let confObject;
 
     try {
       conf = fs.readFileSync(this.getPath() + "/xcl.yml").toString();      
@@ -184,7 +180,7 @@ export class Project {
   }
 
   //
-  public addFeature(feature:ProjectFeature){
+  public addFeature(feature:ProjectFeature):any{
     let dependencyConf:any = "";
 
     //Do not add the Feature if it is already in dependency list or if deployment method has already been configured 
@@ -231,13 +227,13 @@ export class Project {
     }
   }
 
-  public addSetupStep(file:string, path:string, hash:string){
+  public addSetupStep(file:string, path:string, hash:string):void{
       if (!this.config.xcl.setup){
         this.config.xcl.setup=[];
       }
-      let newStep = {name: file, path: path, hash: ""};
+      const newStep = {name: file, path: path, hash: ""};
       
-      let stepIndex = this.config.xcl.setup.findIndex(
+      const stepIndex = this.config.xcl.setup.findIndex(
                         (
                           e: { name: string; path: string; }
                         ) => e.name == newStep.name && e.path == newStep.path
@@ -255,16 +251,16 @@ export class Project {
   }
 
 
-  public updateSetupStep (file:string, path:string){
+  public updateSetupStep (file:string, path:string):void{
     try{
-      let content = fs.readFileSync(path+'/'+file);
-      let contentHash = Md5.hashStr(content.toString()).toString();
+      const content = fs.readFileSync(path+'/'+file);
+      const contentHash = Md5.hashStr(content.toString()).toString();
 
       console.log('HASH: '+contentHash);
 
-      let newStep = {name: file, path: path, hash: contentHash};
+      const newStep = {name: file, path: path, hash: contentHash};
 
-      let stepIndex = this.config.xcl.setup.findIndex(
+      const stepIndex = this.config.xcl.setup.findIndex(
         (
           e: { name: string; path: string; }
         ) => e.name == newStep.name && e.path == newStep.path
@@ -277,7 +273,7 @@ export class Project {
     }
   }
 
-  private hasDeployMethod():Boolean{
+  private hasDeployMethod():boolean{
     let deployMethodAvailable=false;
     this.features.forEach(function(feature){
       
@@ -301,7 +297,7 @@ export class Project {
     return method;
   }
 
-  public removeFeature(feature:ProjectFeature){
+  public removeFeature(feature:ProjectFeature):void{
     if (this.features.has(feature.getName())){  
       this.config=this.readConfig();
       this.features.delete(feature.getName());
@@ -310,7 +306,7 @@ export class Project {
         this.config.xcl.dependencies=[];
       }
 
-      this.config.xcl.dependencies = this.config.xcl.dependencies.filter((obj: { name: string; version: String; installed: Boolean; user: { name: string; pwd: string; }; }) => obj.name !== feature.getName())
+      this.config.xcl.dependencies = this.config.xcl.dependencies.filter((obj: { name: string; version: string; installed: boolean; user: { name: string; pwd: string; }; }) => obj.name !== feature.getName())
 
       this.writeConfig();
     }else{
@@ -319,13 +315,13 @@ export class Project {
   }
 
   //INFO: Read all Features from configuration and write it to feature-Map < String, ProjectFeature >
-  public getFeatures():Map<String,ProjectFeature>{
-    let features: Map<String, ProjectFeature> = new Map<String, ProjectFeature>();
-    let featureManager = FeatureManager.getInstance();
+  public getFeatures():Map<string,ProjectFeature>{
+    const features: Map<string, ProjectFeature> = new Map<string, ProjectFeature>();
+    const featureManager = FeatureManager.getInstance();
     this.config=this.readConfig();
     
     if (this.config.xcl?.dependencies){
-      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; type:string; user:any}) => {
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean; type:string; user:any}) => {
         switch(element.type){
           case "DB": { 
             features.set(element.name,(featureManager.getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! )); 
@@ -348,12 +344,12 @@ export class Project {
     return features;
   }
 
-  public getFeaturesOfType(type:string):Map<String,ProjectFeature>{
-    let features: Map<String,ProjectFeature> = new Map<String,ProjectFeature>();
+  public getFeaturesOfType(type:string):Map<string,ProjectFeature>{
+    const features: Map<string,ProjectFeature> = new Map<string,ProjectFeature>();
     this.config = this.readConfig();
     if (this.config.xcl?.dependencies){
-      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: Boolean; type:string; user:any}) => {
-        if (element.type==type){
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean; type:string; user:any}) => {
+        if ( element.type == type ){
           features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));    
         }
       });      
@@ -363,7 +359,7 @@ export class Project {
     return features;
   }
 
-  public updateFeature(feature:ProjectFeature){
+  public updateFeature(feature:ProjectFeature):void{
     if (this.features.has(feature.getName())){  
       this.config=this.readConfig();
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; }) => {
@@ -375,15 +371,15 @@ export class Project {
     }
   }
 
-  public getUsers():Map<String,Schema>{
-    this.config=this.readConfig();
-    this.users=new Map<String,Schema>();
+  public getUsers():Map<string,Schema>{
+    this.config = this.readConfig();
+    this.users  = new Map<string,Schema>();
     if(this.config.xcl?.users){
-      let users=this.config.xcl?.users;
-        let proxy= new Schema({name: users.user_deployment, password:"", proxy:undefined});
-        this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy:proxy}));
-        this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
-        this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
+      const users=this.config.xcl?.users;
+      const proxy= new Schema({name: users.user_deployment, password:"", proxy:undefined});
+      this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy:proxy}));
+      this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
+      this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
     }
     return this.users;
   }
@@ -427,11 +423,11 @@ class ProjectStatus {
   private static stateFileName = "";
   private project: Project;
   private statusConfig: any;
-  private changeList:Map<string, Boolean>;
+  private changeList:Map<string, boolean>;
   
   constructor(project:Project){
     this.project = project;
-    this.changeList = new Map<string,Boolean>();
+    this.changeList = new Map<string, boolean>();
 
     this.changeList.set('FEATURE',false);
     this.changeList.set('SETUP',false);
@@ -460,7 +456,7 @@ class ProjectStatus {
   }
 
   public hasChanged():boolean{
-    this.changeList=new Map<string, Boolean>();
+    this.changeList=new Map<string, boolean>();
     this.project.reloadConfig();
     this.statusConfig=this.deserialize();
     this.checkSetup("./db/.setup");
@@ -475,8 +471,8 @@ class ProjectStatus {
   public checkSetup(path:string){
     fs.readdirSync(path).forEach(file=>{
       if(fs.lstatSync(path+'/'+file).isFile() && !file.startsWith(".")){
-        let content = fs.readFileSync(path+'/'+file);
-        let contentHash = Md5.hashStr(content.toString()).toString();
+        const content = fs.readFileSync(path+'/'+file);
+        const contentHash = Md5.hashStr(content.toString()).toString();
         this.project.addSetupStep(file, path, contentHash);
       }else{
         if(fs.lstatSync(path+'/'+file).isDirectory()){
@@ -491,7 +487,7 @@ class ProjectStatus {
     }
   }
 
-  public getChanges():Map<string, Boolean>{
+  public getChanges():Map<string, boolean>{
     return this.changeList;
   }
 
@@ -549,7 +545,7 @@ class ProjectStatus {
   }
 
   public getRemovedDependencies(){
-    let features:Map<String,ProjectFeature>= new Map();
+    let features:Map<string,ProjectFeature> = new Map();
     this.statusConfig=this.deserialize();
     features = this.project.getFeatures();
       Object.keys(this.statusConfig.xcl.dependencies).forEach(key=>{
@@ -578,8 +574,7 @@ class ProjectStatus {
   }
 
   protected deserialize():any{
-    let conf:string="";
-    let confObject;
+    let conf = "";
 
     try {
       conf = fs.readFileSync(ProjectStatus.stateFileName).toString();      

@@ -22,14 +22,14 @@ export class Schema{
             return this.proxy.getPassword();
         }else{
             return this.password
-        };
+        }
     }
 
-    public setName(name:string){
+    public setName(name:string):void{
         this.name=name;
     }
 
-    public setPassword(password:string){
+    public setPassword(password:string):void{
         this.password=password;
     }
 }

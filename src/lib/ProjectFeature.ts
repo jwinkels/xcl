@@ -4,10 +4,10 @@ import { Schema } from './Schema';
 
 export class ProjectFeature extends Feature{
     private version:string;
-    private installed:Boolean;
+    private installed:boolean;
     private user:Schema;
 
-    constructor(args : {parent:Feature, version:string, username:string, password:string, installed:Boolean}){
+    constructor(args : {parent:Feature, version:string, username:string, password:string, installed:boolean}){
             super( {
                 name : args.parent.getName(), 
                 owner : args.parent.getOwner(), 
@@ -24,7 +24,7 @@ export class ProjectFeature extends Feature{
         return this.version;
     }
 
-    public setReleaseInformation(version:string){
+    public setReleaseInformation(version:string):void{
         this.version=version;
     }
 
@@ -37,11 +37,11 @@ export class ProjectFeature extends Feature{
         }
     }
 
-    public isInstalled():Boolean{
+    public isInstalled():boolean{
         return this.installed;
     }
 
-    public setInstalled(status:Boolean){
+    public setInstalled(status:boolean){
         this.installed=status;
     }
 
@@ -50,13 +50,13 @@ export class ProjectFeature extends Feature{
     }
 
     public getDownloadUrl():Promise<string>{
-        var self=this;
-        return new Promise((resolve, reject)=>{
+        const self = this;
+        return new Promise((resolve)=>{
             this.call()
                 .then(function(releases){
-                    var jsonObject = JSON.parse(releases.toString());
+                    const jsonObject = JSON.parse(releases.toString());
                     try{
-                        for (var i=0; i<jsonObject.length; i++){
+                        for (let i=0; i<jsonObject.length; i++){
                             if (jsonObject[i].name && jsonObject[i].name.includes(self.getReleaseInformation())){
                                 resolve(jsonObject[i].zipball_url);
                             }else if (jsonObject[i].tag_name && jsonObject[i].tag_name.includes(self.getReleaseInformation())) {
