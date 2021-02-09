@@ -1,14 +1,10 @@
 import { execSync,spawnSync } from 'child_process';
-import * as path from 'path'
 import chalk from 'chalk'
-import cli from 'cli-ux'
-import { resolve } from 'dns';
-import { fstat, fstatSync } from 'fs';
 import * as fs from "fs-extra";
 
 export class ShellHelper{
 
-    public static executeScript(script: string, executePath:string){
+    public static executeScriptWithEnv(script: string, executePath:string, envObject:any){
     return new Promise((resolve, reject)=>{
             try{
                 const childProcess = spawnSync(
@@ -16,7 +12,8 @@ export class ShellHelper{
                     [], {
                         encoding: 'utf8',
                         cwd: executePath,
-                        shell: true
+                        shell: true,
+                        env: envObject
                     }
                     );
                     
@@ -47,4 +44,7 @@ export class ShellHelper{
         });
     }
 
+    public static executeScript(script: string, executePath:string){
+        return ShellHelper.executeScriptWithEnv(script, executePath, {})
+    }
 }

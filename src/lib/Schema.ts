@@ -9,12 +9,20 @@ export class Schema{
         this.proxy=args.proxy;
     }
 
-    public getName():string{
+    public getConnectionName():string{
         if(this.proxy){
-            return this.proxy.getName()+'['+this.name+']';
+            return this.proxy.getConnectionName()+'['+this.name+']';
         }else{
             return this.name;
         }
+    }
+
+    public getName():string{
+        return this.name;
+    }
+
+    public getProxy():Schema|undefined{
+        return this.proxy;
     }
 
     public getPassword():string{
