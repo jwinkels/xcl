@@ -14,8 +14,14 @@ export default class ProjectDeploy extends Command {
     password: flags.string( {char: 'p', description:'Password for Deployment User', required: true} ),
     dependencies: flags.boolean({char: 'd', description:'Deploy inclusive dependencies (you will be asked for sys-user password)'}),
     syspw: flags.string({char:'s', description:'Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users will be overwritten!]'}),
-    yes: flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),
     'schema-only': flags.boolean({description:'Deploys only schema objects', default: false}),
+    mode: flags.string({char:         'm', 
+                        description:  'mode of build (init/patch)', 
+                        default:      'init'}),
+    version: flags.string({char:        'v',
+                           description: 'Version to tag build',
+                           required:    true}),                        
+    yes: flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),   
     'ords-url': flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords')})    
   }
 
@@ -40,8 +46,8 @@ export default class ProjectDeploy extends Command {
           if (flags.dependencies){
             await FeatureManager.getInstance().installAllProjectFeatures(args.project, flags.connection, flags.syspw!, true);
           }
-        }
-        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"], flags['ords-url'], flags.yes); 
+        }        
+        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"], flags['ords-url'], flags.yes, flags.version, flags.mode); 
        
       }else{
         console.log(chalk.red("ERROR: Deploy-Method undefined!"));

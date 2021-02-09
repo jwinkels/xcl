@@ -3,8 +3,8 @@ import chalk from 'chalk'
 import * as fs from "fs-extra";
 
 export class ShellHelper{
-
-    public static executeScript(script: string, executePath:string):Promise<string>{
+    
+    public static executeScriptWithEnv(script: string, executePath:string, envObject:any):Promise<string>{
     return new Promise((resolve, reject)=>{
             try{
                 if (fs.existsSync(executePath+'/'+script)){
@@ -16,7 +16,8 @@ export class ShellHelper{
                     [], {
                         encoding: 'utf8',
                         cwd: executePath,
-                        shell: true
+                        shell: true,
+                        env: envObject
                     }
                 );
 
@@ -48,4 +49,7 @@ export class ShellHelper{
         });
     }
 
+    public static executeScript(script: string, executePath:string){
+        return ShellHelper.executeScriptWithEnv(script, executePath, {})
+    }
 }

@@ -17,6 +17,9 @@ import { ShellHelper } from './ShellHelper';
 import {Operation} from './Operation';
 import { Application } from './Application';
 import { Utils } from './Utils';
+import ConfigDefaults from "../commands/config/defaults";
+import ProjectInit from "../commands/project/init";
+//import FeatureInstall from "../commands/feature/install";
 
 const Table = require('cli-table')
 //Implementation in Singleton-Pattern because there is no need for multiple instances of the ProjectManager!
@@ -281,14 +284,14 @@ export class ProjectManager {
     
     const p:Project = this.getProject(projectName);
    
-    deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).build(projectName,version);
+    deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).build(projectName, version, mode);
   }
 
   public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean):Promise<void>{
     const p:Project = this.getProject(projectName);
     
-    if (!p.getStatus().hasChanged()){
-      deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, ords, silentMode);
+    if (!p.getStatus().hasChanged()){      
+      deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, ords, silentMode, version, mode);
     }else{
       console.log(chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!'));
     }
@@ -394,8 +397,33 @@ export class ProjectManager {
     const project:Project = this.getProject(projectName);
     if (fs.existsSync(project.getPath()+'/plan.sh')){
       Application.generateSQLEnvironment(projectName, __dirname);
-      ShellHelper.executeScript('./plan.sh',project.getPath())
-      .then(()=>{
+      const plansh = fs.readFileSync(project.getPath()+'/plan.sh').toString();
+      const commands = plansh.split("\n");
+      if (commands.length > 1){
+        for (let i=1; i<=commands.length-1; i++){
+
+          //SPLIT COMMAND FROM ARGUMENTS
+          const command = commands[i].substr(0, commands[i].indexOf(" ", 5)).trim();
+          const argv = commands[i].substr(command.length+1, commands[i].length).split(" ");
+
+          //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
+          switch (command){
+            case "xcl config:defaults":  
+                  await ConfigDefaults.run(argv);
+                  break;
+            default:
+                  await ShellHelper.executeScript(commands[i], project.getPath());
+                  break;
+          }
+
+        }
+      }else{
+        console.log("Error reading XCL Commands!");
+      }
+      
+      /*ShellHelper.executeScript('plan.sh',project.getPath())
+      .then((output)=>{
+      */
         project.getStatus().updateStatus();
         if (!project.getStatus().hasChanged()){
           console.log(chalk.green('SUCCESS: Everything up to date!'));
@@ -407,15 +435,16 @@ export class ProjectManager {
                         Environment.readConfigFrom(project.getPath(),'password'),
                         false,
                         Environment.readConfigFrom(project.getPath(),'ords'),
-                        true);
+                        true,
+                        "a", "b"); // FIXME: version und mode noch in apply einbauen);
           }
         }else{
           console.log(chalk.red('FAILURE: apply was made but there are still changes!'));
         }      
-      })
+      /*})
       .catch(()=>{
         console.log(chalk.red('ERROR: Update was not successfull! There are still changes!'));
-      });
+      });*/
     }else{
       console.log(chalk.yellow('Execute xcl project:plan first!'));
     }

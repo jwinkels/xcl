@@ -42,7 +42,7 @@ export class Application{
         });
   
         installFileList.forEach((script, path)=>{
-          let conn=DBHelper.getConnectionProps(ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getName(),
+          let conn=DBHelper.getConnectionProps(ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getConnectionName(),
                                       password,
                                       connection);
           DBHelper.executeScriptIn(conn, script, path);
