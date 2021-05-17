@@ -283,14 +283,14 @@ export class ProjectManager {
     // app erstellen
   }
 
-  public async build(projectName: string, version:string):Promise<void>{
+  public async build(projectName: string, version:string, mode:string):Promise<void>{
     
     const p:Project = this.getProject(projectName);
    
     deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).build(projectName, version, mode);
   }
 
-  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean):Promise<void>{
+  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string):Promise<void>{
     const p:Project = this.getProject(projectName);
     
     if (!p.getStatus().hasChanged()){      
