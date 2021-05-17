@@ -246,7 +246,7 @@ export class ProjectManager {
     }
 
     if (flags.users){
-      console.log(chalk.green(`OK, Schemas werden installiert`));
+      console.log(chalk.green(`install schemas...`));
       await DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/create_xcl_users.sql')+ ' ' + p.getName() + '_depl ' +
                                                                             p.getName() + ' ' +  //TODO: Generate strong password!
                                                                             p.getName() + '_data ' +
@@ -290,11 +290,11 @@ export class ProjectManager {
     deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).build(projectName, version, mode);
   }
 
-  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string):Promise<void>{
+  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined):Promise<void>{
     const p:Project = this.getProject(projectName);
     
     if (!p.getStatus().hasChanged()){      
-      deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, ords, silentMode, version, mode);
+      deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema);
     }else{
       console.log(chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!'));
     }
@@ -440,7 +440,7 @@ export class ProjectManager {
                         false,
                         Environment.readConfigFrom(project.getPath(),'ords'),
                         true,
-                        "a", "b"); // FIXME: version und mode noch in apply einbauen);
+                        "a", "b", undefined); // FIXME: version und mode noch in apply einbauen);
           }
         }else{
           console.log(chalk.red('FAILURE: apply was made but there are still changes!'));

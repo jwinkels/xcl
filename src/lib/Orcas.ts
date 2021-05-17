@@ -37,68 +37,77 @@ export class Orcas implements DeliveryMethod{
         feature.setInstalled(true);
     }
 
-    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string){
+    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined){
       
       let project=ProjectManager.getInstance().getProject(projectName);
       let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " --continue";
       let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " --continue";
       let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " --continue";
-      /*
-        Pre-Deploy
-      */
-
-      //TODO: Was ist wenn ich das für mehrere Schemata machen möchte
-      let conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(),
-                                    password,
-                                    connection);
-
-      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/").filter(f=>f.toLowerCase().includes("pre_")).forEach(file=>{
-        DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
-      });
-
-      /*
-        Pre-Deploy Hook End
-      */
-
-      /*
-        Deploy Start
-      */
-
-      if (silentMode){
-        this.silentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly);
-      }else{
-        this.unsilentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly);
-      }
-
-      /*
-      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
-        .then(function(){
-          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
-            .then(function(){
-              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
-                .then(()=>{
-                    if (!schemaOnly){
-                      Application.installApplication(projectName, connection, password, ords);
-                    }
-                })
-            })
-        });
-      */
-      /*
-        Deploy End
-      */
-    
-      /*
-        Post-Deploy Hook Start
-      */
+      if (schema){
+        let gradleString:string = "";
+        switch (schema){
+          case "data": 
+            gradleString = gradleStringData;
+            break;
+          case "logic":
+            gradleString = gradleStringLogic;
+            break;
+          case "app":
+            gradleString = gradleStringApp;
+            break;
+          default:
+            gradleString = "";
+            break;
+        }
         
-      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/").filter(f=>f.toLowerCase().includes("post_")).forEach(file=>{
-        DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
-      });
+        if (gradleString){
+          this.deploySchema(gradleString, project, schema);
+        }
 
-      /*
-        Post-Deploy Hook End
-      */
+      }else{
+        /*
+          Pre-Deploy
+        */
+
+        //TODO: Was ist wenn ich das für mehrere Schemata machen möchte
+        let conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(),
+                                      password,
+                                      connection);
+
+        fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/").filter(f=>f.toLowerCase().includes("pre_")).forEach(file=>{
+          DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
+        });
+
+        /*
+          Pre-Deploy Hook End
+        */
+
+        /*
+          Deploy Start
+        */
+
+        if (silentMode){
+          this.silentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly);
+        }else{
+          this.unsilentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly);
+        }
+
+        /*
+          Deploy End
+        */
+      
+        /*
+          Post-Deploy Hook Start
+        */
+          
+        fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/").filter(f=>f.toLowerCase().includes("post_")).forEach(file=>{
+          DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
+        });
+
+        /*
+          Post-Deploy Hook End
+        */
+      }
     }
 
 
@@ -140,8 +149,8 @@ export class Orcas implements DeliveryMethod{
         });
     }
 
-    public deploySchema(){
-      //TODO: Implement single Schema Deploy
+    public deploySchema(gradleString:string, project:Project, schema:string){
+      ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName() + "_" + schema);
     }
 
     public build(projectName:string, version:string){
