@@ -13,22 +13,18 @@ import { ProjectFeature } from './ProjectFeature';
 import { Schema } from './Schema';
 import { Environment } from './Environment';
 import { FeatureManager } from './FeatureManager';
-import { cpuUsage, exit } from 'process';
 import { ShellHelper } from './ShellHelper';
 import {Operation} from './Operation';
 import { Application } from './Application';
-import { string } from '@oclif/command/lib/flags';
-import { interfaces } from 'inversify';
 import { Utils } from './Utils';
 import ConfigDefaults from "../commands/config/defaults";
 import ProjectInit from "../commands/project/init";
 //import FeatureInstall from "../commands/feature/install";
 
 const Table = require('cli-table')
-
 //Implementation in Singleton-Pattern because there is no need for multiple instances of the ProjectManager!
 export class ProjectManager {
-  public static projectYMLfile: string = "projects.yml";
+  public static projectYMLfile = "projects.yml";
 
   private static manager: ProjectManager;
   private static xclHome = os.homedir + "/AppData/Roaming/xcl";
@@ -48,7 +44,7 @@ export class ProjectManager {
   /**
    * return Singelton-Instance of PM
    */
-  static getInstance() {
+  static getInstance():ProjectManager{
     if (!ProjectManager.manager) {
       ProjectManager.manager = new ProjectManager();
     }
@@ -65,7 +61,7 @@ export class ProjectManager {
       return ProjectManager.project;
     }else{
       if (ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName]) {
-        let projectJSON = ProjectManager.projectsJson.projects[projectName];
+        const projectJSON = ProjectManager.projectsJson.projects[projectName];
         ProjectManager.project = new Project(projectName, projectJSON.path,'' , false);
         return ProjectManager.project;
       } else {
@@ -76,7 +72,6 @@ export class ProjectManager {
 
   public getProjectNameByPath(projectPath: string):string{
     try {
-      let index=-1;
       let name ="all";
       //Unsauber!! Überdenke projects.yaml
       for (let i=0; i<Object.values(ProjectManager.projectsJson.projects).length; i++){
@@ -88,7 +83,7 @@ export class ProjectManager {
       //Aber es ist noch nicht in der Projektliste, aufgrund git clone o.ä.
       //Daher prüfen ob eine xcl.yaml existiert, wenn ja, laden und in die Projektliste aufnehmen
       if (name == "all" && fs.existsSync(projectPath + '/xcl.yml')){
-        let tmpProject:Project = new Project('',projectPath,'',false);
+        const tmpProject:Project = new Project('',projectPath,'',false);
         this.addProjectToGlobalConfig(tmpProject);
         name = tmpProject.getName();
       }
@@ -136,7 +131,7 @@ export class ProjectManager {
   }
 
 
-  public removeProject(projectName: string, path: boolean, database: boolean, connection:string, syspw:string) {
+  public removeProject(projectName: string, path: boolean, database: boolean, connection:string, syspw:string):void {
     // check if not allready defined
     let project;
     try {
@@ -178,17 +173,17 @@ export class ProjectManager {
 
   public getProjects():Project[] {
 
-    let projects:Project[] = [];
+    const projects:Project[] = [];
 
     Object.keys(ProjectManager.projectsJson.projects).forEach(function(projectName) {
-      let projectJSON = ProjectManager.projectsJson.projects[projectName];
+      const projectJSON = ProjectManager.projectsJson.projects[projectName];
       projects.push(new Project(projectName, projectJSON.path,'', false));
     });
 
     return projects;
   }
 
-  public listProjects() {
+  public listProjects():void {
     const table = new Table({
       head: [
         chalk.blueBright('name'),
@@ -200,7 +195,7 @@ export class ProjectManager {
     const projects:Project[] = ProjectManager.getInstance().getProjects();
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
-      var status = project.getErrorText();
+      const status = project.getErrorText();
       table.push([ project.getName(), project.getPath(), status ? chalk.red(status) : chalk.green('VALID') ]);
     }
 
@@ -218,7 +213,7 @@ export class ProjectManager {
     return "";
   }
 
-  public async initializeProject(projectName: string, flags: { help: void; syspw: string | undefined; connection: string | undefined; force: boolean; yes: boolean; objects: boolean; users:boolean;}) {
+  public async initializeProject(projectName: string, flags: { help: void; syspw: string | undefined; connection: string | undefined; force: boolean; yes: boolean; objects: boolean; users:boolean;}):Promise<void> {
     const p:Project = this.getProject(projectName);
     
     flags.syspw = flags.syspw ? flags.syspw : Environment.readConfigFrom(p.getPath() , "syspw");
@@ -238,7 +233,7 @@ export class ProjectManager {
           
           if (!confirmYN) {
             console.log(chalk.yellow(`Project initialization canceled`));          
-            return;
+            return ; 
           }
         }
         
@@ -288,16 +283,15 @@ export class ProjectManager {
     // app erstellen
   }
 
-  public async build(projectName: string, version:string, mode:string){
-    let  p:Project = this.getProject(projectName);
+  public async build(projectName: string, version:string):Promise<void>{
+    
+    const p:Project = this.getProject(projectName);
    
     deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).build(projectName, version, mode);
   }
 
-
-  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string){    
-    let p:Project = this.getProject(projectName);
-    let path:string = p.getPath();
+  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean):Promise<void>{
+    const p:Project = this.getProject(projectName);
     
     if (!p.getStatus().hasChanged()){      
       deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, ords, silentMode, version, mode);
@@ -306,15 +300,15 @@ export class ProjectManager {
     }
   }
 
-  public async plan(projectName: string){
-    let  p:Project =  this.getProject(projectName);
-    let path:string =  p.getPath();
-    let commands:Array<String> = new Array<String>();
+  public async plan(projectName: string):Promise<void>{
+    const p:Project =  this.getProject(projectName);
+    const path:string =  p.getPath();
+    const commands:Array<string> = new Array<string>();
     let commandCount=1;
     
     if( p.getStatus().hasChanged()){
       
-      p.getFeatures().forEach((feature:ProjectFeature, key:String)=>{
+      p.getFeatures().forEach((feature:ProjectFeature)=>{
         if(feature.getType()==="DB" ){
           if (FeatureManager.priviledgedInstall(feature.getName()) && !commands[0]){
               commands[0]='xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
@@ -322,7 +316,7 @@ export class ProjectManager {
             console.log("SYS NOt needed for feature : "+feature.getName());
           }
           
-          let operation = p.getStatus().checkDependency(feature);
+          const operation = p.getStatus().checkDependency(feature);
           if(operation === Operation.INSTALL){
             console.log(chalk.green('+')+' install '+feature.getName());
             console.log(chalk.green('+++')+' xcl feature:install ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection"));
@@ -348,7 +342,7 @@ export class ProjectManager {
       p.getStatus().getRemovedDependencies();
 
       if(!p.getStatus().checkUsers()){        
-        p.getUsers().forEach((user:Schema, key:String)=>{
+        p.getUsers().forEach((user:Schema, key:string)=>{
             console.log(chalk.green('+') + ' create user '+ key);
         });
         console.log(chalk.green('+++')+' xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom(path, "connection"));
@@ -397,11 +391,13 @@ export class ProjectManager {
           fs.appendFileSync(fileName,commands[i]+"\n");
       }
     }
-  }
 
-  public async apply(projectName: string, setupOnly:boolean){
+    fs.chmodSync(fileName,'777');
+  }
+  
+  public async apply(projectName: string, setupOnly:boolean):Promise<void>{
     
-    let project:Project = this.getProject(projectName);
+    const project:Project = this.getProject(projectName);
     if (fs.existsSync(project.getPath()+'/plan.sh')){
       Application.generateSQLEnvironment(projectName, __dirname);
       const plansh = fs.readFileSync(project.getPath()+'/plan.sh').toString();
