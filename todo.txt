@@ -60,7 +60,7 @@ TODO:
 
     - LOGGING-Klasse schreiben:
         * damit die Logs während des Deploys weggeschrieben werden brauchen wir eine Logging-Klasse!
-        * DER DB-HELPER loggt im moment nichts weg! Nach dem apply ist man Blind!
+        * DER DB-HELPER loggt im moment nichts weg! Nach dem apply ist man blind!
 
     - PROBLEME:
         * Ein Feature wird entfernt
