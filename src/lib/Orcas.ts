@@ -40,9 +40,9 @@ export class Orcas implements DeliveryMethod{
     public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string){
       
       let project=ProjectManager.getInstance().getProject(projectName);
-      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getName() + " -Ppassword=" + password + " --continue";
-      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getName() + " -Ppassword=" + password + " --continue";
-      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getName() + " -Ppassword=" + password + " --continue";
+      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " --continue";
+      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " --continue";
+      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " --continue";
       /*
         Pre-Deploy
       */
