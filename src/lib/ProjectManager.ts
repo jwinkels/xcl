@@ -267,10 +267,13 @@ export class ProjectManager {
     if (flags.objects){
       //Execute setup files 
       const config = p.getConfig();
-      await config.xcl.setup.forEach((element: { name: string; path: string; }) => {
-        DBHelper.executeScriptIn(c, element.name, element.path);
-        p.updateSetupStep(element.name, element.path);
-      });
+      if(config.xcl.setup){
+        await config.xcl.setup.forEach((element: { name: string; path: string; }) => {
+            console.log(element.name, element.path);
+            DBHelper.executeScriptIn(c, element.name, element.path);
+          	p.updateSetupStep(element.name, element.path);
+        });
+      }
     }
     // TODO: Abfrage nach syspwd?
 
@@ -411,15 +414,16 @@ export class ProjectManager {
           const argv = commands[i].substr(command.length+1, commands[i].length).split(" ");
 
           //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
-          switch (command){
-            case "xcl config:defaults":  
-                  await ConfigDefaults.run(argv);
-                  break;
-            default:
-                  await ShellHelper.executeScript(commands[i], project.getPath());
-                  break;
+          if(command){
+            switch (command){
+              case "xcl config:defaults":  
+                    await ConfigDefaults.run(argv);
+                    break;
+              default:
+                    await ShellHelper.executeScript(commands[i], project.getPath());
+                    break;
+            }
           }
-
         }
       }else{
         console.log("Error reading XCL Commands!");
