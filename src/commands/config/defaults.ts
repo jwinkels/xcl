@@ -96,7 +96,7 @@ export default class ConfigDefaults extends Command{
     let input = "";
     
     if (variableName.toUpperCase()==="SYSPW"){
-      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'hide'});
+      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'normal'});
     }else{
       input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'normal'});
     } 
@@ -152,8 +152,6 @@ export default class ConfigDefaults extends Command{
   async setGlobalVariable(variableName:string){
     let globals = Environment.initialize('all');
     let input = await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"');
-    //Braucht das ding sonst ist die ausgabe irgendwie unsauber
-    console.log("");
     globals.set(variableName!, input);
     Environment.writeEnvironment('all', globals);
     console.log(chalk.green('OK'));

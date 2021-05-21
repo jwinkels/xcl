@@ -34,7 +34,7 @@ export class ProjectManager {
 
   private constructor() {
     // read projects
-    ProjectManager.projectsYaml = yaml.parseDocument(fs.readFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile).toString());
+    ProjectManager.projectsYaml = yaml.parseDocument( fs.readFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile ).toString());
 
     // convert to json of create an empty definition
     ProjectManager.projectsJson = ProjectManager.projectsYaml.toJSON() || { projects: {} };
@@ -45,7 +45,7 @@ export class ProjectManager {
    * return Singelton-Instance of PM
    */
   static getInstance():ProjectManager{
-    if (!ProjectManager.manager) {
+    if ( !ProjectManager.manager ) {
       ProjectManager.manager = new ProjectManager();
     }
     return ProjectManager.manager;
@@ -56,13 +56,13 @@ export class ProjectManager {
    *
    * @param projectName name of project
    */
-  public getProject(projectName: string): Project {
-    if(ProjectManager.project && ProjectManager.project.getName()==projectName){
+  public getProject( projectName: string ): Project {
+    if( ProjectManager.project && ProjectManager.project.getName() == projectName ){
       return ProjectManager.project;
     }else{
-      if (ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName]) {
-        const projectJSON = ProjectManager.projectsJson.projects[projectName];
-        ProjectManager.project = new Project(projectName, projectJSON.path,'' , false);
+      if ( ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName] ) {
+        const projectJSON      = ProjectManager.projectsJson.projects[projectName];
+        ProjectManager.project = new Project( projectName, projectJSON.path, '', false );
         return ProjectManager.project;
       } else {
         throw new ProjectNotFoundError(`project ${projectName} not found`);
@@ -74,16 +74,16 @@ export class ProjectManager {
     try {
       let name ="all";
       //Unsauber!! Überdenke projects.yaml
-      for (let i=0; i<Object.values(ProjectManager.projectsJson.projects).length; i++){
-        if(Object.values(ProjectManager.projectsJson.projects)[i].path==projectPath){
-          name=Object.keys(ProjectManager.projectsJson.projects)[i];
+      for (let i=0; i < Object.values( ProjectManager.projectsJson.projects ).length; i++){
+        if( Object.values(ProjectManager.projectsJson.projects)[i].path == projectPath ){
+          name = Object.keys(ProjectManager.projectsJson.projects)[i];
         }
       }
       //Wenn in der Liste nichts gefunden ist kann es trotzdem sein, dass es ein XCL-Projekt ist
       //Aber es ist noch nicht in der Projektliste, aufgrund git clone o.ä.
       //Daher prüfen ob eine xcl.yaml existiert, wenn ja, laden und in die Projektliste aufnehmen
-      if (name == "all" && fs.existsSync(projectPath + '/xcl.yml')){
-        const tmpProject:Project = new Project('',projectPath,'',false);
+      if ( name == "all" && fs.existsSync(projectPath + '/xcl.yml') ){
+        const tmpProject:Project = new Project('', projectPath, '', false);
         this.addProjectToGlobalConfig(tmpProject);
         name = tmpProject.getName();
       }
@@ -114,8 +114,8 @@ export class ProjectManager {
           project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true);
         }
 
-        this.addProjectToGlobalConfig(project);
-        Application.generateCreateWorkspaceFile(projectName, workspaceName);
+        this.addProjectToGlobalConfig( project );
+        Application.generateCreateWorkspaceFile( projectName, workspaceName );
       } else {
         // undefined error. what happened?
         throw err;
@@ -127,7 +127,7 @@ export class ProjectManager {
 
   private addProjectToGlobalConfig(project: Project) {
     ProjectManager.projectsJson.projects[project.getName()] = project.toJSON();
-    fs.writeFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile, yaml.stringify(ProjectManager.projectsJson));
+    fs.writeFileSync( ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile, yaml.stringify(ProjectManager.projectsJson ) );
   }
 
 
@@ -137,16 +137,16 @@ export class ProjectManager {
     try {
       project = this.getProject(projectName);
 
-      if(database){// remove from db?
+      if( database ){// remove from db?
         if (connection && syspw){
-          const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
-          DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/drop_xcl_users.sql')+ ' ' + project.getName() + '_data ' +
+          const c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection);
+          DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/drop_xcl_users.sql' ) + ' ' + project.getName() + '_data ' +
                                                                                project.getName() + '_logic ' +
                                                                                project.getName() + '_app ' +
                                                                                project.getName() + '_depl');
         }else{
-          console.log(chalk.red("ERROR: You need to provide a connection-String and the sys-user password"));
-          console.log(chalk.yellow("INFO: xcl project:remove -h to see command options"));
+          console.log( chalk.red("ERROR: You need to provide a connection-String and the sys-user password") );
+          console.log( chalk.yellow("INFO: xcl project:remove -h to see command options") );
           throw new Error("Could not remove project due to missing information");
         }
       }
@@ -166,8 +166,8 @@ export class ProjectManager {
   }
 
   private removeProjectFromGlobalConfig(project: Project) {
-    delete ProjectManager.projectsJson.projects[project.getName()];
-    fs.writeFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile, yaml.stringify(ProjectManager.projectsJson));
+    delete ProjectManager.projectsJson.projects[ project.getName() ];
+    fs.writeFileSync(ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile, yaml.stringify( ProjectManager.projectsJson ) );
     console.log(`Project ${project.getName()} removed`);
   }
 
@@ -175,9 +175,9 @@ export class ProjectManager {
 
     const projects:Project[] = [];
 
-    Object.keys(ProjectManager.projectsJson.projects).forEach(function(projectName) {
-      const projectJSON = ProjectManager.projectsJson.projects[projectName];
-      projects.push(new Project(projectName, projectJSON.path,'', false));
+    Object.keys( ProjectManager.projectsJson.projects).forEach( function(projectName) {
+      const projectJSON = ProjectManager.projectsJson.projects[ projectName ];
+      projects.push( new Project( projectName, projectJSON.path, '', false ) );
     });
 
     return projects;
@@ -195,18 +195,18 @@ export class ProjectManager {
     const projects:Project[] = ProjectManager.getInstance().getProjects();
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
-      const status = project.getErrorText();
-      table.push([ project.getName(), project.getPath(), status ? chalk.red(status) : chalk.green('VALID') ]);
+      const status  = project.getErrorText();
+      table.push( [ project.getName(), project.getPath(), status ? chalk.red(status) : chalk.green('VALID') ] );
     }
 
-    console.log(table.toString());
+    console.log( table.toString() );
   }
 
   public getProjectPath(projectName:string):string{
     const projects:Project[] = ProjectManager.getInstance().getProjects();
-    for (let i = 0; i < projects.length; i++) {
+    for ( let i = 0; i < projects.length; i++ ) {
       const project = projects[i];
-      if (project.getName()===projectName){
+      if ( project.getName() === projectName ){
         return project.getPath();
       }
     }
@@ -222,23 +222,23 @@ export class ProjectManager {
 
     // Prüfen ober es den User schon gibt
     if (await DBHelper.isProjectInstalled(p, c) && flags.users) {
-      if ( !flags.force) {
+      if ( !flags.force ) {
         console.log(chalk.yellow(`Warning: ProjectSchemas already exists in db!!!`));
         console.log(chalk.yellow(`If you wish to drop users before, you could use force flag`));
         await p.getStatus().updateUserStatus();
         return;
       } else { 
-        if (flags.force && !flags.yes) {
-          const confirmYN = await cli.confirm(chalk.green(`Force option detected, schema will be dropped. Continue Y/N`));
+        if ( flags.force && !flags.yes ) {
+          const confirmYN = await cli.confirm( chalk.green(`Force option detected, schema will be dropped. Continue Y/N`) );
           
-          if (!confirmYN) {
-            console.log(chalk.yellow(`Project initialization canceled`));          
+          if ( !confirmYN ) {
+            console.log( chalk.yellow(`Project initialization canceled`) );          
             return ; 
           }
         }
         
-        console.log(chalk.yellow(`Dropping existing schemas`));
-        await DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/drop_xcl_users.sql')+' ' + p.getName() + '_data ' +
+        console.log( chalk.yellow(`Dropping existing schemas`) );
+        await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/drop_xcl_users.sql' ) + ' ' + p.getName() + '_data ' +
                                                                            p.getName() + '_logic ' +
                                                                            p.getName() + '_app ' +
                                                                            p.getName() + '_depl');
@@ -247,26 +247,26 @@ export class ProjectManager {
 
     if (flags.users){
       console.log(chalk.green(`install schemas...`));
-      await DBHelper.executeScript(c, Utils.checkPathForSpaces(__dirname + '/scripts/create_xcl_users.sql')+ ' ' + p.getName() + '_depl ' +
+      await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
                                                                             p.getName() + ' ' +  //TODO: Generate strong password!
                                                                             p.getName() + '_data ' +
                                                                             p.getName() + '_logic ' +
                                                                             p.getName() + '_app');
 
-      if (await DBHelper.isProjectInstalled(p, c)) {
-        console.log(chalk.green(`Project successfully installed`));
+      if ( await DBHelper.isProjectInstalled(p, c) ) {
+        console.log( chalk.green(`Project successfully installed`) );
         p.getStatus().updateUserStatus();
       }
     }
 
-    if (flags.objects){
+    if ( flags.objects ){
       //Execute setup files 
       const config = p.getConfig();
-      if(config.xcl.setup){
-        await config.xcl.setup.forEach((element: { name: string; path: string; }) => {
-            console.log(element.name, element.path);
-            DBHelper.executeScriptIn(c, element.name, element.path);
-          	p.updateSetupStep(element.name, element.path);
+      if( config.xcl.setup ){
+        await config.xcl.setup.forEach( ( element: { name: string; path: string; } ) => {
+            console.log( element.name, element.path );
+            DBHelper.executeScriptIn( c, element.name, element.path );
+          	p.updateSetupStep( element.name, element.path );
         });
       }
     }
@@ -287,16 +287,16 @@ export class ProjectManager {
     
     const p:Project = this.getProject(projectName);
    
-    deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).build(projectName, version, mode);
+    deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).build(projectName, version, mode);
   }
 
   public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined):Promise<void>{
     const p:Project = this.getProject(projectName);
     
-    if (!p.getStatus().hasChanged()){      
-      deliveryFactory.getNamed<DeliveryMethod>("Method",p.getDeployMethod().toUpperCase()).deploy(projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema);
+    if ( !p.getStatus().hasChanged() ){      
+      deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema );
     }else{
-      console.log(chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!'));
+      console.log( chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!') );
     }
   }
 
@@ -306,25 +306,25 @@ export class ProjectManager {
     const commands:Array<string> = new Array<string>();
     let commandCount=1;
     
-    if( p.getStatus().hasChanged()){
+    if( p.getStatus().hasChanged() ){
       
-      p.getFeatures().forEach((feature:ProjectFeature)=>{
-        if(feature.getType()==="DB" ){
-          if (FeatureManager.priviledgedInstall(feature.getName()) && !commands[0]){
-              commands[0]='xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
+      p.getFeatures().forEach( ( feature:ProjectFeature ) =>{
+        if( feature.getType()==="DB" ){
+          if ( FeatureManager.priviledgedInstall( feature.getName() ) && !commands[0] ){
+              commands[0] = 'xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
           }else{
-            console.log("SYS NOt needed for feature : "+feature.getName());
+            console.log( "SYS not needed for feature : " + feature.getName() );
           }
           
-          const operation = p.getStatus().checkDependency(feature);
-          if(operation === Operation.INSTALL){
-            console.log(chalk.green('+')+' install '+feature.getName());
-            console.log(chalk.green('+++')+' xcl feature:install ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection"));
-            commands[commandCount]='xcl feature:install ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection");
-          }else if(operation === Operation.UPDATE){
-            console.log(chalk.yellow('*')+' update '+feature.getName());
-            console.log(chalk.yellow('***')+' xcl feature:update ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection"));
-            commands[commandCount]='xcl feature:update ' + feature.getName() +' '+ feature.getReleaseInformation() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection");
+          const operation = p.getStatus().checkDependency( feature );
+          if( operation === Operation.INSTALL ){
+            console.log( chalk.green('+') + ' install ' + feature.getName() );
+            console.log( chalk.green('+++') + ' xcl feature:install ' + feature.getName() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" ) );
+            commands[commandCount] = 'xcl feature:install ' + feature.getName() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" );
+          }else if( operation === Operation.UPDATE ){
+            console.log( chalk.yellow('*') + ' update ' + feature.getName() );
+            console.log( chalk.yellow('***') + ' xcl feature:update ' + feature.getName() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" ) );
+            commands[commandCount]= 'xcl feature:update ' + feature.getName() + ' ' + feature.getReleaseInformation() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" );
           }
           
           //WE DONT DO THAT HERE!
@@ -334,80 +334,80 @@ export class ProjectManager {
             commands[commandCount]='xcl feature:deinstall ' + feature.getName() + ' '+ projectName +' --connection=' + Environment.readConfigFrom(path, "connection");
           }*/
 
-          commandCount=commandCount+1;
+          commandCount = commandCount + 1;
           
         }
       });
 
       p.getStatus().getRemovedDependencies();
 
-      if(!p.getStatus().checkUsers()){        
-        p.getUsers().forEach((user:Schema, key:string)=>{
-            console.log(chalk.green('+') + ' create user '+ key);
+      if( !p.getStatus().checkUsers() ){        
+        p.getUsers().forEach( ( user:Schema, key:string ) => {
+            console.log( chalk.green('+') + ' create user '+ key );
         });
-        console.log(chalk.green('+++')+' xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom(path, "connection"));
+        console.log( chalk.green('+++') + ' xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom( path, "connection" ) );
         commands[commandCount] =  'xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom(path, "connection");
         
-        commandCount=commandCount+1;
+        commandCount = commandCount + 1;
         
-        if (!commands[0]){
-          commands[0]='xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
+        if ( !commands[0] ){
+          commands[0] = 'xcl config:defaults ' + projectName + ' -s syspw $PASSWORD';
         }
       }
 
-      if(p.getStatus().getChanges().get('SETUP')){
+      if( p.getStatus().getChanges().get('SETUP') ){
         
-        console.log(chalk.green('+') + ' SETUP ');
-        console.log(chalk.green('+++')+' xcl project:init ' + projectName + ' --objects --connection=' + Environment.readConfigFrom(path, "connection"));
+        console.log( chalk.green('+') + ' SETUP ');
+        console.log( chalk.green('+++')+' xcl project:init ' + projectName + ' --objects --connection=' + Environment.readConfigFrom(path, "connection") );
         commands[commandCount] =  'xcl project:init ' + projectName + ' --objects --connection=' + Environment.readConfigFrom(path, "connection");
 
-        commandCount=commandCount+1;
+        commandCount = commandCount + 1;
 
-        if (!commands[0]){
-          commands[0]='xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
+        if ( !commands[0] ){
+          commands[0] = 'xcl config:defaults ' + projectName + ' -s syspw $PASSWORD';
         }
       }
     
       //commands[commandCount] ='xcl project:deploy '+ projectName + ' --connection=' + Environment.readConfigFrom(path, "connection") + ' --password=' + Environment.readConfigFrom(path, "password");
-      console.log(chalk.green('+')+' deploy application');
+      console.log( chalk.green('+') + ' deploy application' );
       //console.log(chalk.green('+++ ')+commands[commandCount]);
-      if (commands[0]){
-        commandCount=commandCount+1;
-        console.log(chalk.green('+')+' xcl config:defaults ' + projectName + ' --reset syspw');
-        commands[commandCount]='xcl config:defaults ' + projectName + ' --reset syspw';
+      if ( commands[0] ){
+        commandCount = commandCount + 1;
+        console.log( chalk.green('+') + ' xcl config:defaults ' + projectName + ' --reset syspw');
+        commands[commandCount] = 'xcl config:defaults ' + projectName + ' --reset syspw';
       }
     }else{
-      console.log(chalk.yellow('INFO: Project dependencies have no changes!'));
+      console.log( chalk.yellow('INFO: Project dependencies have no changes!') );
     }
 
     let fileName = path;
    
-    fileName = fileName +'/plan.sh';
+    fileName = fileName + '/plan.sh';
 
     fs.removeSync(fileName);
-    fs.writeFileSync(fileName,'#!/bin/bash'+"\n");
+    fs.writeFileSync(fileName, '#!/bin/bash' + "\n");
     for (let i = 0; i<commands.length; i++){
-      if(commands[i]){
-          fs.appendFileSync(fileName,commands[i]+"\n");
+      if( commands[i] ){
+          fs.appendFileSync( fileName, commands[i]+"\n" );
       }
     }
 
-    fs.chmodSync(fileName,'777');
+    fs.chmodSync(fileName, '777');
   }
   
   public async apply(projectName: string, setupOnly:boolean):Promise<void>{
     
     const project:Project = this.getProject(projectName);
-    if (fs.existsSync(project.getPath()+'/plan.sh')){
-      Application.generateSQLEnvironment(projectName, __dirname);
-      const plansh = fs.readFileSync(project.getPath()+'/plan.sh').toString();
+    if ( fs.existsSync( project.getPath() + '/plan.sh' ) ){
+      Application.generateSQLEnvironment( projectName, __dirname );
+      const plansh = fs.readFileSync( project.getPath() + '/plan.sh' ).toString();
       const commands = plansh.split("\n");
-      if (commands.length > 1){
-        for (let i=1; i<=commands.length-1; i++){
+      if ( commands.length > 1 ){
+        for (let i = 1; i <= commands.length - 1; i++){
 
           //SPLIT COMMAND FROM ARGUMENTS
-          const command = commands[i].substr(0, commands[i].indexOf(" ", 5)).trim();
-          const argv = commands[i].substr(command.length+1, commands[i].length).split(" ");
+          const command = commands[i].substr( 0, commands[i].indexOf( " ", 5 ) ).trim();
+          const argv    = commands[i].substr( command.length + 1, commands[i].length ).split(" ");
 
           //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
           if(command){
@@ -416,7 +416,7 @@ export class ProjectManager {
                     await ConfigDefaults.run(argv);
                     break;
               default:
-                    await ShellHelper.executeScript(commands[i], project.getPath());
+                    await ShellHelper.executeScript( commands[i], project.getPath() );
                     break;
             }
           }
@@ -425,15 +425,13 @@ export class ProjectManager {
         console.log("Error reading XCL Commands!");
       }
       
-      /*ShellHelper.executeScript('plan.sh',project.getPath())
-      .then((output)=>{
-      */
         project.getStatus().updateStatus();
-        if (!project.getStatus().hasChanged()){
-          console.log(chalk.green('SUCCESS: Everything up to date!'));
-          fs.removeSync('plan.sh');
-          if(!setupOnly){
-            console.log('DEPLOY APPLICATION: ');
+
+        if ( !project.getStatus().hasChanged() ){
+          console.log( chalk.green('SUCCESS: Everything up to date!') );
+          fs.removeSync( 'plan.sh' );
+          if( !setupOnly ){
+            console.log( 'DEPLOY APPLICATION: ' );
             this.deploy(projectName, 
                         Environment.readConfigFrom(project.getPath(),'connection'),
                         Environment.readConfigFrom(project.getPath(),'password'),
@@ -443,14 +441,10 @@ export class ProjectManager {
                         "a", "b", undefined); // FIXME: version und mode noch in apply einbauen);
           }
         }else{
-          console.log(chalk.red('FAILURE: apply was made but there are still changes!'));
+          console.log( chalk.red( 'FAILURE: apply was made but there are still changes!' ) );
         }      
-      /*})
-      .catch(()=>{
-        console.log(chalk.red('ERROR: Update was not successfull! There are still changes!'));
-      });*/
     }else{
-      console.log(chalk.yellow('Execute xcl project:plan first!'));
+      console.log( chalk.yellow( 'Execute xcl project:plan first!' ) );
     }
   }
 

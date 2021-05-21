@@ -197,7 +197,7 @@ export class Project {
         dependencyConf = {
               name: feature.getName(), 
               version: feature.getReleaseInformation(),
-              //installed: feature.getInstalled(),
+              installed: false,
               type: feature.getType()
           };
         
@@ -361,12 +361,20 @@ export class Project {
 
   public updateFeature(feature:ProjectFeature):void{
     if (this.features.has(feature.getName())){  
+
       this.config=this.readConfig();
-      this.config.xcl.dependencies.forEach((element: { name: string; version: string; }) => {
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean}) => {
+        
         if(element.name===feature.getName()){
           element.version=feature.getReleaseInformation();
+          
+          if(feature.getType() === 'DEPLOY'){
+            element.installed = true;
+          }
+
         }
       });
+
       this.writeConfig();
     }
   }
@@ -374,6 +382,7 @@ export class Project {
   public getUsers():Map<string,Schema>{
     this.config = this.readConfig();
     this.users  = new Map<string,Schema>();
+
     if(this.config.xcl?.users){
       const users=this.config.xcl?.users;
       const proxy= new Schema({name: users.user_deployment, password:"", proxy:undefined});
@@ -381,6 +390,7 @@ export class Project {
       this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
       this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
     }
+    
     return this.users;
   }
 
@@ -404,14 +414,31 @@ export class Project {
       }
   }
 
-  public setEnvironmentVariable(key:string, value:string){
+  public setEnvironmentVariable(key:string, value:string, reset:boolean=false){
+    
     if (this.environment.has(key)){
-        if (value !== undefined || value !==""){
-            this.environment.set(key, value);
-            Environment.writeEnvironment(this.name, this.environment);
-        }else{
-            console.error(chalk.red('ERROR: variable can not be empty!'));
+        
+        if (value.startsWith('$')){
+
+          value = value.replace('$','');
+          value = "" + process.env[value]?.trim();
+          
+          //If System-Environment Variable was not found lookup xcl-Environment Variable
+          if (value === ""){
+            value = "" + this.environment.get(key);
+          }
         }
+        
+        if (!reset){
+          if (value !== undefined && value !==""){
+              this.environment.set(key, value);
+          }else{
+              console.error(chalk.red('ERROR: variable can not be empty!'));
+          }
+        }else{
+          this.environment.set(key, value);
+        }
+        Environment.writeEnvironment(this.name, this.environment);
     }else{
         console.error(chalk.red('ERROR: Unkown variable ´'+key+'´'));
     }
@@ -499,6 +526,7 @@ class ProjectStatus {
     }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
       this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
     }
+
     this.serialize();
   }
 
@@ -590,7 +618,14 @@ class ProjectStatus {
     return yaml.parse(conf);
   }
 
-  public setFeatureStatus(featureName: string, installed: boolean){
-    this.project.getFeatures().get(featureName)?.setInstalled(installed);
+  public getDependencyStatus(feature: ProjectFeature):boolean{
+    if(this.statusConfig.xcl.dependencies && 
+       this.statusConfig.xcl.dependencies[feature.getName()] && 
+       this.statusConfig.xcl.dependencies[feature.getName()].version === feature.getReleaseInformation()
+       ){
+      return true;
+    }else{
+      return false;
+    }
   }
 }

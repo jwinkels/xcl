@@ -29,7 +29,6 @@ export class ProjectFeature extends Feature{
     }
 
     public getStatus():string{
-        
         if (this.installed){
             return chalk.green('installed');
         }else{
