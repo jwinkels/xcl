@@ -96,7 +96,7 @@ export default class ConfigDefaults extends Command{
     let input = "";
     
     if (variableName.toUpperCase()==="SYSPW"){
-      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'normal'});
+      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'hide'});
     }else{
       input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'normal'});
     } 

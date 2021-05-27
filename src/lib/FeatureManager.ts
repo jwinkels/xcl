@@ -21,6 +21,7 @@ import e = require('express');
 import { Environment } from './Environment';
 import { Operation } from './Operation';
 import { Utils } from './Utils';
+import { resolve } from "dns";
 const Table = require('cli-table');
 
 export class FeatureManager{
@@ -118,24 +119,27 @@ export class FeatureManager{
         
       }
 
-      public getFeatureReleases(name:string){
-        const table = new Table({
-          head: [        
-            chalk.blueBright(name)
-          ]
-        });
+      public async getFeatureReleases(name:string):Promise<boolean>{
         
-        if(FeatureManager.features.has(name.toLowerCase())){
-            (FeatureManager.features.get(name.toLowerCase()) ! ).getReleaseInformation().then(function(releases:String[]){
-            for (let i=0; i<releases.length; i++){
-              table.push([releases[i]]);
-            }
-            console.log(table.toString());
+        return new Promise((resolve, reject)=>{
+          const table = new Table({
+            head: [        
+              chalk.blueBright(name)
+            ]
           });
           
-        }else{
-          throw Error('Unknown Feature: '+name+' Try: xcl feature:list');
-        }
+          if(FeatureManager.features.has(name.toLowerCase())){
+              (FeatureManager.features.get(name.toLowerCase()) ! ).getReleaseInformation().then(function(releases:String[]){
+              for (let i=0; i<releases.length; i++){
+                table.push([releases[i]]);
+              }
+              console.log(table.toString());
+            });
+            resolve(true);
+          }else{
+            throw Error('Unknown Feature: '+name+' Try: xcl feature:list');
+          }
+        });
       }
 
       public addFeatureToProject(featureName:string, version:string, projectName:string, username: string, password: string){
@@ -162,7 +166,7 @@ export class FeatureManager{
                     if (GithubCredentials.get()){
                         options.headers= {
                             'User-Agent': 'xcl',
-                            'Authorization': 'token '+GithubCredentials.get()
+                            'Authorization': 'token ' + GithubCredentials.get()
                         };
                     }else{
                       options.headers= {

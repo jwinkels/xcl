@@ -9,6 +9,7 @@ import cli from 'cli-ux';
 import {ShellHelper} from "./ShellHelper";
 import { DBHelper } from './DBHelper';
 import { Application } from './Application';
+import { resolve } from "dns";
 
 @injectable()
 export class Orcas implements DeliveryMethod{
@@ -43,6 +44,7 @@ export class Orcas implements DeliveryMethod{
       let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " --continue";
       let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " --continue";
       let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " --continue";
+      
       if (schema){
         let gradleString:string = "";
         switch (schema){
@@ -61,69 +63,78 @@ export class Orcas implements DeliveryMethod{
         }
         
         if (gradleString){
+          this.hook(schema, "pre", projectName, connection, password, project);
           this.deploySchema(gradleString, project, schema);
+          this.hook(schema, "post", projectName, connection, password, project);
         }
 
       }else{
-        /*
-          Pre-Deploy
-        */
-
-        //TODO: Was ist wenn ich das für mehrere Schemata machen möchte
-        let conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(),
-                                      password,
-                                      connection);
-
-        fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/").filter(f=>f.toLowerCase().includes("pre_")).forEach(file=>{
-          DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
-        });
-
-        /*
-          Pre-Deploy Hook End
-        */
-
-        /*
-          Deploy Start
-        */
-
         if (silentMode){
-          this.silentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly);
+          cli.action.start('Deploy...');
+          this.silentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly).then((success)=>{
+            if(success){
+              cli.action.stop('done');
+            }else{
+              cli.action.stop('failed');
+            }
+          });
         }else{
           this.unsilentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly);
         }
-
-        /*
-          Deploy End
-        */
-      
-        /*
-          Post-Deploy Hook Start
-        */
-          
-        fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/").filter(f=>f.toLowerCase().includes("post_")).forEach(file=>{
-          DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
-        });
-
-        /*
-          Post-Deploy Hook End
-        */
       }
     }
 
+    private hook(schema:string, type:string, projectName:string, connection:string, password:string, project:Project):void{
+     
+      let conn:any;
+      console.log(`Doing ${schema} - ${type} - Hooks: ...` )
+      switch (schema.toLowerCase()){
+        case 'data':
+          conn=DBHelper.getConnectionProps(project.getUsers().get('DATA')?.getConnectionName(),
+                                          password,
+                                          connection);
+          break;
+        case 'logic':
+          conn=DBHelper.getConnectionProps(project.getUsers().get('LOGIC')?.getConnectionName(),
+                                          password,
+                                          connection);
+          break;
+        case 'app':
+          conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(),
+                                          password,
+                                          connection);
+          break;
+        }
+        fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/")
+              .filter(f=>(f.toLowerCase().includes(type.toLowerCase()) && f.toLowerCase().includes(schema.toLowerCase())))
+              .forEach(file=>{
+                DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
+              });
+    }
 
     public unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean){
-      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
+      let _this = this;
+      _this.hook("data","pre",projectName, connection, password, project);
+      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data", true)
       .then(function(){
+        _this.hook("data","post",projectName, connection, password, project);
         cli.confirm('Proceed with '+projectName.toUpperCase()+'_LOGIC? (y/n)').then(function(proceed){
           if (proceed){
-            ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
+            _this.hook("logic","pre",projectName, connection, password, project);
+            ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic", true)
               .then(function(){
+                _this.hook("logic","post",projectName, connection, password, project);
                 cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)').then(function(proceed){
                   if (proceed){
-                    ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
+                    _this.hook("app","pre",projectName, connection, password, project);
+                    ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app", true)
                     .then(()=>{
+                      _this.hook("app","post",projectName, connection, password, project);
                         if (!schemaOnly){
                           Application.installApplication(projectName, connection, password, ords);
+                          _this.hook("app","finally",projectName, connection, password, project);
+                          _this.hook("logic","finally",projectName, connection, password, project);
+                          _this.hook("data","finally",projectName, connection, password, project);
                         }
                     })
                   }
@@ -134,23 +145,36 @@ export class Orcas implements DeliveryMethod{
       });
     }
 
-    public silentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean){
-      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data")
+    public async silentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean):Promise<boolean>{
+      return new Promise((resolve, reject)=>{
+        let _this = this;
+        _this.hook("data","pre",projectName, connection, password, project);
+        ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data", false)
         .then(function(){
-          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic")
+          _this.hook("data","post",projectName, connection, password, project);
+          _this.hook("logic","pre",projectName, connection, password, project);
+          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic", false)
             .then(function(){
-              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app")
+              _this.hook("logic","post",projectName, connection, password, project);
+              _this.hook("app","pre",projectName, connection, password, project);
+              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app", false)
                 .then(()=>{
+                  _this.hook("app","post",projectName, connection, password, project);
                   if (!schemaOnly){
                     Application.installApplication(projectName, connection, password, ords);
+                    _this.hook("app","finally",projectName, connection, password, project);
+                    _this.hook("logic","finally",projectName, connection, password, project);
+                    _this.hook("data","finally",projectName, connection, password, project);  
                   }
+                  resolve(true);
                 })
             })
         });
+      });
     }
 
     public deploySchema(gradleString:string, project:Project, schema:string){
-      ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName() + "_" + schema);
+      ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName() + "_" + schema, true);
     }
 
     public build(projectName:string, version:string){
@@ -197,45 +221,4 @@ export class Orcas implements DeliveryMethod{
       });     
       
     }
-    /*
-    private static installApplication(projectName:string,connection:string, password:string){
-      let path = "";
-      let installFileList:Map<string,string>;
-      installFileList=new Map();
-
-      //Read apex-folder and find the correct file
-      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/").forEach(file=>{
-          console.log(file);
-          if(fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file).isDirectory()){
-            if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/install.sql")){
-              //Get Application ID
-                  // In Zukunft: ProjectManager.getInstance().getProject(projectName).getApplicationId()
-              
-              //Jetzt mal noch über auslesen der ID vom pfad
-              let appId = file.substr(1,file.length-1);
-              //Copy PreInstall File - to this location
-              fs.copySync(__dirname+"/scripts/pre_install_application.sql",
-                          ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/pre_install_application.sql");
-              let script=ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/pre_install_application.sql " + 
-                          ProjectManager.getInstance().getProject(projectName).getWorkspace() + " " +
-                          appId +" "+
-                          ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
-              installFileList.set(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file,
-                                    script);
-            }
-          }
-      });
-
-      installFileList.forEach((script, path)=>{
-        let conn=DBHelper.getConnectionProps(ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getName(),
-                                    password,
-                                    connection);
-        console.log("About to execute: " + script + " in: " + path);
-        DBHelper.executeScript(conn, __dirname+"/scripts/create_workspace.sql "+
-                                        ProjectManager.getInstance().getProject(projectName).getWorkspace() + " "+
-                                        ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP");
-        DBHelper.executeScriptIn(conn, script, path);
-      });
-    }
-    */
 }

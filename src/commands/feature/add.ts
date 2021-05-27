@@ -2,6 +2,7 @@ import {Command, flags} from '@oclif/command'
 import {FeatureManager} from '../../lib/FeatureManager'
 import { ProjectManager } from '../../lib/ProjectManager';
 import chalk from 'chalk';
+import cli from 'cli-ux';
 import { Environment } from '../../lib/Environment';
 
 export default class FeatureAdd extends Command {
@@ -38,9 +39,17 @@ export default class FeatureAdd extends Command {
 
   async run() {
     const {args, flags} = this.parse(FeatureAdd);
+
     if(FeatureManager.getInstance().getFeatureType(args.feature)==="DB" && (!args.username || !args.password)){
       console.log(chalk.red("ERROR: You need to specify a username and a password to add this feature!"));
     }else{
+
+      /*if(!args.version && args.feature){
+        await FeatureManager.getInstance().getFeatureReleases(args.feature).then(async (success)=>{
+          args.version= await cli.prompt('Please enter the version number from the list above you like to add: ');
+        });
+      }*/
+
       if ( ProjectManager.getInstance().getProjectNameByPath(process.cwd()) !== 'all' ){
         FeatureManager.getInstance().addFeatureToProject(args.feature,args.version, ProjectManager.getInstance().getProjectNameByPath(process.cwd()), args.username, args.password); 
       }else{

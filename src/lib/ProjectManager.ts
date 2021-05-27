@@ -19,6 +19,7 @@ import { Application } from './Application';
 import { Utils } from './Utils';
 import ConfigDefaults from "../commands/config/defaults";
 import ProjectInit from "../commands/project/init";
+import { Git } from "./Git";
 //import FeatureInstall from "../commands/feature/install";
 
 const Table = require('cli-table')
@@ -290,11 +291,13 @@ export class ProjectManager {
     deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).build(projectName, version, mode);
   }
 
-  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined):Promise<void>{
+  public deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined):void{
     const p:Project = this.getProject(projectName);
-    
+    console.log('Start Deploying...');
     if ( !p.getStatus().hasChanged() ){      
       deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema );
+      //Git.getCurrentCommitId().then((commitId)=>{p.getStatus().setCommitId(commitId)});
+      Git.getLatestTaggedCommitId().then((commitId)=>{p.getStatus().setCommitId(commitId)});
     }else{
       console.log( chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!') );
     }

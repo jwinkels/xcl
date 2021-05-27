@@ -4,7 +4,7 @@ import * as fs from "fs-extra";
 
 export class ShellHelper{
     
-    public static executeScriptWithEnv(script: string, executePath:string, envObject:any):Promise<string>{
+    public static executeScriptWithEnv(script: string, executePath:string, envObject:any, consoleOutput:boolean=false):Promise<string>{
     return new Promise((resolve, reject)=>{
             try{
                 const childProcess = spawnSync(
@@ -19,19 +19,23 @@ export class ShellHelper{
 
                     
                 if(!childProcess.error){
-                    console.log(chalk.gray(childProcess.stdout)); 
-                    //fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
-                    if(childProcess.stderr.toLocaleLowerCase().includes('failed')){
-                        console.log(chalk.redBright(childProcess.stderr));
-                        //  fs.appendFileSync(executePath+'/xcl.log','FAILURE: '+ childProcess.stderr); 
-                    }else{
-                        console.log(chalk.yellow(childProcess.stderr));
+
+                    if (consoleOutput){
+                        console.log(chalk.gray(childProcess.stdout)); 
                         //fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
+                        if(childProcess.stderr.toLocaleLowerCase().includes('failed')){
+                            console.log(chalk.redBright(childProcess.stderr));
+                            //  fs.appendFileSync(executePath+'/xcl.log','FAILURE: '+ childProcess.stderr); 
+                        }else{
+                            console.log(chalk.yellow(childProcess.stderr));
+                            //fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
+                        }
+                        
+                        if (script.includes('plan.sh')){
+                            fs.appendFileSync(executePath+'/xcl.log', 'APPLY STARTED: '+new Date().toLocaleString()); 
+                        }
                     }
-                    
-                    if (script.includes('plan.sh')){
-                        fs.appendFileSync(executePath+'/xcl.log', 'APPLY STARTED: '+new Date().toLocaleString()); 
-                    }
+
                     resolve(childProcess.stdout);
                 }else{
                     reject(childProcess.error.message);
@@ -45,7 +49,7 @@ export class ShellHelper{
         });
     }
 
-    public static executeScript(script: string, executePath:string){
-        return ShellHelper.executeScriptWithEnv(script, executePath, {})
+    public static executeScript(script: string, executePath:string, consoleOutput:boolean=false){
+        return ShellHelper.executeScriptWithEnv(script, executePath, {}, consoleOutput);
     }
 }

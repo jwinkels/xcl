@@ -23,7 +23,8 @@ export default class ProjectDeploy extends Command {
                            required:    true}),                        
     yes: flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),   
     'ords-url': flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords')}),
-    'schema': flags.string({description: 'to deploy a single schema type one of the following: [data, logic, app]'})
+    'schema': flags.string({description: 'to deploy a single schema type one of the following: [data, logic, app]'}),
+    'quiet': flags.boolean({description: 'suppress output', default: false})
   }
 
   static args = [{name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom(process.cwd(),"project")}]
@@ -40,6 +41,7 @@ export default class ProjectDeploy extends Command {
       }
 
       if(ProjectManager.getInstance().getProject((args.project)).getDeployMethod()!==""){
+        
         if (flags.dependencies && !flags.syspw){
           let syspw=await cli.prompt('sys', {type: 'hide'});
           await FeatureManager.getInstance().installAllProjectFeatures(args.project, flags.connection, syspw, false);
@@ -47,7 +49,8 @@ export default class ProjectDeploy extends Command {
           if (flags.dependencies){
             await FeatureManager.getInstance().installAllProjectFeatures(args.project, flags.connection, flags.syspw!, true);
           }
-        }        
+        }     
+
         ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"], flags['ords-url'], flags.yes, flags.version, flags.mode, flags.schema); 
        
       }else{

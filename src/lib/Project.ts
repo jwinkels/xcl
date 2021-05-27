@@ -434,6 +434,7 @@ export class Project {
               this.environment.set(key, value);
           }else{
               console.error(chalk.red('ERROR: variable can not be empty!'));
+              process.exit;
           }
         }else{
           this.environment.set(key, value);
@@ -543,6 +544,21 @@ class ProjectStatus {
     this.statusConfig=this.deserialize();
     this.statusConfig.xcl.hash = Md5.hashStr(yaml.stringify(this.project.getConfig())).toString();
     this.serialize();
+  }
+
+  public setCommitId(commitId:string){
+    this.statusConfig=this.deserialize();
+    this.statusConfig.xcl['commit']=commitId.replace(/[^a-zA-Z0-9]/g,'');
+    this.serialize();
+  }
+
+  public getCommitId():string{
+    this.statusConfig = this.deserialize();
+    if(this.statusConfig.xcl.commit){
+      return this.statusConfig.xcl.commit;
+    }else{
+      return '';
+    }
   }
 
   //Checks wether the dependency is already installed in the correct version
