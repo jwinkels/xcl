@@ -32,7 +32,7 @@ export default class ProjectDeploy extends Command {
   async run() {
     const {args, flags} = this.parse(ProjectDeploy);
     if (!args.project && ProjectManager.getInstance().getProjectNameByPath(process.cwd()) === 'all'){
-      console.log(chalk.red('ERROR: You need to specify a project or be in a xcl-Project directory!'));
+      console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project directory!'));
       console.log(chalk.blueBright('INFO: Try ´xcl project:list´ to get an overview of your projects!'));
     }else{
 

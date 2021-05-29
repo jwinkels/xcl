@@ -31,7 +31,7 @@ export default class FeatureRemove extends Command {
     const {args, flags} = this.parse(FeatureRemove)
 
     if ( ProjectManager.getInstance().getProjectNameByPath(process.cwd()) === 'all' &&  !args.project){
-      console.log(chalk.red('ERROR: You need to specify a project or be in a xcl-Project managed directory!'));
+      console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!'));
     }else{
       let project="";
 
@@ -63,7 +63,7 @@ export default class FeatureRemove extends Command {
         }
         await FeatureManager.getInstance().removeFeatureFromProject(args.feature, project);
       }else{
-        console.log(chalk.red('ERROR: You need to specify a project or be in a xcl-Project managed directory!'));
+        console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!'));
       }
     }
   }

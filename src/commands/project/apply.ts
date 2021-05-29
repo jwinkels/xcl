@@ -28,7 +28,7 @@ export default class ProjectApply extends Command {
       if ( args.project ){
         ProjectManager.getInstance().apply( args.project, flags["setup-only"]);
       }else{
-        console.log( chalk.red('ERROR: You need to specify a project or be in a xcl-Project managed directory!') );
+        console.log( chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!') );
       }
     }
   }

@@ -18,17 +18,17 @@ export default class FeatureAdd extends Command {
                   required: true
                 },
                 {
-                  name: 'version',
-                  description: 'Version of the Feature',
-                  required: true
-                },
-                {
                   name: 'username',
                   description: 'schema name for the feature to be installed in'
                 },
                 {
                   name: 'password',
                   description: 'password for the new schema'
+                },
+                {
+                  name: 'version',
+                  description: 'Version of the Feature',
+                  required: false
                 },
                 {
                   name: 'project',
@@ -40,24 +40,27 @@ export default class FeatureAdd extends Command {
   async run() {
     const {args, flags} = this.parse(FeatureAdd);
 
-    if(FeatureManager.getInstance().getFeatureType(args.feature)==="DB" && (!args.username || !args.password)){
-      console.log(chalk.red("ERROR: You need to specify a username and a password to add this feature!"));
+
+    if(!args.version && args.feature){
+      await FeatureManager.getInstance().getFeatureReleases(args.feature).then(async (success)=>{
+        args.version= await cli.prompt('Please enter a version number from the list above you like to add');
+      });
+    }
+
+    
+    if(FeatureManager.getInstance().getFeatureType(args.feature) === "DB" && (!args.username || !args.password)){
+      console.log(chalk.yellow("INFO: You must specify a username and a password to add this feature!"));
+      args.username = await cli.prompt('Please enter a username');
+      args.password = await cli.prompt('Please enter a password');
+    }
+
+    if ( ProjectManager.getInstance().getProjectNameByPath(process.cwd()) !== 'all' ){
+      FeatureManager.getInstance().addFeatureToProject(args.feature,args.version, ProjectManager.getInstance().getProjectNameByPath(process.cwd()), args.username, args.password); 
     }else{
-
-      /*if(!args.version && args.feature){
-        await FeatureManager.getInstance().getFeatureReleases(args.feature).then(async (success)=>{
-          args.version= await cli.prompt('Please enter the version number from the list above you like to add: ');
-        });
-      }*/
-
-      if ( ProjectManager.getInstance().getProjectNameByPath(process.cwd()) !== 'all' ){
-        FeatureManager.getInstance().addFeatureToProject(args.feature,args.version, ProjectManager.getInstance().getProjectNameByPath(process.cwd()), args.username, args.password); 
+      if ( args.project ){
+        FeatureManager.getInstance().addFeatureToProject(args.feature, args.version, args.project, args.username, args.password); 
       }else{
-        if ( args.project ){
-          FeatureManager.getInstance().addFeatureToProject(args.feature, args.version, args.project, args.username, args.password); 
-        }else{
-          console.log(chalk.red('ERROR: You need to specify a project or be in a xcl-Project managed directory!'));
-        }
+        console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!'));
       }
     }
   }

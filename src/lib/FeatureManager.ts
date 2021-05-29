@@ -5,14 +5,11 @@ import * as os from "os";
 import * as request from "request-promise-native";
 import chalk from 'chalk'
 import { Feature } from './Feature';
-import { integer } from '@oclif/command/lib/flags';
 import { ProjectManager } from './ProjectManager';
 import { ProjectFeature } from './ProjectFeature';
-import { Request } from 'request';
 import requestPromise = require('request-promise-native');
 import { GithubCredentials } from './GithubCredentials';
 import * as AdmZip from "adm-zip";
-import { Executer } from './Executer';
 import { DBHelper, IConnectionProperties } from './DBHelper';
 import  { deliveryFactory }  from './DeliveryFactory';
 import { DeliveryMethod } from './DeliveryMethod';
@@ -21,7 +18,6 @@ import e = require('express');
 import { Environment } from './Environment';
 import { Operation } from './Operation';
 import { Utils } from './Utils';
-import { resolve } from "dns";
 const Table = require('cli-table');
 
 export class FeatureManager{
@@ -134,15 +130,15 @@ export class FeatureManager{
                 table.push([releases[i]]);
               }
               console.log(table.toString());
-            });
-            resolve(true);
+              resolve(true);
+            });           
           }else{
             throw Error('Unknown Feature: '+name+' Try: xcl feature:list');
           }
         });
       }
 
-      public addFeatureToProject(featureName:string, version:string, projectName:string, username: string, password: string){
+      public addFeatureToProject(featureName:string, version:string, projectName:string, username: string, password: string):Promise<void>{
         return new Promise((resolve,reject)=>{
           let pManager:ProjectManager=ProjectManager.getInstance();
           pManager.getProject(projectName).addFeature( (this.getProjectFeature(featureName, version, username, password) ! ));
@@ -150,7 +146,7 @@ export class FeatureManager{
         });
       }
 
-      private downloadFeature(feature:ProjectFeature, projectName:string){
+      private downloadFeature(feature:ProjectFeature, projectName:string):Promise<void>{
         let pManager:ProjectManager=ProjectManager.getInstance();
         return new Promise((resolve, reject)=>{
           var filename = pManager.getProject(projectName).getPath() +'/dependencies/'+feature.getName()+'_'+feature.getReleaseInformation()+'.zip';
@@ -226,7 +222,7 @@ export class FeatureManager{
         console.log(table.toString());
       }
 
-      public getProjectFeature(featureName:string, version:string, username:string, password:string, installed:Boolean=false):ProjectFeature|undefined{
+      public getProjectFeature(featureName:string, version:string, username:string, password:string, installed:boolean=false):ProjectFeature|undefined{
         let feature:ProjectFeature|undefined;
         if( FeatureManager.features.has(featureName.toLowerCase()) ){
           if (FeatureManager.features.get(featureName.toLowerCase()) !== undefined ){
@@ -256,7 +252,7 @@ export class FeatureManager{
         }
       }
 
-      public installProjectFeature(featureName:string, connection:string, syspw:string, projectName:string){
+      public installProjectFeature(featureName:string, connection:string, syspw:string, projectName:string):Promise<void>{
           return new Promise((resolve, reject)=>{
             var connectionWithUser="";
             var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
@@ -312,7 +308,7 @@ export class FeatureManager{
                                 if(fs.existsSync(__dirname + "/scripts/" + installSteps.scripts[i].path)){
                                   executeString=Utils.checkPathForSpaces(__dirname + "/scripts/" + installSteps.scripts[i].path) + argumentString;
                                 }else{
-                                  throw Error("Script couldn't be found!");
+                                  throw Error(`Script '${__dirname + "/scripts/" + installSteps.scripts[i].path}' couldn't be found!`);
                                 }
                               }
                               DBHelper.executeScript(c, executeString);
@@ -354,7 +350,7 @@ export class FeatureManager{
           });
       }
 
-      public deinstallProjectFeature(featureName:string, connection:string, syspw:string, projectName:string){
+      public deinstallProjectFeature(featureName:string, connection:string, syspw:string, projectName:string):Promise<void>{
         return new Promise((resolve, reject)=>{
           var connectionWithUser="";
           var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
@@ -429,7 +425,7 @@ export class FeatureManager{
         }); 
       }  
 
-      public dropOwnerSchema(featureName:string, connection:string, syspw:string, projectName:string){
+      public dropOwnerSchema(featureName:string, connection:string, syspw:string, projectName:string):Promise<void>{
         return new Promise((resolve,reject)=>{
           var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
           const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
@@ -442,8 +438,8 @@ export class FeatureManager{
         });
       }
 
-      private static unzipFeature(installSteps:any, projectPath:string, feature:ProjectFeature):Promise<any>{
-        return new Promise<any>((resolve, reject)=>{
+      private static unzipFeature(installSteps:any, projectPath:string, feature:ProjectFeature):Promise<void>{
+        return new Promise((resolve, reject)=>{
           if (installSteps && installSteps.installzip){
             var zip = new AdmZip(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '.zip');
             zip.extractAllTo(projectPath + '/dependencies/');
@@ -499,13 +495,15 @@ export class FeatureManager{
         }
       }
 
-      public static updateFeatureVersion(featureName:string, version:string, projectName:string, connection:string, syspw:string){
+      public static updateFeatureVersion(featureName:string, version:string, projectName:string, connection:string, syspw:string):Promise<void>{
         return new Promise((resolve, reject)=>{
           if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
             let p:Project = ProjectManager.getInstance().getProject(projectName);
             let feature = p.getFeatures().get(featureName);
             let newFeature = feature;
+            
             syspw = syspw ? syspw : Environment.readConfigFrom( p.getPath(), "syspw");
+
             newFeature?.setReleaseInformation(version);
             FeatureManager.getInstance().deinstallProjectFeature(featureName, connection, syspw, projectName)
               .then(function(){
@@ -531,7 +529,7 @@ export class FeatureManager{
         });
       }
 
-      public removeFeatureFromProject(featureName:string, projectName:string){
+      public removeFeatureFromProject(featureName:string, projectName:string):Promise<void>{
         return new Promise((resolve, reject)=>{
           if(ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
             ProjectManager.getInstance().getProject(projectName).removeFeature(ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)!);

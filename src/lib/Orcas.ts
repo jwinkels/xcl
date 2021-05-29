@@ -87,7 +87,7 @@ export class Orcas implements DeliveryMethod{
     private hook(schema:string, type:string, projectName:string, connection:string, password:string, project:Project):void{
      
       let conn:any;
-      console.log(`Doing ${schema} - ${type} - Hooks: ...` )
+      cli.action.start(`${type}-${schema}-hooks: ...` );
       switch (schema.toLowerCase()){
         case 'data':
           conn=DBHelper.getConnectionProps(project.getUsers().get('DATA')?.getConnectionName(),
@@ -105,11 +105,20 @@ export class Orcas implements DeliveryMethod{
                                           connection);
           break;
         }
+
         fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/")
-              .filter(f=>(f.toLowerCase().includes(type.toLowerCase()) && f.toLowerCase().includes(schema.toLowerCase())))
+              .filter( f => ( 
+                            f.toLowerCase().substr(0, f.indexOf('_', f.indexOf('_', 0) + 1)).includes( type.toLowerCase() ) && 
+                            f.toLowerCase().substr(0, f.indexOf('_', f.indexOf('_', 0) + 1)).includes( schema.toLowerCase() ) 
+                          ) 
+                     )
               .forEach(file=>{
-                DBHelper.executeScriptIn(conn, file, ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/");
+                DBHelper.executeScriptIn(conn, 
+                                         file, 
+                                         ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/"
+                                        );
               });
+        cli.action.stop('done');
     }
 
     public unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean){
@@ -132,10 +141,10 @@ export class Orcas implements DeliveryMethod{
                       _this.hook("app","post",projectName, connection, password, project);
                         if (!schemaOnly){
                           Application.installApplication(projectName, connection, password, ords);
-                          _this.hook("app","finally",projectName, connection, password, project);
-                          _this.hook("logic","finally",projectName, connection, password, project);
-                          _this.hook("data","finally",projectName, connection, password, project);
                         }
+                        _this.hook("app","finally",projectName, connection, password, project);
+                        _this.hook("logic","finally",projectName, connection, password, project);
+                        _this.hook("data","finally",projectName, connection, password, project);
                     })
                   }
                 })
@@ -162,10 +171,10 @@ export class Orcas implements DeliveryMethod{
                   _this.hook("app","post",projectName, connection, password, project);
                   if (!schemaOnly){
                     Application.installApplication(projectName, connection, password, ords);
-                    _this.hook("app","finally",projectName, connection, password, project);
-                    _this.hook("logic","finally",projectName, connection, password, project);
-                    _this.hook("data","finally",projectName, connection, password, project);  
                   }
+                  _this.hook("app","finally",projectName, connection, password, project);
+                  _this.hook("logic","finally",projectName, connection, password, project);
+                  _this.hook("data","finally",projectName, connection, password, project);  
                   resolve(true);
                 })
             })

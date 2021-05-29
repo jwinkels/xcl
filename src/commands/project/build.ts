@@ -31,7 +31,7 @@ export default class ProjectBuild extends Command {
       if ( args.project ){
         ProjectManager.getInstance().build(args.project, flags.version, flags.mode);
       }else{
-        console.log(chalk.red('ERROR: You need to specify a project or be in a xcl-Project managed directory!'));
+        console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!'));
       }
     }
     

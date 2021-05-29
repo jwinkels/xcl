@@ -135,7 +135,7 @@ export default class ConfigDefaults extends Command{
   }
 
   async resetVariable(variableName:string, project:Project){
-    project.setEnvironmentVariable(variableName, "");
+    project.setEnvironmentVariable(variableName, "", true);
     console.log(chalk.green('OK'));
   }
 
@@ -144,7 +144,7 @@ export default class ConfigDefaults extends Command{
 
     let projectEnv=project.getEnvironment()
     for (let key of projectEnv.keys()){
-      project.setEnvironmentVariable(key, "");
+      project.setEnvironmentVariable(key, "", true);
     }
     console.log(chalk.green('OK'));
   }
