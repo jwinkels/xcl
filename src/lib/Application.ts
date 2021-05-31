@@ -2,7 +2,6 @@ import { ProjectManager } from './ProjectManager';
 import * as fs from "fs-extra"
 import { DBHelper } from './DBHelper';
 import { Md5 } from 'ts-md5';
-import { Environment } from './Environment';
 import { Utils } from './Utils';
 
 export class Application{

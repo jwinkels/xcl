@@ -3,7 +3,6 @@ import "reflect-metadata";
 import { DeliveryMethod } from "./DeliveryMethod";
 import { ProjectFeature } from './ProjectFeature';
 import * as fs from "fs-extra"
-import { AQ_DEQ_MODE_LOCKED } from "oracledb";
 import { ShellHelper } from "./ShellHelper";
 import { ProjectManager } from "./ProjectManager";
 

@@ -9,7 +9,6 @@ import cli from 'cli-ux';
 import {ShellHelper} from "./ShellHelper";
 import { DBHelper } from './DBHelper';
 import { Application } from './Application';
-import { resolve } from "dns";
 
 @injectable()
 export class Orcas implements DeliveryMethod{

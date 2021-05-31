@@ -18,7 +18,6 @@ import {Operation} from './Operation';
 import { Application } from './Application';
 import { Utils } from './Utils';
 import ConfigDefaults from "../commands/config/defaults";
-import ProjectInit from "../commands/project/init";
 import { Git } from "./Git";
 //import FeatureInstall from "../commands/feature/install";
 

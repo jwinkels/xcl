@@ -2,7 +2,6 @@ import * as fs from "fs-extra";
 import  * as os from 'os';
 import * as yaml from "yaml";
 import { ProjectManager } from './ProjectManager';
-import chalk from 'chalk'
 export class Environment{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
 

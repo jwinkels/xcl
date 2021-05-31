@@ -2,6 +2,7 @@ import {Command, flags} from '@oclif/command'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { ProjectManager } from '../../lib/ProjectManager'
 import { Environment } from '../../lib/Environment'
+import cli from 'cli-ux';
 
 export default class FeatureUpdate extends Command {
   static description = 'update Project Feature version'
@@ -21,7 +22,7 @@ export default class FeatureUpdate extends Command {
     {
       name: 'version',
       description: 'Version of the Feature',
-      required: true
+      required: false
     },
     {
       name: 'project',
@@ -32,7 +33,16 @@ export default class FeatureUpdate extends Command {
 
   async run() {
     const {args, flags} = this.parse(FeatureUpdate)
-    
+    if(!args.version && args.feature){
+      await FeatureManager.getInstance().getFeatureReleases(args.feature).then(async (success)=>{
+        args.version= await cli.prompt('Please enter a version number from the list above you like to add');
+      });
+    }
+
+    if (!flags.syspw){
+      flags.syspw = await cli.prompt('SYS-Password',{type: 'hide'});
+    }
+
     FeatureManager.updateFeatureVersion(args.feature, args.version, args.project, flags.connection, flags.syspw!);
   }
 }

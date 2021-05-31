@@ -55,13 +55,26 @@ export default class FeatureAdd extends Command {
     }
 
     if ( ProjectManager.getInstance().getProjectNameByPath(process.cwd()) !== 'all' ){
-      FeatureManager.getInstance().addFeatureToProject(args.feature,args.version, ProjectManager.getInstance().getProjectNameByPath(process.cwd()), args.username, args.password); 
+      await FeatureManager.getInstance().addFeatureToProject(args.feature,args.version, ProjectManager.getInstance().getProjectNameByPath(process.cwd()), args.username, args.password); 
     }else{
       if ( args.project ){
-        FeatureManager.getInstance().addFeatureToProject(args.feature, args.version, args.project, args.username, args.password); 
+        await FeatureManager.getInstance().addFeatureToProject(args.feature, args.version, args.project, args.username, args.password);
       }else{
         console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!'));
       }
+    }
+
+    let install:string = await cli.prompt(`Install ${args.feature} [y/n]`);
+
+    if (install === 'y'){
+      let connection:string =Environment.readConfigFrom(process.cwd(),"connection");
+      if (!connection){
+        connection = await cli.prompt('Connection [host:port/servicename]');
+      }
+      let syspw:string = await cli.prompt('SYS-Password',{type: 'hide'});
+      FeatureManager.getInstance().installProjectFeature(args.feature, connection, syspw, args.project);
+    }else{
+      console.log(chalk.blueBright('Feature was added! You can install it using feature:install'));
     }
   }
 }

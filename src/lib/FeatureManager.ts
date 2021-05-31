@@ -354,11 +354,12 @@ export class FeatureManager{
         return new Promise((resolve, reject)=>{
           var connectionWithUser="";
           var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
+          var project:Project = ProjectManager.getInstance().getProject(projectName);
           var c:IConnectionProperties;
           syspw = syspw ? syspw : Environment.readConfigFrom(projectPath, "syspw");  
-            if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
+            if (project.getFeatures().has(featureName)){
 
-              let feature:ProjectFeature=ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)!;
+              let feature:ProjectFeature=project.getFeatures().get(featureName)!;
               var deinstallSteps = FeatureManager.getDeinstallSteps(feature.getName());
               FeatureManager.unzipFeature(deinstallSteps, projectPath, feature)
                 .then(()=>{
@@ -414,8 +415,8 @@ export class FeatureManager{
                 })
                 .finally(function(){
                   feature.setInstalled(false);
-                  ProjectManager.getInstance().getProject(projectName).updateFeature(feature);
-                   //TODO: Status-File Update
+                  project.updateFeature(feature);
+                  project.getStatus().updateDependencyStatus(feature, true);
                   resolve();
                 });
             }else{
@@ -534,7 +535,6 @@ export class FeatureManager{
           if(ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
             ProjectManager.getInstance().getProject(projectName).removeFeature(ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)!);
             console.log(chalk.green(`SUCCESS: Feature ${featureName} removed!`));
-             //TODO: Status-File Update
             resolve();
           }else{
             console.log(chalk.yellow(`WARNING: Feature ${featureName} not in dependency list! Nothing removed!`));

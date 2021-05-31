@@ -4,8 +4,6 @@ import * as fs from "fs-extra";
 import * as http from 'http';
 import * as Oauth from 'client-oauth2';
 import * as Express from 'express';
-import { resolve } from 'dns';
-import { rejects } from 'assert';
 import * as open from 'open';
 
 export class GithubCredentials{
@@ -56,7 +54,7 @@ export class GithubCredentials{
       
       let server=app.get('/auth/github/callback', function (req, express) {
             let authToken="";
-            let httpReq=http.request('http://130.61.153.127'+req.originalUrl,(res)=>{
+            let httpReq=http.request('http://130.61.153.127' + req.originalUrl,(res)=>{
                 res.on('data', (d) => {
                     authToken += d;
                 });

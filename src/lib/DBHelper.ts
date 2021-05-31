@@ -1,9 +1,7 @@
 import { Project } from './Project';
 import { spawnSync } from 'child_process';
-import * as path from 'path'
 import { ProjectFeature } from './ProjectFeature';
 import chalk from 'chalk'
-import cli from 'cli-ux'
 import * as fs from "fs-extra";
 import * as os from "os";
 

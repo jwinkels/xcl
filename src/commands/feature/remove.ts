@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { ProjectManager } from '../../lib/ProjectManager'
 import { Environment } from '../../lib/Environment'
+import { cli } from 'cli-ux'
 export default class FeatureRemove extends Command {
   static description = 'remove Feature from Project'
 
@@ -42,26 +43,31 @@ export default class FeatureRemove extends Command {
       }
 
       if (project !== ""){
-        if (flags.deinstall && (flags.connection === undefined || flags.syspw === undefined)){
-          console.log(chalk.red('Please provide a connection and the SYS-User password!'));
+        
+        if ( flags.deinstall && ( flags.connection === undefined || flags.syspw === undefined ) ){
+          console.log(chalk.yellow('Please provide a connection and the SYS-User password!'));
+          flags.connection = flags.connection ? flags.connection : await cli.prompt('connection [host:port/servicename]');
+          flags.syspw      = flags.syspw      ? flags.syspw      : await cli.prompt('sys-password');
+        }
+        
+        if ( flags.deinstall && ( flags.connection && flags.syspw ) ){
+          await FeatureManager.getInstance().deinstallProjectFeature(args.feature, flags.connection!, flags.syspw!, project);
         }else{
-          if ( flags.deinstall && ( flags.connection && flags.syspw ) ){
-            await FeatureManager.getInstance().deinstallProjectFeature(args.feature, flags.connection!, flags.syspw!, project);
-          }else{
-            if (flags.deinstall){
-              throw Error(chalk.red('ERROR: When using deinstall option you need to provide a connection and the SYS-User password!'));
-            }
-          }
-
-          if (flags.owner && ( flags.connection && flags.syspw ) ){
-            await FeatureManager.getInstance().dropOwnerSchema(args.feature, flags.connection!, flags.syspw!, project);
-          }else{
-            if (flags.owner){
-              throw Error(chalk.red('ERROR: When using drop owner schema option you need to provide a connection and the SYS-User password!'));
-            }
+          if (flags.deinstall){
+            throw Error(chalk.red('ERROR: When using deinstall option you need to provide a connection and the SYS-User password!'));
           }
         }
+
+        if ( flags.owner && ( flags.connection && flags.syspw ) ){
+          await FeatureManager.getInstance().dropOwnerSchema(args.feature, flags.connection!, flags.syspw!, project);
+        }else{
+          if (flags.owner){
+            throw Error(chalk.red('ERROR: When using drop owner schema option you need to provide a connection and the SYS-User password!'));
+          }
+        }
+        
         await FeatureManager.getInstance().removeFeatureFromProject(args.feature, project);
+
       }else{
         console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!'));
       }

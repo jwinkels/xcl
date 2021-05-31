@@ -8,7 +8,6 @@ import  * as os from 'os';
 import { Environment } from './Environment';
 import { Md5 } from 'ts-md5/dist/md5';
 import {Operation} from './Operation';
-import { string } from "@oclif/command/lib/flags";
 
 
 export class Project {
@@ -519,13 +518,17 @@ class ProjectStatus {
     return this.changeList;
   }
 
-  public updateDependencyStatus(feature:ProjectFeature){
-    if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
-      this.statusConfig.xcl.dependencies[feature.getName()]={};
-      this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
-      this.statusConfig.xcl.dependencies[feature.getName()].owner = feature.getOwner();
-    }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
-      this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+  public updateDependencyStatus(feature:ProjectFeature, removed:boolean=false){
+    if (!removed){
+      if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
+        this.statusConfig.xcl.dependencies[feature.getName()]={};
+        this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+        this.statusConfig.xcl.dependencies[feature.getName()].owner = feature.getOwner();
+      }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
+        this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+      }
+    }else{
+      delete this.statusConfig.xcl.dependencies[feature.getName()];
     }
 
     this.serialize();

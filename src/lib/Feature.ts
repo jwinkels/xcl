@@ -1,4 +1,3 @@
-import * as fs from "fs-extra";
 import * as https from "https";
 import {GithubCredentials} from './GithubCredentials';
 
