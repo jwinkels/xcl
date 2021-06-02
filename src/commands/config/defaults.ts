@@ -92,17 +92,26 @@ export default class ConfigDefaults extends Command{
     }
   }
 
-  async setVariable(variableName:string, project:Project, value:string){
+  async setVariable(variableName:string, project:Project, value:string|undefined){
     let input = "";
-    
+
+    if (value && value.startsWith('$')){
+      value = value.replace('$','');
+      value = process.env[value]?.trim();
+
+      //If System-Environment Variable was not found lookup xcl-Environment Variable
+      if (!value || value === ""){
+        value = project.getEnvironment().get(variableName);
+      }
+    }
+
     if (variableName.toUpperCase()==="SYSPW"){
-      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'hide'});
+      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'normal'});
     }else{
       input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'normal'});
     } 
 
     await project.setEnvironmentVariable(variableName, input);
-    console.log(chalk.green('OK'));
   }
 
   async listVariables(project:Project){
@@ -136,7 +145,6 @@ export default class ConfigDefaults extends Command{
 
   async resetVariable(variableName:string, project:Project){
     project.setEnvironmentVariable(variableName, "", true);
-    console.log(chalk.green('OK'));
   }
 
   async resetAllVariables(project:Project){

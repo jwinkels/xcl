@@ -1,50 +1,49 @@
 import {spawnSync } from 'child_process';
 import chalk from 'chalk'
 import * as fs from "fs-extra";
+import { boolean } from '@oclif/parser/lib/flags';
 
 export class ShellHelper{
     
-    public static executeScriptWithEnv(script: string, executePath:string, envObject:any, consoleOutput:boolean=false):Promise<string>{
+    public static executeScriptWithEnv(script: string, executePath:string, envObject:any, consoleOutput:boolean=false):Promise<{status: boolean, result: string}>{
     return new Promise((resolve, reject)=>{
-            try{
+            let retObj:any = {}
+            try{    
                 const childProcess = spawnSync(
                     script, 
                     [], {
                         encoding: 'utf8',
                         cwd: executePath,
                         shell: true,
-                        env: envObject
+                        env: envObject,
+                        stdio:[process.stdin, consoleOutput ? process.stdout : null, process.stderr]
                     }
                 );
-
                     
                 if(!childProcess.error){
 
-                    if (consoleOutput){
-                        console.log(chalk.gray(childProcess.stdout)); 
-                        //fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
-                        if(childProcess.stderr.toLocaleLowerCase().includes('failed')){
-                            console.log(chalk.redBright(childProcess.stderr));
-                            //  fs.appendFileSync(executePath+'/xcl.log','FAILURE: '+ childProcess.stderr); 
-                        }else{
-                            console.log(chalk.yellow(childProcess.stderr));
-                            //fs.appendFileSync(executePath+'/xcl.log', childProcess.stderr); 
-                        }
+                    //  fs.appendFileSync(executePath+'/xcl.log','FAILURE: '+ childProcess.stderr); 
                         
-                        if (script.includes('plan.sh')){
-                            fs.appendFileSync(executePath+'/xcl.log', 'APPLY STARTED: '+new Date().toLocaleString()); 
-                        }
-                    }
+                   if (childProcess.stdout){
+                    retObj.result=childProcess.stdout;
+                   }
 
-                    resolve(childProcess.stdout);
+                   retObj.status=true;
+                   
+                    resolve(retObj);
                 }else{
-                    reject(childProcess.error.message);
+                   // fs.appendFileSync(executePath+'/xcl.log','\n\r'+ new Date().toLocaleString() + ': ' + childProcess.stderr); 
+                   retObj.status=false;
+                   retObj.result="";
+                    resolve(retObj);
                 }
                     
 
             
             }catch(err){
-                reject(err);
+                retObj.status=false;
+                retObj.result="";
+                 resolve(retObj);
             }
         });
     }

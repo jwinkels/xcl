@@ -413,30 +413,20 @@ export class Project {
       }
   }
 
-  public setEnvironmentVariable(key:string, value:string, reset:boolean=false){
+  public setEnvironmentVariable(key:string, value:string|undefined, reset:boolean=false){
     
     if (this.environment.has(key)){
         
-        if (value.startsWith('$')){
-
-          value = value.replace('$','');
-          value = "" + process.env[value]?.trim();
-          
-          //If System-Environment Variable was not found lookup xcl-Environment Variable
-          if (value === ""){
-            value = "" + this.environment.get(key);
-          }
-        }
-        
         if (!reset){
-          if (value !== undefined && value !==""){
+          if (value && value !==""){
               this.environment.set(key, value);
+              console.log(chalk.green('OK'));
           }else{
-              console.error(chalk.red('ERROR: variable can not be empty!'));
-              process.exit;
+              process.stderr.write(chalk.red('ERROR: variable can not be empty!'));
           }
         }else{
-          this.environment.set(key, value);
+          this.environment.set(key, value!);
+          process.stdout.write(chalk.green('OK'));
         }
         Environment.writeEnvironment(this.name, this.environment);
     }else{

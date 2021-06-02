@@ -295,8 +295,10 @@ export class ProjectManager {
     console.log('Start Deploying...');
     if ( !p.getStatus().hasChanged() ){      
       deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema );
-      //Git.getCurrentCommitId().then((commitId)=>{p.getStatus().setCommitId(commitId)});
-      Git.getLatestTaggedCommitId().then((commitId)=>{p.getStatus().setCommitId(commitId)});
+      Git.getCurrentCommitId()
+        .then((commitId)=>{p.getStatus().setCommitId(commitId)})
+        .catch((reason)=>{});
+      //Git.getLatestTaggedCommitId().then((commitId)=>{p.getStatus().setCommitId(commitId)});
     }else{
       console.log( chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!') );
     }
@@ -398,7 +400,7 @@ export class ProjectManager {
   }
   
   public async apply(projectName: string, setupOnly:boolean):Promise<void>{
-    
+    let ready:boolean = false;
     const project:Project = this.getProject(projectName);
     if ( fs.existsSync( project.getPath() + '/plan.sh' ) ){
       Application.generateSQLEnvironment( projectName, __dirname );
@@ -413,14 +415,18 @@ export class ProjectManager {
 
           //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
           if(command){
-            switch (command){
-              case "xcl config:defaults":  
+            /*switch (command){
+              case "pcl config:defaults":  
                     await ConfigDefaults.run(argv);
                     break;
               default:
-                    await ShellHelper.executeScript( commands[i], project.getPath() );
-                    break;
-            }
+              */
+              let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true )).result;
+              if (!status){
+                console.log('An unexpected error occured, please check log for details!');
+                process.exit();
+              }
+            //}
           }
         }
       }else{
@@ -430,6 +436,7 @@ export class ProjectManager {
         project.getStatus().updateStatus();
 
         if ( !project.getStatus().hasChanged() ){
+          console.log("\n\n\r");
           console.log( chalk.green('SUCCESS: Everything up to date!') );
           fs.removeSync( 'plan.sh' );
           if( !setupOnly ){
