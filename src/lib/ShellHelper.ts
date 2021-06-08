@@ -19,31 +19,31 @@ export class ShellHelper{
                         stdio:[process.stdin, consoleOutput ? process.stdout : null, process.stderr]
                     }
                 );
-                    
                 if(!childProcess.error){
-
-                    //  fs.appendFileSync(executePath+'/xcl.log','FAILURE: '+ childProcess.stderr); 
+ 
+                    fs.appendFileSync(executePath+'/xcl.log','\n\r'+ new Date().toLocaleString() + ': ' + process.stdout); 
                         
-                   if (childProcess.stdout){
-                    retObj.result=childProcess.stdout;
-                   }
-
-                   retObj.status=true;
-                   
+                    if (childProcess.stdout){
+                        retObj.result = childProcess.stdout;
+                    }
+                    retObj.status = true;
                     resolve(retObj);
+
                 }else{
-                   // fs.appendFileSync(executePath+'/xcl.log','\n\r'+ new Date().toLocaleString() + ': ' + childProcess.stderr); 
-                   retObj.status=false;
-                   retObj.result="";
+                    fs.appendFileSync(executePath+'/xcl.log','\n\r'+ new Date().toLocaleString() + ': ' + childProcess.stderr); 
+                    retObj.status=false;
+                    retObj.result="";
                     resolve(retObj);
                 }
                     
 
             
             }catch(err){
+                console.log(executePath);
+                fs.appendFileSync(executePath+'/xcl.log','\n\r'+ new Date().toLocaleString() + ': ' + err);
                 retObj.status=false;
                 retObj.result="";
-                 resolve(retObj);
+                resolve(retObj);
             }
         });
     }

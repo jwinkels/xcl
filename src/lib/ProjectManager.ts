@@ -421,7 +421,7 @@ export class ProjectManager {
                     break;
               default:
               */
-              let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true )).result;
+              let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true )).status;
               if (!status){
                 console.log('An unexpected error occured, please check log for details!');
                 process.exit();
