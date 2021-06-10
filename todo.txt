@@ -41,7 +41,7 @@ TODO:
         * Eingespielt wird das release dann wieder über plan / apply
         GRUND: Plan erkennt die Änderung an der Versionsnummer und generiert die notwendigen Befehle...
 
-    - Passwort für Benutzer generieren
+    - Passwort für Benutzer generieren @JAW
 
     - Multi Application Support?
 
@@ -69,4 +69,20 @@ TODO:
             MÖGLICHER WORKAROUND: Schema Only Accounts (erst ab 18c)
             MÖGLICHE LÖSUNG: Status file bekommt auch das schema und das passwort mit damit Features deinstalliert werden können
 
+
+    - DBFLOW: @MMI
+        * Implementieren der Build Funktionen
+        * Implementieren der Deploy Funktionen
+    
+    - AutoApply: @JAW
+        * xcl project:plan --auto --yes
+    
+    - Bug in apply @JAW
+        * Hier wird der Hash nicht sauber weggeschrieben 
+    
+    - Projekt init aufräumen @JAW    
+
+    - SingleSchema @JAW
+ 
+    - Project create mit Wizard @MMI
 

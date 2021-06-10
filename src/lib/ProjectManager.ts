@@ -75,8 +75,11 @@ export class ProjectManager {
       let name ="all";
       //Unsauber!! Überdenke projects.yaml
       for (let i=0; i < Object.values( ProjectManager.projectsJson.projects ).length; i++){
-        if( Object.values(ProjectManager.projectsJson.projects)[i].path == projectPath ){
-          name = Object.keys(ProjectManager.projectsJson.projects)[i];
+        let project:any = Object.values(ProjectManager.projectsJson.projects)[i];
+        if (project) {
+          if( project.path == projectPath ){
+            name = Object.keys(ProjectManager.projectsJson.projects)[i];
+          }
         }
       }
       //Wenn in der Liste nichts gefunden ist kann es trotzdem sein, dass es ein XCL-Projekt ist
@@ -215,10 +218,10 @@ export class ProjectManager {
 
   public async initializeProject(projectName: string, flags: { help: void; syspw: string | undefined; connection: string | undefined; force: boolean; yes: boolean; objects: boolean; users:boolean;}):Promise<void> {
     const p:Project = this.getProject(projectName);
-    
+
     flags.syspw = flags.syspw ? flags.syspw : Environment.readConfigFrom(p.getPath() , "syspw");
 
-    const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.syspw, flags.connection);    
+    const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.syspw, flags.connection);
 
     // Prüfen ober es den User schon gibt
     if (await DBHelper.isProjectInstalled(p, c) && flags.users) {
@@ -227,16 +230,16 @@ export class ProjectManager {
         console.log(chalk.yellow(`If you wish to drop users before, you could use force flag`));
         await p.getStatus().updateUserStatus();
         return;
-      } else { 
+      } else {
         if ( flags.force && !flags.yes ) {
           const confirmYN = await cli.confirm( chalk.green(`Force option detected, schema will be dropped. Continue Y/N`) );
-          
+
           if ( !confirmYN ) {
-            console.log( chalk.yellow(`Project initialization canceled`) );          
-            return ; 
+            console.log( chalk.yellow(`Project initialization canceled`) );
+            return ;
           }
         }
-        
+
         console.log( chalk.yellow(`Dropping existing schemas`) );
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/drop_xcl_users.sql' ) + ' ' + p.getName() + '_data ' +
                                                                            p.getName() + '_logic ' +
@@ -260,7 +263,7 @@ export class ProjectManager {
     }
 
     if ( flags.objects ){
-      //Execute setup files 
+      //Execute setup files
       const config = p.getConfig();
       if( config.xcl.setup ){
         await config.xcl.setup.forEach( ( element: { name: string; path: string; } ) => {
@@ -275,7 +278,7 @@ export class ProjectManager {
     // Indextablespace auslagern
     // > data user bekommt das recht tablespaces anzulegen. hier muss ggf. auch das Recht weitergegegen werden
 
-    
+
     // durch features loopen und deren install methode aufrufen
 
     // user erstellen
@@ -284,16 +287,16 @@ export class ProjectManager {
   }
 
   public async build(projectName: string, version:string, mode:string):Promise<void>{
-    
+
     const p:Project = this.getProject(projectName);
-   
+
     deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).build(projectName, version, mode);
   }
 
   public deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined):void{
     const p:Project = this.getProject(projectName);
     console.log('Start Deploying...');
-    if ( !p.getStatus().hasChanged() ){      
+    if ( !p.getStatus().hasChanged() ){
       deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema );
       Git.getCurrentCommitId()
         .then((commitId)=>{p.getStatus().setCommitId(commitId)})
@@ -309,9 +312,9 @@ export class ProjectManager {
     const path:string =  p.getPath();
     const commands:Array<string> = new Array<string>();
     let commandCount=1;
-    
+
     if( p.getStatus().hasChanged() ){
-      
+
       p.getFeatures().forEach( ( feature:ProjectFeature ) =>{
         if( feature.getType()==="DB" ){
           if ( FeatureManager.priviledgedInstall( feature.getName() ) && !commands[0] ){
@@ -319,7 +322,7 @@ export class ProjectManager {
           }else{
             console.log( "SYS not needed for feature : " + feature.getName() );
           }
-          
+
           const operation = p.getStatus().checkDependency( feature );
           if( operation === Operation.INSTALL ){
             console.log( chalk.green('+') + ' install ' + feature.getName() );
@@ -330,7 +333,7 @@ export class ProjectManager {
             console.log( chalk.yellow('***') + ' xcl feature:update ' + feature.getName() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" ) );
             commands[commandCount]= 'xcl feature:update ' + feature.getName() + ' ' + feature.getReleaseInformation() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" );
           }
-          
+
           //WE DONT DO THAT HERE!
           /*else{
             console.log(chalk.red('-')+' deinstall '+feature.getName());
@@ -339,28 +342,28 @@ export class ProjectManager {
           }*/
 
           commandCount = commandCount + 1;
-          
+
         }
       });
 
       p.getStatus().getRemovedDependencies();
 
-      if( !p.getStatus().checkUsers() ){        
+      if( !p.getStatus().checkUsers() ){
         p.getUsers().forEach( ( user:Schema, key:string ) => {
             console.log( chalk.green('+') + ' create user '+ key );
         });
         console.log( chalk.green('+++') + ' xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom( path, "connection" ) );
         commands[commandCount] =  'xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom(path, "connection");
-        
+
         commandCount = commandCount + 1;
-        
+
         if ( !commands[0] ){
           commands[0] = 'xcl config:defaults ' + projectName + ' -s syspw $PASSWORD';
         }
       }
 
       if( p.getStatus().getChanges().get('SETUP') ){
-        
+
         console.log( chalk.green('+') + ' SETUP ');
         console.log( chalk.green('+++')+' xcl project:init ' + projectName + ' --objects --connection=' + Environment.readConfigFrom(path, "connection") );
         commands[commandCount] =  'xcl project:init ' + projectName + ' --objects --connection=' + Environment.readConfigFrom(path, "connection");
@@ -371,7 +374,7 @@ export class ProjectManager {
           commands[0] = 'xcl config:defaults ' + projectName + ' -s syspw $PASSWORD';
         }
       }
-    
+
       //commands[commandCount] ='xcl project:deploy '+ projectName + ' --connection=' + Environment.readConfigFrom(path, "connection") + ' --password=' + Environment.readConfigFrom(path, "password");
       console.log( chalk.green('+') + ' deploy application' );
       //console.log(chalk.green('+++ ')+commands[commandCount]);
@@ -385,7 +388,7 @@ export class ProjectManager {
     }
 
     let fileName = path;
-   
+
     fileName = fileName + '/plan.sh';
 
     fs.removeSync(fileName);
@@ -398,7 +401,7 @@ export class ProjectManager {
 
     fs.chmodSync(fileName, '777');
   }
-  
+
   public async apply(projectName: string, setupOnly:boolean):Promise<void>{
     let ready:boolean = false;
     const project:Project = this.getProject(projectName);
@@ -416,7 +419,7 @@ export class ProjectManager {
           //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
           if(command){
             /*switch (command){
-              case "pcl config:defaults":  
+              case "pcl config:defaults":
                     await ConfigDefaults.run(argv);
                     break;
               default:
@@ -432,7 +435,7 @@ export class ProjectManager {
       }else{
         console.log("Error reading XCL Commands!");
       }
-      
+
         project.getStatus().updateStatus();
 
         if ( !project.getStatus().hasChanged() ){
@@ -441,7 +444,7 @@ export class ProjectManager {
           fs.removeSync( 'plan.sh' );
           if( !setupOnly ){
             console.log( 'DEPLOY APPLICATION: ' );
-            this.deploy(projectName, 
+            this.deploy(projectName,
                         Environment.readConfigFrom(project.getPath(),'connection'),
                         Environment.readConfigFrom(project.getPath(),'password'),
                         false,
@@ -451,7 +454,7 @@ export class ProjectManager {
           }
         }else{
           console.log( chalk.red( 'FAILURE: apply was made but there are still changes!' ) );
-        }      
+        }
     }else{
       console.log( chalk.yellow( 'Execute xcl project:plan first!' ) );
     }

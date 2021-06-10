@@ -110,8 +110,8 @@ software:
     repo: orcas4xcl
     call: release
     deploy: true
-  bash:
+  dbflow:
     owner: MaikMichel
-    repo: bash4xcl
+    repo: dbFlow
     call: release
     deploy: true
