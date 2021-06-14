@@ -477,8 +477,10 @@ class ProjectStatus {
     this.project.reloadConfig();
     this.statusConfig=this.deserialize();
     this.checkSetup("./db/.setup");
-    
-    if(this.statusConfig.xcl.hash==Md5.hashStr(yaml.stringify(this.project.getConfig())).toString() && !this.changeList.get("SETUP")){
+
+    if( this.statusConfig.xcl.hash == Md5.hashStr( yaml.stringify( this.project.getConfig() ) ).toString() 
+          && 
+        !this.changeList.get("SETUP") ){
       return false;
     }else{
       return true;
@@ -533,7 +535,7 @@ class ProjectStatus {
   }
   
   public updateStatus(){
-    // this.project.reloadConfig();
+    this.project.reloadConfig();
     this.statusConfig=this.deserialize();
     this.statusConfig.xcl.hash = Md5.hashStr(yaml.stringify(this.project.getConfig())).toString();
     this.serialize();

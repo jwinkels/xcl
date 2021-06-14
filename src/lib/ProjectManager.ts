@@ -418,18 +418,11 @@ export class ProjectManager {
 
           //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
           if(command){
-            /*switch (command){
-              case "pcl config:defaults":
-                    await ConfigDefaults.run(argv);
-                    break;
-              default:
-              */
-              let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true )).status;
-              if (!status){
-                console.log('An unexpected error occured, please check log for details!');
-                process.exit();
-              }
-            //}
+            let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true )).status;
+            if (!status){
+              console.log('An unexpected error occured, please check log for details!');
+              process.exit();
+            }
           }
         }
       }else{
@@ -453,6 +446,7 @@ export class ProjectManager {
                         "a", "b", undefined); // FIXME: version und mode noch in apply einbauen);
           }
         }else{
+          console.log("\n\n\r");
           console.log( chalk.red( 'FAILURE: apply was made but there are still changes!' ) );
         }
     }else{
