@@ -4,16 +4,16 @@ import * as path from 'path'
 import { Environment } from '../../lib/Environment'
 
 export default class ProjectInit extends Command {
-  static description = 'initialize a project'
+  static description = 'initializes a project'
 
   static flags = {
     help: flags.help({char: 'h'}),
-    syspw: flags.string({char: 'p', description: 'Password of user sys'}),
+    syspw: flags.string({char: 's', description: 'Password of user sys'}),
     connection: flags.string({char: 'c', description: 'Connectstring ex. localhost:1521/xepdb1', default: Environment.readConfigFrom( process.cwd(),"connection") }),
-    force: flags.boolean({char: 'f', description: 'Attention: forces dropping existing schemas'}),
+    force: flags.boolean({char: 'f', description: 'Attention: force will drop existing schemas'}),
     yes: flags.boolean({char: 'y', description: 'Answers force-action with yes (Use with caution)'}),
-    objects: flags.boolean({char: 'o', description: 'Install Basic Objects defined in setup-Directory'}),
-    users: flags.boolean({char: 'u', description: 'Install standard Schemas APP, LOGIC, DATA, DEPL'}),
+    objects: flags.boolean({char: 'o', description: 'Install basic objects defined in setup directory'}),
+    users: flags.boolean({char: 'u', description: 'Install standard schemas APP, LOGIC, DATA, DEPL'}),
   }
 
   static args = [

@@ -17,7 +17,6 @@ import { ShellHelper } from './ShellHelper';
 import {Operation} from './Operation';
 import { Application } from './Application';
 import { Utils } from './Utils';
-import ConfigDefaults from "../commands/config/defaults";
 import { Git } from "./Git";
 //import FeatureInstall from "../commands/feature/install";
 
@@ -276,7 +275,7 @@ export class ProjectManager {
     // TODO: Abfrage nach syspwd?
 
     // Indextablespace auslagern
-    // > data user bekommt das recht tablespaces anzulegen. hier muss ggf. auch das Recht weitergegegen werden
+    // > data user bekommt das recht tablespaces anzulegen. hier muss ggf. auch das Recht weitergegeben werden
 
 
     // durch features loopen und deren install methode aufrufen
