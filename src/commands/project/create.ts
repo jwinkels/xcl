@@ -7,7 +7,8 @@ export default class ProjectCreate extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    workspace: flags.string({char: 'w', description: 'workspace name the application should be installed in', default: Environment.readConfigFrom(process.cwd(),'project')})    
+    workspace: flags.string({char: 'w', description: 'workspace name the application should be installed in', default: Environment.readConfigFrom(process.cwd(),'project')}),
+    "single-schema" : flags.boolean ({description: 'one schema instead of three, no deployment user'})
   }
 
   static args = [
@@ -21,9 +22,9 @@ export default class ProjectCreate extends Command {
   async run() {
     const {args, flags} = this.parse(ProjectCreate)
     if(flags.workspace){
-      ProjectManager.getInstance().createProject(args.project, flags.workspace);
+      ProjectManager.getInstance().createProject(args.project, flags.workspace, flags['single-schema']);
     }else{
-      ProjectManager.getInstance().createProject(args.project, args.project);
+      ProjectManager.getInstance().createProject(args.project, args.project, flags['single-schema']);
     }   
   }
 }

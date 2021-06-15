@@ -23,7 +23,7 @@ export default class ProjectDeploy extends Command {
                            required:    true}),                        
     yes: flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),   
     'ords-url': flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords')}),
-    'schema': flags.string({description: 'to deploy a single schema type one of the following: [data, logic, app]'}),
+    'schema': flags.string({description: 'to deploy a single schema type one of the following: [data, logic, app]', default: Environment.readConfigFrom(process.cwd(), "schema")}),
     'quiet': flags.boolean({description: 'suppress output', default: false})
   }
 

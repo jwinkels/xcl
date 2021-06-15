@@ -334,7 +334,7 @@ export class FeatureManager{
               }else{
                 if(feature.getType() === "DEPLOY"){
                   FeatureManager.unzipFeature(undefined, projectPath, feature).then(()=>{
-                    deliveryFactory.getNamed<DeliveryMethod>("Method",featureName.toUpperCase()).install(feature, projectPath);
+                    deliveryFactory.getNamed<DeliveryMethod>("Method",featureName.toUpperCase()).install(feature, projectPath, project.getMode() === 'multi' ? false : true);
                     feature.setInstalled(true);
                     project.updateFeature(feature);
                     resolve();

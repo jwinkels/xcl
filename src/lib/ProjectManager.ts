@@ -100,7 +100,7 @@ export class ProjectManager {
    * return Project, when found otherwise creates it
    * @param projectName name of project
    */
-  public createProject(projectName: string, workspaceName: string): Project {
+  public createProject(projectName: string, workspaceName: string, singleSchema:boolean): Project {
     // check if not allready defined
     let project;
     try {
@@ -111,9 +111,9 @@ export class ProjectManager {
         // start to create the project
         console.log(projectName + " is to be created in: " + process.cwd());
         if (os.platform() === 'win32'){
-          project = new Project(projectName, process.cwd() + "\\" + projectName, workspaceName, true);
+          project = new Project(projectName, process.cwd() + "\\" + projectName, workspaceName, true, singleSchema);
         }else{
-          project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true);
+          project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true, singleSchema);
         }
 
         this.addProjectToGlobalConfig( project );
@@ -222,6 +222,14 @@ export class ProjectManager {
 
     const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.syspw, flags.connection);
 
+    let userlist:string = "";
+
+    for(let user in p.getUsers().values()){
+      userlist = userlist.concat(user, " ");
+    }
+
+    userlist = userlist.trimEnd();
+
     // Prüfen ober es den User schon gibt
     if (await DBHelper.isProjectInstalled(p, c) && flags.users) {
       if ( !flags.force ) {
@@ -249,11 +257,18 @@ export class ProjectManager {
 
     if (flags.users){
       console.log(chalk.green(`install schemas...`));
-      await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
+
+      if (p.getMode() === 'multi'){
+        await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
                                                                             p.getName() + ' ' +  //TODO: Generate strong password!
                                                                             p.getName() + '_data ' +
                                                                             p.getName() + '_logic ' +
                                                                             p.getName() + '_app');
+      }else{
+        await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_user.sql') + ' ' + p.getName() + ' ' +
+                                                                            p.getName()  //TODO: Generate strong password!
+                                                                            );
+      }
 
       if ( await DBHelper.isProjectInstalled(p, c) ) {
         console.log( chalk.green(`Project successfully installed`) );

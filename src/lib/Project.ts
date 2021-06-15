@@ -20,19 +20,19 @@ export class Project {
   private status: ProjectStatus;
   private environment:Map<string, string>;
 
-  constructor(name: string, path: string, workspaceName:string , create: boolean) {
+  constructor(name: string, path: string, workspaceName:string , create: boolean, singleSchema:boolean=false) {
     this.name = name;
     this.path = path;
 
     if (create) {
-      this.config = this.initialzeConfig(workspaceName);
+      this.config = this.initialzeConfig(workspaceName, singleSchema);
       this.features=new Map();
       this.users=new Map();
-      this.createDirectoryStructure();
+      this.createDirectoryStructure(singleSchema);
       this.status = new ProjectStatus(this);
       this.writeConfig();
       this.status.serialize()
-      this.environment=Environment.initialize(this.name);
+      this.environment=Environment.initialize(this.name, singleSchema ? 'app' : '');
     } else {
       this.config = this.readConfig();
       this.name   = this.config.xcl.project;
@@ -97,6 +97,24 @@ export class Project {
     this.writeConfig();
   }
 
+  public setMode(mode:string):void{
+    if(!this.config.xcl.mode){
+      this.config = this.readConfig();
+    }
+
+    this.config.xcl.mode = mode;
+    this.writeConfig();
+  }
+
+  public getMode():string{
+    if(this.config){
+      return this.config.xcl.mode;
+    }else{
+      this.config=this.readConfig();
+      return this.config.xcl.mode;
+    }
+  }
+
   public toJSON(): any {
     return { path: this.getPath() };
   }
@@ -120,14 +138,27 @@ export class Project {
     }
   }
 
-  private createDirectoryStructure():void {
-    const parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories.yml").toString());
+  private createDirectoryStructure(singleSchema:boolean):void {
+    let parsedDirs:any;
 
-    this.createDirectoryPath(parsedDirs.toJSON(), "/");
+    if (!singleSchema){
+
+      parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories.yml").toString());
+      this.createDirectoryPath(parsedDirs.toJSON(), "/");
+      fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}_data`);
+      fs.renameSync(this.getPath() + "/db/logic", this.getPath() + `/db/${this.getName()}_logic`);
+      fs.renameSync(this.getPath() + "/db/app", this.getPath() + `/db/${this.getName()}_app`);
+
+    }else{
+
+      parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories_single_schema.yml").toString());
+      this.createDirectoryPath(parsedDirs.toJSON(), "/");
+      fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}`);
+
+    }
+
     
-    fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}_data`);
-    fs.renameSync(this.getPath() + "/db/logic", this.getPath() + `/db/${this.getName()}_logic`);
-    fs.renameSync(this.getPath() + "/db/app", this.getPath() + `/db/${this.getName()}_app`);
+  
     fs.copySync(__dirname + "/config/readme.md", this.getPath()+"/readme.md");
   }
 
@@ -135,22 +166,39 @@ export class Project {
     fs.writeFileSync(this.getPath() + "/" + "xcl.yml", yaml.stringify(this.config));    
   }
 
-  private initialzeConfig(workspaceName: string):any {
-    return {
-      xcl: {
-        project: this.getName(),
-        description: "XCL- Projekt " + this.getName(),
-        version: "Release 1.0",
-        workspace: workspaceName,
-        users: {
-          schema_app: this.getName() + "_app",
-          schema_logic: this.getName() + "_logic",
-          schema_data: this.getName() + "_data",
-          user_deployment: this.getName() + "_depl",
-          user_sys: "sys",
+  private initialzeConfig(workspaceName: string, singleSchema:boolean):any {
+    if (!singleSchema){
+      return {
+        xcl: {
+          project: this.getName(),
+          description: "XCL- Projekt " + this.getName(),
+          version: "Release 1.0",
+          workspace: workspaceName,
+          mode: 'multi',
+          users: {
+            schema_app: this.getName() + "_app",
+            schema_logic: this.getName() + "_logic",
+            schema_data: this.getName() + "_data",
+            user_deployment: this.getName() + "_depl",
+            user_sys: "sys",
+          },
         },
-      },
-    };
+      };
+    }else{
+      return {
+        xcl: {
+          project: this.getName(),
+          description: "XCL- Projekt " + this.getName(),
+          version: "Release 1.0",
+          workspace: workspaceName,
+          mode: 'single',
+          users: {
+            schema_app: this.getName(),
+            user_sys: "sys",
+          },
+        },
+      };
+    }
   }
 
   public reloadConfig():void{
@@ -187,8 +235,9 @@ export class Project {
       this.config=this.readConfig();
       this.features.set(feature.getName(),feature);
       if(!this.config.xcl.dependencies){
+        console.log('No Dependencies yet initialize Array!');
         this.config.xcl.dependencies=[];
-        this.status.updateStatus();
+        //this.status.updateStatus();
       }
 
       //DEPLOY-Feature using the existing users to connect to the database and deploy the objects 
@@ -385,7 +434,7 @@ export class Project {
     if(this.config.xcl?.users){
       const users=this.config.xcl?.users;
       const proxy= new Schema({name: users.user_deployment, password:"", proxy:undefined});
-      this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy:proxy}));
+      this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy: this.getMode() === 'multi' ? proxy : undefined}));
       this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
       this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
     }
@@ -527,10 +576,14 @@ class ProjectStatus {
   }
 
   public updateUserStatus(){
-    this.statusConfig.xcl.users.schema_app      = this.project.getName()+"_app";
-    this.statusConfig.xcl.users.schema_logic    = this.project.getName()+"_logic";
-    this.statusConfig.xcl.users.schema_data     = this.project.getName()+"_data";
-    this.statusConfig.xcl.users.user_deployment = this.project.getName()+"_depl";
+    if(this.project.getMode()==='multi'){
+      this.statusConfig.xcl.users.schema_app      = this.project.getName()+"_app";
+      this.statusConfig.xcl.users.schema_logic    = this.project.getName()+"_logic";
+      this.statusConfig.xcl.users.schema_data     = this.project.getName()+"_data";
+      this.statusConfig.xcl.users.user_deployment = this.project.getName()+"_depl";
+    }else{
+      this.statusConfig.xcl.users.schema_app      = this.project.getName();
+    }
     this.serialize();
   }
   
