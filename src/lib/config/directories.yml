@@ -8,6 +8,8 @@ db:
   - pre:
     - ddl
     - dml
+  - tables
+  - tables_ddl
   - sources:
     - tests
     - packages
@@ -51,6 +53,8 @@ db:
   - pre:
     - ddl
     - dml
+  - tables
+  - tables_ddl
   - sources:
     - tests
     - packages

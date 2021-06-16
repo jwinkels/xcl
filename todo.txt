@@ -76,9 +76,11 @@ TODO:
     
     - AutoApply: @JAW
         * xcl project:plan --auto --yes
+    =>DONE
     
     - Bug in apply @JAW
         * Hier wird der Hash nicht sauber weggeschrieben 
+    =>DONE
     
     - Projekt init aufräumen @JAW    
 

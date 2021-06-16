@@ -10,7 +10,7 @@ export default class FeatureInstall extends Command{
   static flags = {
     help: flags.help({char: 'h'}),
     connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', default: Environment.readConfigFrom(process.cwd(),"connection")} ),
-    syspw: flags.string( {char: 'p', description:'Password of SYS-User'})
+    syspw: flags.string( {char: 's', description:'Password of SYS-User'})
   }
 
   static args = [

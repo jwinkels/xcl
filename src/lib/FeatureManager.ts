@@ -7,14 +7,12 @@ import chalk from 'chalk'
 import { Feature } from './Feature';
 import { ProjectManager } from './ProjectManager';
 import { ProjectFeature } from './ProjectFeature';
-import requestPromise = require('request-promise-native');
 import { GithubCredentials } from './GithubCredentials';
 import * as AdmZip from "adm-zip";
 import { DBHelper, IConnectionProperties } from './DBHelper';
 import  { deliveryFactory }  from './DeliveryFactory';
 import { DeliveryMethod } from './DeliveryMethod';
 import {Project} from './Project';
-import e = require('express');
 import { Environment } from './Environment';
 import { Operation } from './Operation';
 import { Utils } from './Utils';
@@ -336,7 +334,7 @@ export class FeatureManager{
               }else{
                 if(feature.getType() === "DEPLOY"){
                   FeatureManager.unzipFeature(undefined, projectPath, feature).then(()=>{
-                    deliveryFactory.getNamed<DeliveryMethod>("Method",featureName.toUpperCase()).install(feature, projectPath);
+                    deliveryFactory.getNamed<DeliveryMethod>("Method",featureName.toUpperCase()).install(feature, projectPath, project.getMode() === 'multi' ? false : true);
                     feature.setInstalled(true);
                     project.updateFeature(feature);
                     resolve();

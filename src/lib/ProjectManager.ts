@@ -17,7 +17,6 @@ import { ShellHelper } from './ShellHelper';
 import {Operation} from './Operation';
 import { Application } from './Application';
 import { Utils } from './Utils';
-import ConfigDefaults from "../commands/config/defaults";
 import { Git } from "./Git";
 //import FeatureInstall from "../commands/feature/install";
 
@@ -101,7 +100,7 @@ export class ProjectManager {
    * return Project, when found otherwise creates it
    * @param projectName name of project
    */
-  public createProject(projectName: string, workspaceName: string): Project {
+  public createProject(projectName: string, workspaceName: string, singleSchema:boolean): Project {
     // check if not allready defined
     let project;
     try {
@@ -112,9 +111,9 @@ export class ProjectManager {
         // start to create the project
         console.log(projectName + " is to be created in: " + process.cwd());
         if (os.platform() === 'win32'){
-          project = new Project(projectName, process.cwd() + "\\" + projectName, workspaceName, true);
+          project = new Project(projectName, process.cwd() + "\\" + projectName, workspaceName, true, singleSchema);
         }else{
-          project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true);
+          project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true, singleSchema);
         }
 
         this.addProjectToGlobalConfig( project );
@@ -223,6 +222,14 @@ export class ProjectManager {
 
     const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.syspw, flags.connection);
 
+    let userlist:string = "";
+
+    for(let user in p.getUsers().values()){
+      userlist = userlist.concat(user, " ");
+    }
+
+    userlist = userlist.trimEnd();
+
     // Prüfen ober es den User schon gibt
     if (await DBHelper.isProjectInstalled(p, c) && flags.users) {
       if ( !flags.force ) {
@@ -250,11 +257,18 @@ export class ProjectManager {
 
     if (flags.users){
       console.log(chalk.green(`install schemas...`));
-      await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
+
+      if (p.getMode() === 'multi'){
+        await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
                                                                             p.getName() + ' ' +  //TODO: Generate strong password!
                                                                             p.getName() + '_data ' +
                                                                             p.getName() + '_logic ' +
                                                                             p.getName() + '_app');
+      }else{
+        await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_user.sql') + ' ' + p.getName() + ' ' +
+                                                                            p.getName()  //TODO: Generate strong password!
+                                                                            );
+      }
 
       if ( await DBHelper.isProjectInstalled(p, c) ) {
         console.log( chalk.green(`Project successfully installed`) );
@@ -276,7 +290,7 @@ export class ProjectManager {
     // TODO: Abfrage nach syspwd?
 
     // Indextablespace auslagern
-    // > data user bekommt das recht tablespaces anzulegen. hier muss ggf. auch das Recht weitergegegen werden
+    // > data user bekommt das recht tablespaces anzulegen. hier muss ggf. auch das Recht weitergegeben werden
 
 
     // durch features loopen und deren install methode aufrufen
@@ -418,18 +432,11 @@ export class ProjectManager {
 
           //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
           if(command){
-            /*switch (command){
-              case "pcl config:defaults":
-                    await ConfigDefaults.run(argv);
-                    break;
-              default:
-              */
-              let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true )).status;
-              if (!status){
-                console.log('An unexpected error occured, please check log for details!');
-                process.exit();
-              }
-            //}
+            let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true )).status;
+            if (!status){
+              console.log('An unexpected error occured, please check log for details!');
+              process.exit();
+            }
           }
         }
       }else{
@@ -453,6 +460,7 @@ export class ProjectManager {
                         "a", "b", undefined); // FIXME: version und mode noch in apply einbauen);
           }
         }else{
+          console.log("\n\n\r");
           console.log( chalk.red( 'FAILURE: apply was made but there are still changes!' ) );
         }
     }else{

@@ -8,7 +8,7 @@ export default class FeatureDeinstall extends Command {
   static flags = {
     help: flags.help({char: 'h'}),
     connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true} ),
-    syspw: flags.string( {char: 'p', description:'Password of SYS-User', required: true}),
+    syspw: flags.string( {char: 's', description:'Password of SYS-User', required: true}),
     owner: flags.boolean ( {char: 'o', description: 'drop owner schema'} )
   }
 

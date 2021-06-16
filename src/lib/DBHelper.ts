@@ -50,11 +50,9 @@ export class DBHelper {
     let countSchemas:number = 0;
     try {
       connection = await oracledb.getConnection(conn);
-      let query = `SELECT count(1) FROM all_users where username like '${project.getName().toUpperCase()}_%'`;
-      // console.debug(query);
-      
+      let query = `SELECT count(1) FROM all_users where username like '${project.getName().toUpperCase()}%'`;
+  
       const result = await connection.execute(query);
-      // console.debug(result)
       
       countSchemas = result.rows[0][0];
 

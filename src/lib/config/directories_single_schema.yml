@@ -1,0 +1,36 @@
+db:
+- .hooks
+- .setup
+- data:
+  - init:
+    - ddl
+    - dml
+  - pre:
+    - ddl
+    - dml
+  - tables
+  - sequences
+  - tables_ddl
+  - sources:
+    - tests
+    - packages
+    - functions
+    - procedures
+    - trigger
+    - objects
+    - views
+  - precompile
+  - post:
+    - ddl
+    - dml
+  - finally
+apps:
+  - apex:
+    - f1000 
+  - rest
+apex_files:
+  - f1000:
+    - js
+    - css
+    - img
+

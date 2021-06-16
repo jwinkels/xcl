@@ -5,7 +5,7 @@ import { ProjectManager } from './ProjectManager';
 export class Environment{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
 
-    public static initialize(projectName:string):Map<string,string>{
+    public static initialize(projectName:string, schema:string = ''):Map<string,string>{
         let variables:Map<string,string>=new Map<string, string>();
         let envFileName="";
         let env:any={};
@@ -18,6 +18,7 @@ export class Environment{
         variables.set('syspw','');
         variables.set('password','');
         variables.set('ords','');
+        variables.set('schema', schema);
         
         // Decide which environment variables context should be loaded 
         if(projectName.toLocaleLowerCase()!=="all"){

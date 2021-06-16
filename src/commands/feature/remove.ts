@@ -11,7 +11,7 @@ export default class FeatureRemove extends Command {
     help: flags.help({char: 'h'}),
     deinstall: flags.boolean( {char: 'd', description: 'deinstall Feature from database'}),
     connection: flags.string( {char: 'c', description: 'connection to database (required when deinstall Feature) [ HOST:PORT/SERVICE_NAME ]', default: Environment.readConfigFrom(process.cwd(),"connection")} ),
-    syspw: flags.string( {char: 'p', description: 'password of SYS-User'}),
+    syspw: flags.string( {char: 's', description: 'password of SYS-User'}),
     owner: flags.boolean ( {char: 'o', description: 'drop Feature owner schema'} )
   }
 

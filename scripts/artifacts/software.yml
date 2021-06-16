@@ -94,6 +94,17 @@ software:
         - path: drop_user.sql
           arguments:
             - username
+  teplsql:
+    owner: osalvador
+    repo: tePLSQL
+    call: release
+    install:
+      scripts:
+        - path: create_user.sql
+            sys: true
+            arguments:
+              - credentials
+        - path: install.sql
   orcas:
     owner: jwinkels
     repo: orcas4xcl
