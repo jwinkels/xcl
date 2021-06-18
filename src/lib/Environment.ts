@@ -14,7 +14,7 @@ export class Environment{
         // List can be extended
         variables=new Map<string, {value:string, required:boolean}>();
         variables.set('connection', {value: "unset", required: true});
-        variables.set('project', {value:"", required: true});
+        variables.set('project', {value: projectName!=="all" ? projectName : "", required: true});
         variables.set('syspw', {value:"", required: false});
         variables.set('password',{value:'', required: false});
         variables.set('ords',{value:"", required: false});

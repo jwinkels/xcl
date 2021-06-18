@@ -17,7 +17,7 @@ export class ShellHelper{
                         cwd: executePath,
                         shell: true,
                         env: envObject,
-                        stdio:[process.stdin, consoleOutput ? process.stdout : null, null]
+                        stdio:[process.stdin, consoleOutput ? process.stdout : null, process.stderr]
                     }
                 );
 
