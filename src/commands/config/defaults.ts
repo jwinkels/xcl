@@ -101,7 +101,7 @@ export default class ConfigDefaults extends Command{
 
       //If System-Environment Variable was not found lookup xcl-Environment Variable
       if (!value || value === ""){
-        value = project.getEnvironment().get(variableName);
+        value = project.getEnvironment().get(variableName)?.value;
       }
     }
 
@@ -121,18 +121,18 @@ export default class ConfigDefaults extends Command{
         chalk.blueBright('value')
       ]
     });
-    project.getEnvironment().forEach((value: string, key: string)=>{
+    project.getEnvironment().forEach((variable: {value:string, required:boolean}, key: string)=>{
       if ( key != 'syspw' ){
-        table.push([key, value ? value : 'unset']);
+        table.push([key, variable.value ? variable.value : 'unset']);
       }else{
-        table.push([key, value ? '*******' : 'unset']);
+        table.push([key, variable.value ? '*******' : 'unset']);
       }
     });
     console.log(table.toString());
   }
 
   async setAllVariables(project:Project){
-    let variables:Map<string,string>=new Map<string,string>();
+    //let variables:Map<string,{value:string, required:boolean}>=new Map<string,{value:string, required:boolean}>();
 
     let projectEnv=project.getEnvironment()
     for (let key of projectEnv.keys()){
@@ -170,7 +170,7 @@ export default class ConfigDefaults extends Command{
     for (let key of globals.keys()){
       let input = await cli.prompt('Insert a value for "' + key.toUpperCase() + '"');
       console.log(chalk.green('\nVariable ´'+key.toUpperCase()+'´ set!'));
-      globals.set(key, input);
+      Environment.setVariable(key, input, globals);
     }
     Environment.writeEnvironment('all', globals);
     console.log(chalk.green('OK'));
@@ -185,11 +185,11 @@ export default class ConfigDefaults extends Command{
           ]
         });
         let globals=Environment.initialize('all');
-        globals.forEach((value:string, key:string)=>{
+        globals.forEach((variable:{value:string, required:boolean}, key:string)=>{
           if ( key != 'syspw' ){
-            table.push([ key, value ? value : 'unset']);
+            table.push([ key, variable.value ? variable.value : 'unset']);
           }else{
-            table.push([key, value ? '*******' : 'unset']);
+            table.push([key, variable.value ? '*******' : 'unset']);
           }
         });
         console.log(table.toString());
@@ -197,7 +197,7 @@ export default class ConfigDefaults extends Command{
 
   async resetGlobalVariable(variableName:string){
     let globals = Environment.initialize('all');
-    globals.set(variableName,"");
+    Environment.setVariable(variableName,  "", globals);
     Environment.writeEnvironment('all', globals);
     console.log(chalk.green('OK'));
   }
@@ -205,7 +205,7 @@ export default class ConfigDefaults extends Command{
   async resetAllGlobalVariables(){
     let globals = Environment.initialize('all');
     for (let key of globals.keys()){
-      globals.set(key, "");
+      Environment.setVariable(key,  "", globals);
     }
     Environment.writeEnvironment('all', globals);
     console.log(chalk.green('OK'));

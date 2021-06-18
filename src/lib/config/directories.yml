@@ -1,29 +1,7 @@
 db:
 - .hooks
 - .setup
-- app:
-  - init:
-    - ddl
-    - dml
-  - pre:
-    - ddl
-    - dml
-  - tables
-  - tables_ddl
-  - sources:
-    - tests
-    - packages
-    - functions
-    - procedures
-    - trigger
-    - objects
-    - views
-  - precompile
-  - post:
-    - ddl
-    - dml
-  - finally
-- data:
+- :projectName_app:
   - init:
     - ddl
     - dml
@@ -46,7 +24,7 @@ db:
     - ddl
     - dml
   - finally
-- logic:
+- :projectName_data:
   - init:
     - ddl
     - dml
@@ -54,6 +32,30 @@ db:
     - ddl
     - dml
   - tables
+  - sequences
+  - tables_ddl
+  - sources:
+    - tests
+    - packages
+    - functions
+    - procedures
+    - trigger
+    - objects
+    - views
+  - precompile
+  - post:
+    - ddl
+    - dml
+  - finally
+- :projectName_logic:
+  - init:
+    - ddl
+    - dml
+  - pre:
+    - ddl
+    - dml
+  - tables
+  - sequences
   - tables_ddl
   - sources:
     - tests
