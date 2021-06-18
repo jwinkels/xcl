@@ -21,6 +21,7 @@
     "@types/readline-sync": "^1.4.3",
     "@types/request": "^2.48.5",
     "@types/request-promise-native": "^1.0.17",
+    "@types/winston": "^2.4.4",
     "@types/yaml": "^1.9.7",
     "adm-zip": "^0.4.16",
     "cli-table": "^0.3.6",

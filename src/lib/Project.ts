@@ -118,7 +118,7 @@ export class Project {
 
   public getMode():string{
     if(this.config){
-      return this.config.xcl.mode;
+      return this.config.xcl.mode ? this.config.xcl.mode : "multi" ;
     }else{
       this.config=this.readConfig();
       return this.config.xcl.mode;
