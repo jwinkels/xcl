@@ -162,9 +162,6 @@ export class Project {
       parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories.yml").toString());
       if ( this.directories !== Md5.hashStr(yaml.stringify(parsedDirs)).toString()){
         this.createDirectoryPath(parsedDirs.toJSON(), "/");
-        //fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}_data`);
-        //fs.renameSync(this.getPath() + "/db/logic", this.getPath() + `/db/${this.getName()}_logic`);
-        //fs.renameSync(this.getPath() + "/db/app", this.getPath() + `/db/${this.getName()}_app`);
       }
 
     }else{
@@ -172,7 +169,6 @@ export class Project {
       parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories_single_schema.yml").toString());
       if ( this.directories !== Md5.hashStr(yaml.stringify(parsedDirs)).toString()){
         this.createDirectoryPath(parsedDirs.toJSON(), "/");
-        fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}`);
       }
 
     }
