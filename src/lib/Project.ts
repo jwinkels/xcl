@@ -11,6 +11,9 @@ import {Operation} from './Operation';
 
 
 export class Project {
+  static MODE_SINGLE: string = "single";
+  static MODE_MULTI:  string = "multi";
+
   private name: string;                           //Project-Name
   private path: string; 	                        //Project-Home
   private errorText = '';                        //Individual Error-Messages
@@ -36,7 +39,7 @@ export class Project {
     } else {
       this.config = this.readConfig();
       this.name   = this.config.xcl.project;
-      this.status = new ProjectStatus(this);      
+      this.status = new ProjectStatus(this);
       this.features = this.getFeatures();
       this.users = this.getUsers();
       this.environment=Environment.initialize(this.name);
@@ -52,7 +55,7 @@ export class Project {
   }
 
   public getName(): string {
-    
+
     if (this.name == ''){
       this.name=this.config.xcl.project;
     }
@@ -71,7 +74,7 @@ export class Project {
 
   public setVersion(version:string):void{
     if(!this.config.xcl.version){
-      this.config=this.readConfig(); 
+      this.config=this.readConfig();
     }
 
     this.config.xcl.version=version;
@@ -90,7 +93,7 @@ export class Project {
 
   public setWorkspace(workspaceName:string):void{
     if(!this.config.xcl.workspace){
-      this.config=this.readConfig(); 
+      this.config=this.readConfig();
     }
 
     this.config.xcl.workspace=workspaceName;
@@ -131,7 +134,7 @@ export class Project {
       }
     } else {
       if (!fs.existsSync(this.getPath() + fullPath + path)) {
-        fullPath = this.getPath() + fullPath + path;        
+        fullPath = this.getPath() + fullPath + path;
         fs.mkdirSync(fullPath, { recursive: true });
         fs.createFileSync(fullPath+'/.gitkeep');
       }
@@ -157,13 +160,13 @@ export class Project {
 
     }
 
-    
-  
+
+
     fs.copySync(__dirname + "/config/readme.md", this.getPath()+"/readme.md");
   }
 
-  public writeConfig():void {    
-    fs.writeFileSync(this.getPath() + "/" + "xcl.yml", yaml.stringify(this.config));    
+  public writeConfig():void {
+    fs.writeFileSync(this.getPath() + "/" + "xcl.yml", yaml.stringify(this.config));
   }
 
   private initialzeConfig(workspaceName: string, singleSchema:boolean):any {
@@ -174,7 +177,7 @@ export class Project {
           description: "XCL- Projekt " + this.getName(),
           version: "Release 1.0",
           workspace: workspaceName,
-          mode: 'multi',
+          mode: Project.MODE_MULTI,
           users: {
             schema_app: this.getName() + "_app",
             schema_logic: this.getName() + "_logic",
@@ -191,7 +194,7 @@ export class Project {
           description: "XCL- Projekt " + this.getName(),
           version: "Release 1.0",
           workspace: workspaceName,
-          mode: 'single',
+          mode: Project.MODE_SINGLE,
           users: {
             schema_app: this.getName(),
             user_sys: "sys",
@@ -209,9 +212,9 @@ export class Project {
     let conf:string
 
     try {
-      conf = fs.readFileSync(this.getPath() + "/xcl.yml").toString();      
+      conf = fs.readFileSync(this.getPath() + "/xcl.yml").toString();
     } catch (err) {
-      if (err.code === 'ENOENT') {        
+      if (err.code === 'ENOENT') {
         conf = yaml.stringify({xcl: {
                                 project: this.getName(),
                                 errtext: 'File not found!'
@@ -220,7 +223,7 @@ export class Project {
       } else {
         throw err;
       }
-      
+
     }
 
     return yaml.parse(conf);
@@ -230,8 +233,8 @@ export class Project {
   public addFeature(feature:ProjectFeature):any{
     let dependencyConf:any = "";
 
-    //Do not add the Feature if it is already in dependency list or if deployment method has already been configured 
-    if ( ! this.features.has(feature.getName()) || !(feature.getType()==="DEPLOY" && this.hasDeployMethod())){  
+    //Do not add the Feature if it is already in dependency list or if deployment method has already been configured
+    if ( ! this.features.has(feature.getName()) || !(feature.getType()==="DEPLOY" && this.hasDeployMethod())){
       this.config=this.readConfig();
       this.features.set(feature.getName(),feature);
       if(!this.config.xcl.dependencies){
@@ -240,18 +243,18 @@ export class Project {
         //this.status.updateStatus();
       }
 
-      //DEPLOY-Feature using the existing users to connect to the database and deploy the objects 
+      //DEPLOY-Feature using the existing users to connect to the database and deploy the objects
       if(feature.getType()==="DEPLOY"){
         dependencyConf = {
-              name: feature.getName(), 
+              name: feature.getName(),
               version: feature.getReleaseInformation(),
               installed: false,
               type: feature.getType()
           };
-        
+
       }else{
         dependencyConf = {
-                name: feature.getName(), 
+                name: feature.getName(),
                 version: feature.getReleaseInformation(),
                 //installed: feature.getInstalled(),
                 type: feature.getType(),
@@ -280,22 +283,22 @@ export class Project {
         this.config.xcl.setup=[];
       }
       const newStep = {name: file, path: path, hash: ""};
-      
+
       const stepIndex = this.config.xcl.setup.findIndex(
                         (
                           e: { name: string; path: string; }
                         ) => e.name == newStep.name && e.path == newStep.path
                       );
-      
+
       if(stepIndex==-1){
-        this.config.xcl.setup.push(newStep);   
+        this.config.xcl.setup.push(newStep);
         this.getStatus().addToChanges('SETUP');
       }else{
         if (this.config.xcl.setup[stepIndex].hash !== hash){
           console.log('File (' + file +') has changed!');
           this.getStatus().addToChanges('SETUP');
         }
-      }      
+      }
   }
 
 
@@ -324,7 +327,7 @@ export class Project {
   private hasDeployMethod():boolean{
     let deployMethodAvailable=false;
     this.features.forEach(function(feature){
-      
+
       if(feature.getType() === "DEPLOY"){
         deployMethodAvailable = true;
       }
@@ -346,7 +349,7 @@ export class Project {
   }
 
   public removeFeature(feature:ProjectFeature):void{
-    if (this.features.has(feature.getName())){  
+    if (this.features.has(feature.getName())){
       this.config=this.readConfig();
       this.features.delete(feature.getName());
       if(!this.config.xcl.dependencies){
@@ -367,16 +370,16 @@ export class Project {
     const features: Map<string, ProjectFeature> = new Map<string, ProjectFeature>();
     const featureManager = FeatureManager.getInstance();
     this.config=this.readConfig();
-    
+
     if (this.config.xcl?.dependencies){
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean; type:string; user:any}) => {
         switch(element.type){
-          case "DB": { 
-            features.set(element.name,(featureManager.getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! )); 
+          case "DB": {
+            features.set(element.name,(featureManager.getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));
             break;
           }
           case "DEPLOY": {
-            features.set(element.name,(featureManager.getProjectFeature(element.name,element.version, "", "", element.installed) ! )); 
+            features.set(element.name,(featureManager.getProjectFeature(element.name,element.version, "", "", element.installed) ! ));
             break;
           }
           default:{
@@ -384,8 +387,8 @@ export class Project {
             break;
           }
         }
-           
-      });      
+
+      });
     }else{
       return features;
     }
@@ -398,9 +401,9 @@ export class Project {
     if (this.config.xcl?.dependencies){
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean; type:string; user:any}) => {
         if ( element.type == type ){
-          features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));    
+          features.set(element.name,(FeatureManager.getInstance().getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));
         }
-      });      
+      });
     }else{
       return features;
     }
@@ -408,14 +411,14 @@ export class Project {
   }
 
   public updateFeature(feature:ProjectFeature):void{
-    if (this.features.has(feature.getName())){  
+    if (this.features.has(feature.getName())){
 
       this.config=this.readConfig();
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean}) => {
-        
+
         if(element.name===feature.getName()){
           element.version=feature.getReleaseInformation();
-          
+
           if(feature.getType() === 'DEPLOY'){
             element.installed = true;
           }
@@ -438,7 +441,7 @@ export class Project {
       this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
       this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
     }
-    
+
     return this.users;
   }
 
@@ -463,9 +466,9 @@ export class Project {
   }
 
   public setEnvironmentVariable(key:string, value:string|undefined, reset:boolean=false){
-    
+
     if (this.environment.has(key)){
-        
+
         if (!reset){
           if (value && value !==""){
               this.environment.set(key, value);
@@ -482,7 +485,7 @@ export class Project {
         console.error(chalk.red('ERROR: Unkown variable ´'+key+'´'));
     }
   }
-} 
+}
 
 class ProjectStatus {
   private static xclHome = os.homedir + "/AppData/Roaming/xcl";
@@ -490,7 +493,7 @@ class ProjectStatus {
   private project: Project;
   private statusConfig: any;
   private changeList:Map<string, boolean>;
-  
+
   constructor(project:Project){
     this.project = project;
     this.changeList = new Map<string, boolean>();
@@ -527,8 +530,8 @@ class ProjectStatus {
     this.statusConfig=this.deserialize();
     this.checkSetup("./db/.setup");
 
-    if( this.statusConfig.xcl.hash == Md5.hashStr( yaml.stringify( this.project.getConfig() ) ).toString() 
-          && 
+    if( this.statusConfig.xcl.hash == Md5.hashStr( yaml.stringify( this.project.getConfig() ) ).toString()
+          &&
         !this.changeList.get("SETUP") ){
       return false;
     }else{
@@ -586,7 +589,7 @@ class ProjectStatus {
     }
     this.serialize();
   }
-  
+
   public updateStatus(){
     this.project.reloadConfig();
     this.statusConfig=this.deserialize();
@@ -611,7 +614,7 @@ class ProjectStatus {
 
   //Checks wether the dependency is already installed in the correct version
   public checkDependency(feature: ProjectFeature):Operation{
-    
+
     this.statusConfig=this.deserialize();
     if (this.statusConfig.xcl.dependencies &&
         this.statusConfig.xcl.dependencies[feature.getName()] &&
@@ -621,14 +624,14 @@ class ProjectStatus {
 
     }else if(this.statusConfig.xcl.dependencies &&
              !this.statusConfig.xcl.dependencies[feature.getName()]){
-        
+
               this.addToChanges('FEATURE');
               return Operation.INSTALL;
 
     }else if(this.statusConfig.xcl.dependencies &&
             this.statusConfig.xcl.dependencies[feature.getName()] &&
             this.statusConfig.xcl.dependencies[feature.getName()].version != feature.getReleaseInformation()){
-        
+
               this.addToChanges('FEATURE');
               return Operation.UPDATE;
     }else{
@@ -669,22 +672,22 @@ class ProjectStatus {
     let conf = "";
 
     try {
-      conf = fs.readFileSync(ProjectStatus.stateFileName).toString();      
+      conf = fs.readFileSync(ProjectStatus.stateFileName).toString();
     } catch (err) {
-      if (err.code === 'ENOENT') {        
+      if (err.code === 'ENOENT') {
         return 'File not found!';
       } else {
         throw err;
       }
-      
+
     }
 
     return yaml.parse(conf);
   }
 
   public getDependencyStatus(feature: ProjectFeature):boolean{
-    if(this.statusConfig.xcl.dependencies && 
-       this.statusConfig.xcl.dependencies[feature.getName()] && 
+    if(this.statusConfig.xcl.dependencies &&
+       this.statusConfig.xcl.dependencies[feature.getName()] &&
        this.statusConfig.xcl.dependencies[feature.getName()].version === feature.getReleaseInformation()
        ){
       return true;

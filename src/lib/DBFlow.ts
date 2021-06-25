@@ -7,16 +7,24 @@ import * as path from "path";
 import { ShellHelper } from "./ShellHelper";
 import { ProjectManager } from "./ProjectManager";
 import chalk from 'chalk';
+import cli from 'cli-ux'
+import { Project } from "./Project";
 
 @injectable()
 export class DBFlow implements DeliveryMethod{
-    public install(feature:ProjectFeature, projectPath:string){
+    public async install(feature:ProjectFeature, projectPath:string){
         console.log("You have chosen dbFlow!!!");
         let featurePath = projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
-        fs.copySync(featurePath,
-                    projectPath + '/.dbFlow');
-
+        fs.copySync(featurePath, projectPath + '/.dbFlow');
         fs.removeSync(featurePath);
+
+        // init git
+        if (!fs.pathExistsSync(path.join(projectPath, '.git'))) {
+          const initGit = await cli.prompt('Project has to be a git repositoy. Do you want to git init [Y/N] ', {type: 'normal'});
+          if (initGit.toUpperCase() === "Y") {
+            ShellHelper.executeScript(`git init`, projectPath, true);
+          }
+        }
     }
 
     public deploy(projectName:string, connection:string, password:string, schemaOnly:boolean, ords:string, silentMode:boolean, version:string, mode:string) {
@@ -25,9 +33,10 @@ export class DBFlow implements DeliveryMethod{
         console.log("mode", mode);
         let project=ProjectManager.getInstance().getProject(projectName);
         const appSchema = project.getUsers().get('APP')?.getName();
-        const dataSchema = project.getUsers().get('DATA')?.getName();
-        const logicSchema = project.getUsers().get('LOGIC')?.getName();
-        const proxyUserName = project.getUsers().get('DATA')?.getProxy()?.getName() || `${projectName}_depl`;
+        const dataSchema = project.getMode() === Project.MODE_SINGLE ? appSchema : project.getUsers().get('DATA')?.getName();
+        const logicSchema = project.getMode() === Project.MODE_SINGLE ? appSchema : project.getUsers().get('LOGIC')?.getName();
+
+        const proxyUserName =project.getMode() === Project.MODE_SINGLE ? appSchema : project.getUsers().get('DATA')?.getProxy()?.getName() || `${projectName}_depl`;
         ShellHelper.executeScriptWithEnv(`bash .dbFLow/apply.sh ${mode} ${version}`,
                                          project.getPath(),
                                          {
@@ -36,7 +45,8 @@ export class DBFlow implements DeliveryMethod{
                                            "DATA_SCHEMA": dataSchema,
                                            "LOGIC_SCHEMA": logicSchema,
                                            "WORKSPACE": project.getName(),
-                                           "SCHEMASDELIMITED": `${dataSchema},${logicSchema},${appSchema}`,
+                                           "SCHEMAS": `( ${dataSchema} ${logicSchema} ${appSchema} )`,
+                                           //"SCHEMASDELIMITED": `${dataSchema},${logicSchema},${appSchema}`,
                                            "BRANCHES": `( develop test master )`, // TODO: das muss ausgelagert werden
                                            "DEPOT_PATH": `_depot`, // TODO: das muss ausgelagert werden
                                            "STAGE": `master`, // TODO: das muss ausgelagert werden
