@@ -432,7 +432,7 @@ export class ProjectManager {
 
           //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
           if(command){
-            let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true )).status;
+            let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true, project.getLogger() )).status;
             if (!status){
               console.log('An unexpected error occured, please check log for details!');
               process.exit();

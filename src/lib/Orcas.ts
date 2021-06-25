@@ -13,36 +13,40 @@ import { Application } from './Application';
 @injectable()
 export class Orcas implements DeliveryMethod{
     public install(feature:ProjectFeature, projectPath:string, singleSchema:boolean){
-        let featurePath = projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
-          if (!singleSchema){
-            fs.copyFileSync(featurePath+'/app/build.gradle',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_app/build.gradle');
-            fs.copyFileSync(featurePath+'/logic/build.gradle',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_logic/build.gradle');
-            fs.copyFileSync(featurePath+'/data/build.gradle',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/build.gradle');
-            
-            fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_app/gradlew');
-            fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_logic/gradlew');
-            fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/gradlew');
-
-            fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_app/gradlew.bat');
-            fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_logic/gradlew.bat');
-            fs.copyFileSync(featurePath+'/gradlew.bat',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/gradlew.bat');
-            
-            
-            fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_app/gradle/');
-            fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_logic/gradle/');
-            fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/gradle/');
-
-            fs.removeSync(projectPath+'/db/'+ ProjectManager.getInstance().getProjectNameByPath(projectPath) + '_data/tables_ddl');
-          }else{
-            fs.copyFileSync(featurePath+'/app/build.gradle',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '/build.gradle');
-            fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '/gradlew');
-            fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '/gradlew.bat');
-            fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + ProjectManager.getInstance().getProjectNameByPath(projectPath) + '/gradle/');
-            fs.removeSync(projectPath+'/db/'+ ProjectManager.getInstance().getProjectNameByPath(projectPath) + '/tables_ddl');
-          }
-        fs.removeSync(featurePath);
         
-        feature.setInstalled(true);
+      let featurePath:string = projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
+      let projectName:string = ProjectManager.getInstance().getProjectNameByPath(projectPath);
+
+        if (!singleSchema){
+          fs.copyFileSync(featurePath+'/app/build.gradle',projectPath + '/db/' + projectName + '_app/build.gradle');
+          fs.copyFileSync(featurePath+'/logic/build.gradle',projectPath + '/db/' + projectName + '_logic/build.gradle');
+          fs.copyFileSync(featurePath+'/data/build.gradle',projectPath + '/db/' + projectName + '_data/build.gradle');
+          
+          fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + projectName + '_app/gradlew');
+          fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + projectName + '_logic/gradlew');
+          fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + projectName + '_data/gradlew');
+
+          fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + projectName + '_app/gradlew.bat');
+          fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + projectName + '_logic/gradlew.bat');
+          fs.copyFileSync(featurePath+'/gradlew.bat',projectPath+'/db/' + projectName + '_data/gradlew.bat');
+
+          fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + projectName + '_app/gradle/');
+          fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + projectName + '_logic/gradle/');
+          fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + projectName + '_data/gradle/');
+
+          fs.removeSync(projectPath+'/db/'+ projectName + '_data/tables_ddl');
+          fs.removeSync(projectPath+'/db/'+ projectName + '_logic/tables_ddl');
+          fs.removeSync(projectPath+'/db/'+ projectName + '_app/tables_ddl');
+        }else{
+          fs.copyFileSync(featurePath+'/app/build.gradle',projectPath + '/db/' + projectName + '/build.gradle');
+          fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + projectName + '/gradlew');
+          fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + projectName + '/gradlew.bat');
+          fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + projectName + '/gradle/');
+          fs.removeSync(projectPath+'/db/'+ projectName + '/tables_ddl');
+        }
+      fs.removeSync(featurePath);
+        
+      feature.setInstalled(true);
     }
 
     public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined){
@@ -131,19 +135,19 @@ export class Orcas implements DeliveryMethod{
     public unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean){
       let _this = this;
       _this.hook("data","pre",projectName, connection, password, project);
-      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data", true)
+      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data", true, project.getLogger())
       .then(function(){
         _this.hook("data","post",projectName, connection, password, project);
         cli.confirm('Proceed with '+projectName.toUpperCase()+'_LOGIC? (y/n)').then(function(proceed){
           if (proceed){
             _this.hook("logic","pre",projectName, connection, password, project);
-            ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic", true)
+            ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic", true, project.getLogger())
               .then(function(){
                 _this.hook("logic","post",projectName, connection, password, project);
                 cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)').then(function(proceed){
                   if (proceed){
                     _this.hook("app","pre",projectName, connection, password, project);
-                    ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app", true)
+                    ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app", true, project.getLogger())
                     .then(()=>{
                       _this.hook("app","post",projectName, connection, password, project);
                         if (!schemaOnly){
@@ -165,15 +169,15 @@ export class Orcas implements DeliveryMethod{
       return new Promise((resolve, reject)=>{
         let _this = this;
         _this.hook("data","pre",projectName, connection, password, project);
-        ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data", false)
+        ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data", false, project.getLogger())
         .then(function(){
           _this.hook("data","post",projectName, connection, password, project);
           _this.hook("logic","pre",projectName, connection, password, project);
-          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic", false)
+          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic", false, project.getLogger())
             .then(function(){
               _this.hook("logic","post",projectName, connection, password, project);
               _this.hook("app","pre",projectName, connection, password, project);
-              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app", false)
+              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app", false, project.getLogger())
                 .then(()=>{
                   _this.hook("app","post",projectName, connection, password, project);
                   if (!schemaOnly){
@@ -191,10 +195,9 @@ export class Orcas implements DeliveryMethod{
 
     public deploySchema(gradleString:string, project:Project, schema:string){
       if(project.getMode()==='multi'){
-        ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName() + "_" + schema, true);
+        ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName() + "_" + schema, true, project.getLogger());
       }else{
-        console.log(gradleString, project.getPath() + "/db/" + project.getName());
-        ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName(), true);
+        ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName(), true, project.getLogger());
       }
     }
 

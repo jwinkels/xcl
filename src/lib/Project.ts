@@ -8,6 +8,7 @@ import  * as os from 'os';
 import { Environment } from './Environment';
 import { Md5 } from 'ts-md5/dist/md5';
 import {Operation} from './Operation';
+import { Logger } from "./Logger";
 
 
 export class Project {
@@ -21,29 +22,38 @@ export class Project {
   private features: Map<string, ProjectFeature>;  //Map to save the added features
   private users: Map<string, Schema>;              //Map for Project User-List
   private status: ProjectStatus;
-  private environment:Map<string, string>;
+  private environment:Map<string, {value:string, required:boolean}>;
+  private logger:Logger;
+  private directories:string;
 
   constructor(name: string, path: string, workspaceName:string , create: boolean, singleSchema:boolean=false) {
     this.name = name;
     this.path = path;
+    this.logger = new Logger(path);
 
     if (create) {
       this.config = this.initialzeConfig(workspaceName, singleSchema);
       this.features=new Map();
       this.users=new Map();
-      this.createDirectoryStructure(singleSchema);
+      this.directories = this.createDirectoryStructure(singleSchema);
       this.status = new ProjectStatus(this);
       this.writeConfig();
       this.status.serialize()
       this.environment=Environment.initialize(this.name, singleSchema ? 'app' : '');
     } else {
       this.config = this.readConfig();
+      this.directories = this.createDirectoryStructure(this.getMode()==='multi' ? false : true);
       this.name   = this.config.xcl.project;
       this.status = new ProjectStatus(this);
       this.features = this.getFeatures();
       this.users = this.getUsers();
-      this.environment=Environment.initialize(this.name);
+      this.environment=Environment.initialize(this.name, singleSchema ? 'app' : '');
     }
+
+  }
+
+  public getLogger():Logger{
+    return this.logger;
   }
 
   public getErrorText(): string {
@@ -111,7 +121,7 @@ export class Project {
 
   public getMode():string{
     if(this.config){
-      return this.config.xcl.mode;
+      return this.config.xcl.mode ? this.config.xcl.mode : "multi" ;
     }else{
       this.config=this.readConfig();
       return this.config.xcl.mode;
@@ -130,9 +140,15 @@ export class Project {
     } else if (path instanceof Object) {
       for (let i = 0; i < Object.keys(path).length; i++) {
         const objName = Object.keys(path)[i];
+
         this.createDirectoryPath(path[objName], fullPath + objName + "/");
       }
     } else {
+
+      if (fullPath.includes(':projectName')){
+        fullPath = fullPath.replace(':projectName',this.getName());
+      }
+
       if (!fs.existsSync(this.getPath() + fullPath + path)) {
         fullPath = this.getPath() + fullPath + path;
         fs.mkdirSync(fullPath, { recursive: true });
@@ -141,28 +157,29 @@ export class Project {
     }
   }
 
-  private createDirectoryStructure(singleSchema:boolean):void {
+  private createDirectoryStructure(singleSchema:boolean):string {
     let parsedDirs:any;
 
     if (!singleSchema){
 
       parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories.yml").toString());
-      this.createDirectoryPath(parsedDirs.toJSON(), "/");
-      fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}_data`);
-      fs.renameSync(this.getPath() + "/db/logic", this.getPath() + `/db/${this.getName()}_logic`);
-      fs.renameSync(this.getPath() + "/db/app", this.getPath() + `/db/${this.getName()}_app`);
+      if ( this.directories !== Md5.hashStr(yaml.stringify(parsedDirs)).toString()){
+        this.createDirectoryPath(parsedDirs.toJSON(), "/");
+      }
 
     }else{
 
       parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories_single_schema.yml").toString());
-      this.createDirectoryPath(parsedDirs.toJSON(), "/");
-      fs.renameSync(this.getPath() + "/db/data", this.getPath() + `/db/${this.getName()}`);
+      if ( this.directories !== Md5.hashStr(yaml.stringify(parsedDirs)).toString()){
+        this.createDirectoryPath(parsedDirs.toJSON(), "/");
+      }
 
     }
 
 
 
     fs.copySync(__dirname + "/config/readme.md", this.getPath()+"/readme.md");
+    return Md5.hashStr(yaml.stringify(parsedDirs)).toString();
   }
 
   public writeConfig():void {
@@ -453,13 +470,13 @@ export class Project {
     return this.status;
   }
 
-  public getEnvironment():Map<string, string>{
+  public getEnvironment():Map<string, {value:string, required:boolean}>{
     return this.environment;
   }
 
   public getEnvironmentVariable(key:string):string|undefined{
       if (this.environment.get(key)){
-          return this.environment.get(key);
+          return this.environment.get(key)?.value;
       }else{
           console.error('No such variable in defaults');
       }
@@ -471,13 +488,13 @@ export class Project {
 
         if (!reset){
           if (value && value !==""){
-              this.environment.set(key, value);
+              Environment.setVariable(key, value, this.environment);
               console.log(chalk.green('OK'));
           }else{
               process.stderr.write(chalk.red('ERROR: variable can not be empty!'));
           }
         }else{
-          this.environment.set(key, value!);
+          Environment.setVariable(key, value!, this.environment);
           process.stdout.write(chalk.green('OK'));
         }
         Environment.writeEnvironment(this.name, this.environment);

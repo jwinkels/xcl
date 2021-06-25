@@ -16,6 +16,7 @@ export default class ConfigDefaults extends Command{
     list: flags.boolean({char: 'l', description:'list environment variables'}),
     set: flags.string({char: 's', description:'set the value of an environment variable'}),
     "set-all": flags.boolean({description:'set all available environment variables'}),
+    "set-required": flags.boolean({description:'set all required environment variables'}),
     reset: flags.string({char: 'r', description: 'resets an environment variable'}),
     "reset-all": flags.boolean({description: 'resets all environment variables'})
   }
@@ -47,6 +48,10 @@ export default class ConfigDefaults extends Command{
       }else{
         if (flags.set && flags.set !==""){
           await this.setVariable(flags.set, project, args.value);
+        }
+
+        if(flags['set-required']){
+          this.setRequiredVariables(project);
         }
       }
 
@@ -101,7 +106,7 @@ export default class ConfigDefaults extends Command{
 
       //If System-Environment Variable was not found lookup xcl-Environment Variable
       if (!value || value === ""){
-        value = project.getEnvironment().get(variableName);
+        value = project.getEnvironment().get(variableName)?.value;
       }
     }
 
@@ -121,20 +126,20 @@ export default class ConfigDefaults extends Command{
         chalk.blueBright('value')
       ]
     });
-    project.getEnvironment().forEach((value: string, key: string)=>{
+    project.getEnvironment().forEach((variable: {value:string, required:boolean}, key: string)=>{
       if ( key != 'syspw' ){
-        table.push([key, value ? value : 'unset']);
+        table.push([key, variable.value ? variable.value : 'unset']);
       }else{
-        table.push([key, value ? '*******' : 'unset']);
+        table.push([key, variable.value ? '*******' : 'unset']);
       }
     });
     console.log(table.toString());
   }
 
   async setAllVariables(project:Project){
-    let variables:Map<string,string>=new Map<string,string>();
+    //let variables:Map<string,{value:string, required:boolean}>=new Map<string,{value:string, required:boolean}>();
 
-    let projectEnv=project.getEnvironment()
+    let projectEnv=project.getEnvironment();
     for (let key of projectEnv.keys()){
       let input = await cli.prompt('Insert a value for "' + key.toUpperCase() + '"');
       project.setEnvironmentVariable(key, input);
@@ -170,7 +175,7 @@ export default class ConfigDefaults extends Command{
     for (let key of globals.keys()){
       let input = await cli.prompt('Insert a value for "' + key.toUpperCase() + '"');
       console.log(chalk.green('\nVariable ´'+key.toUpperCase()+'´ set!'));
-      globals.set(key, input);
+      Environment.setVariable(key, input, globals);
     }
     Environment.writeEnvironment('all', globals);
     console.log(chalk.green('OK'));
@@ -185,11 +190,11 @@ export default class ConfigDefaults extends Command{
           ]
         });
         let globals=Environment.initialize('all');
-        globals.forEach((value:string, key:string)=>{
+        globals.forEach((variable:{value:string, required:boolean}, key:string)=>{
           if ( key != 'syspw' ){
-            table.push([ key, value ? value : 'unset']);
+            table.push([ key, variable.value ? variable.value : 'unset']);
           }else{
-            table.push([key, value ? '*******' : 'unset']);
+            table.push([key, variable.value ? '*******' : 'unset']);
           }
         });
         console.log(table.toString());
@@ -197,7 +202,7 @@ export default class ConfigDefaults extends Command{
 
   async resetGlobalVariable(variableName:string){
     let globals = Environment.initialize('all');
-    globals.set(variableName,"");
+    Environment.setVariable(variableName,  "", globals);
     Environment.writeEnvironment('all', globals);
     console.log(chalk.green('OK'));
   }
@@ -205,9 +210,23 @@ export default class ConfigDefaults extends Command{
   async resetAllGlobalVariables(){
     let globals = Environment.initialize('all');
     for (let key of globals.keys()){
-      globals.set(key, "");
+      Environment.setVariable(key,  "", globals);
     }
     Environment.writeEnvironment('all', globals);
+    console.log(chalk.green('OK'));
+  }
+
+  async setRequiredVariables(project:Project){
+    //let variables:Map<string,{value:string, required:boolean}>=new Map<string,{value:string, required:boolean}>();
+
+    let projectEnv=project.getEnvironment();
+    for (let key of projectEnv.keys()){
+      if(projectEnv.get(key)?.required){
+        let input = await cli.prompt('Insert a value for "' + key.toUpperCase() + '"', {default: projectEnv.get(key)?.value});
+        project.setEnvironmentVariable(key, input);
+        console.log(chalk.green('\nVariable ´'+key.toUpperCase()+'´ set!'));
+      }
+    }
     console.log(chalk.green('OK'));
   }
 

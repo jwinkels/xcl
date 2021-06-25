@@ -5,20 +5,20 @@ import { ProjectManager } from './ProjectManager';
 export class Environment{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
 
-    public static initialize(projectName:string, schema:string = ''):Map<string,string>{
-        let variables:Map<string,string>=new Map<string, string>();
+    public static initialize(projectName:string, schema:string = ''):Map<string,{value:string, required:boolean}>{
+        let variables:Map<string,{value:string, required:boolean}>=new Map<string, {value:string, required:boolean}>();
         let envFileName="";
         let env:any={};
         
         // Available environment variable declaration 
         // List can be extended
-        variables=new Map<string, string>();
-        variables.set('connection','');
-        variables.set('project','');
-        variables.set('syspw','');
-        variables.set('password','');
-        variables.set('ords','');
-        variables.set('schema', schema);
+        variables=new Map<string, {value:string, required:boolean}>();
+        variables.set('connection', {value: "unset", required: true});
+        variables.set('project', {value: projectName!=="all" ? projectName : "", required: true});
+        variables.set('syspw', {value:"", required: false});
+        variables.set('password',{value:'', required: false});
+        variables.set('ords',{value:"", required: false});
+        variables.set('schema', {value: schema, required: false});
         
         // Decide which environment variables context should be loaded 
         if(projectName.toLocaleLowerCase()!=="all"){
@@ -31,22 +31,41 @@ export class Environment{
 
         // Check if environment variable file exists if not, write skelleton to file
         if(!fs.existsSync(envFileName)){
-            variables.forEach((value, key)=>{
-                env[key]=value;
+            variables.forEach((variable: {value:string, required:boolean}, key)=>{
+                env[key]=variable.value;
             });
             fs.writeFileSync(envFileName,yaml.stringify(env)); 
         }else{
             // load environment variables from file if exists
             env=yaml.parse(fs.readFileSync(envFileName).toString());
-            variables.forEach((value, key)=>{
-                variables.set(key, env[key]);
+            variables.forEach((variable: {value:string, required:boolean}, key)=>{
+                this.setVariable(key, env[key], variables);
             });
         }
 
         return variables;
     }
 
-    public static writeEnvironment(projectName:string, variables:Map<string,string>){
+    private static getVariablesMap(schema:string = ''):Map<string,{value:string, required:boolean}>{
+        let variables:Map<string,{value:string, required:boolean}>=new Map<string, {value:string, required:boolean}>();
+        variables=new Map<string, {value:string, required:boolean}>();
+        variables.set('connection', {value:'', required: true});
+        variables.set('project', {value:'', required: true});
+        variables.set('syspw', {value:'', required: true});
+        variables.set('password',{value:'', required: false});
+        variables.set('ords',{value:'', required: false});
+        variables.set('schema', {value: schema, required: false});
+        return variables;
+    }
+
+    public static setVariable(variableName:string, value:string, variables:Map<string,{value:string, required:boolean}>):Map<string,{value:string, required:boolean}>{ 
+        let variable:{value:string, required:boolean} = variables.get(variableName)!;
+        variable.value = value;
+        variables.set(variableName, variable);
+        return variables;
+    }
+
+    public static writeEnvironment(projectName:string, variables:Map<string,{value:string, required:boolean}>){
         let envFileName="";
         let env:any={};
 
@@ -58,8 +77,8 @@ export class Environment{
         }
        
         // Set variables
-        variables.forEach((value, key)=>{
-            env[key]=value;
+        variables.forEach((variable, key)=>{
+            env[key]=variable.value;
         });
 
         fs.writeFileSync(envFileName,yaml.stringify(env));

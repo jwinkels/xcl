@@ -47,7 +47,9 @@ TODO:
 
     - Upgrade Funktion:
         * Wenn sich dinge in der DirectoryStruktur ändern, sollte xcl automatisch die Änderungen vornehmen können,
-          solange, die Ordner nicht mit Dateien befüllt sind. Ansonsten sollte eine Hilfe-Meldung ausgegeben werden 
+          solange, die Ordner nicht mit Dateien befüllt sind. Ansonsten sollte eine Hilfe-Meldung ausgegeben werden
+        * Es werden nur Ordner hinzugefügt nicht gelöscht!
+    => DONE
 
     - setup 
         * Der Ordner setup beinhaltet alle Maßnahmen, die für die Installation der Application notwendig sind, für die aber Admin Rechte auf der DB erforderlich sind
@@ -83,8 +85,13 @@ TODO:
     =>DONE
     
     - Projekt init aufräumen @JAW    
+    =>DONE?
 
     - SingleSchema @JAW
+    =>DONE
  
     - Project create mit Wizard @MMI
-
+    
+    - Deploy Method für welche xcl-Version?
+        * Warum: Wenn sich dinge in der Ordnerstruktur ändern, muss auch die deploy Methode angeglichen werden
+        * Um kompatibilität zu gewähren muss die deploy feature version zur xcl version passen
