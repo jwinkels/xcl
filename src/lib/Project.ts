@@ -25,6 +25,9 @@ export class Project {
   private environment:Map<string, {value:string, required:boolean}>;
   private logger:Logger;
   private directories:string;
+  private _depot_path: string = '';                            // if something is deployed, that is the path
+
+
 
   constructor(name: string, path: string, workspaceName:string , create: boolean, singleSchema:boolean=false) {
     this.name = name;
@@ -42,7 +45,7 @@ export class Project {
       this.environment=Environment.initialize(this.name, singleSchema ? 'app' : '');
     } else {
       this.config = this.readConfig();
-      this.directories = this.createDirectoryStructure(this.getMode()==='multi' ? false : true);
+      this.directories = this.createDirectoryStructure(this.getMode()=== Project.MODE_MULTI ? false : true);
       this.name   = this.config.xcl.project;
       this.status = new ProjectStatus(this);
       this.features = this.getFeatures();
@@ -121,16 +124,32 @@ export class Project {
 
   public getMode():string{
     if(this.config){
-      return this.config.xcl.mode ? this.config.xcl.mode : "multi" ;
+      return this.config.xcl.mode ? this.config.xcl.mode : Project.MODE_MULTI ;
     }else{
       this.config=this.readConfig();
       return this.config.xcl.mode;
     }
   }
 
+  public isMultiSchema():boolean {
+    return this.getMode() === Project.MODE_MULTI
+  }
+
   public toJSON(): any {
     return { path: this.getPath() };
   }
+
+  public get depotPath(): string {
+    return this._depot_path;
+  }
+
+  public set depotPath(value: string) {
+    this._depot_path = value;
+
+    this.config.xcl.depot_path = value;
+    this.writeConfig();
+  }
+
 
   private createDirectoryPath(path: any, fullPath: string):void {
     if (path instanceof Array) {
@@ -454,7 +473,7 @@ export class Project {
     if(this.config.xcl?.users){
       const users=this.config.xcl?.users;
       const proxy= new Schema({name: users.user_deployment, password:"", proxy:undefined});
-      this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy: this.getMode() === 'multi' ? proxy : undefined}));
+      this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy: this.getMode() === Project.MODE_MULTI ? proxy : undefined}));
       this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
       this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
     }
@@ -596,7 +615,7 @@ class ProjectStatus {
   }
 
   public updateUserStatus(){
-    if(this.project.getMode()==='multi'){
+    if(this.project.getMode()===Project.MODE_MULTI){
       this.statusConfig.xcl.users.schema_app      = this.project.getName()+"_app";
       this.statusConfig.xcl.users.schema_logic    = this.project.getName()+"_logic";
       this.statusConfig.xcl.users.schema_data     = this.project.getName()+"_data";
