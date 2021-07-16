@@ -6,10 +6,13 @@ import * as fs from "fs-extra"
 import { ProjectManager } from './ProjectManager';
 import { Project } from './Project';
 import cli from 'cli-ux';
-import {ShellHelper} from "./ShellHelper";
+import { ShellHelper } from "./ShellHelper";
 import { DBHelper } from './DBHelper';
 import { Application } from './Application';
-
+import { Git } from "./Git";
+import { Logger } from "./Logger";
+import AdmZip = require("adm-zip");
+const ps = require("ps-node");
 @injectable()
 export class Orcas implements DeliveryMethod{
     public install(feature:ProjectFeature, projectPath:string, singleSchema:boolean){
@@ -55,7 +58,22 @@ export class Orcas implements DeliveryMethod{
       let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " --continue";
       let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " --continue";
       let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " --continue";
-      
+      let path:string = "";
+      let buildZip:AdmZip;
+      if (version){
+        if (fs.pathExistsSync(`${project.getPath()}/dist/${version}.zip`)){
+          buildZip = new AdmZip(`${project.getPath()}/dist/${version}.zip`);
+          buildZip.extractAllTo(`${project.getPath()}/dist/${version}`,true);
+          path = `${project.getPath()}/dist/${version}`;
+        }else{
+          path = project.getPath();
+        }
+      }else{
+        path = project.getPath();
+      }
+
+      console.log(path);
+
       if (schema){
         let gradleString:string = "";
         switch (schema){
@@ -82,20 +100,26 @@ export class Orcas implements DeliveryMethod{
       }else{
         if (silentMode){
           cli.action.start('Deploy...');
-          this.silentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly).then((success)=>{
+          this.silentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly, path).then((success)=>{
             if(success){
+              if(path.includes('dist')){
+                this.cleanUp(path);
+              }
               cli.action.stop('done');
             }else{
+              this.cleanUp(path);
               cli.action.stop('failed');
             }
           });
         }else{
-          this.unsilentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly);
+          this.unsilentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly, path).finally(()=>{
+            this.cleanUp(path);
+          });
         }
       }
     }
 
-    private hook(schema:string, type:string, projectName:string, connection:string, password:string, project:Project):void{
+    private async hook(schema:string, type:string, projectName:string, connection:string, password:string, project:Project):Promise<void>{
      
       let conn:any;
       cli.action.start(`${type}-${schema}-hooks: ...` );
@@ -132,63 +156,76 @@ export class Orcas implements DeliveryMethod{
         cli.action.stop('done');
     }
 
-    public unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean){
+    public async unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean, executePath:string):Promise<boolean>{
       let _this = this;
-      _this.hook("data","pre",projectName, connection, password, project);
-      ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data", true, project.getLogger())
-      .then(function(){
-        _this.hook("data","post",projectName, connection, password, project);
-        cli.confirm('Proceed with '+projectName.toUpperCase()+'_LOGIC? (y/n)').then(function(proceed){
-          if (proceed){
-            _this.hook("logic","pre",projectName, connection, password, project);
-            ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic", true, project.getLogger())
-              .then(function(){
-                _this.hook("logic","post",projectName, connection, password, project);
-                cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)').then(function(proceed){
-                  if (proceed){
-                    _this.hook("app","pre",projectName, connection, password, project);
-                    ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app", true, project.getLogger())
-                    .then(()=>{
-                      _this.hook("app","post",projectName, connection, password, project);
-                        if (!schemaOnly){
-                          Application.installApplication(projectName, connection, password, ords);
-                        }
-                        _this.hook("app","finally",projectName, connection, password, project);
-                        _this.hook("logic","finally",projectName, connection, password, project);
-                        _this.hook("data","finally",projectName, connection, password, project);
+      console.log(gradleStringData);
+      return new Promise((resolve, reject)=>{
+        _this.hook("data","pre",projectName, connection, password, project)
+        .then(()=>{
+          ShellHelper.executeScript(gradleStringData, executePath+"/db/"+project.getName()+"_data", true, project.getLogger())
+          .then(function(){
+            _this.hook("data","post",projectName, connection, password, project);
+            cli.confirm('Proceed with '+projectName.toUpperCase()+'_LOGIC? (y/n)').then(function(proceed){
+              if (proceed){
+                _this.hook("logic","pre",projectName, connection, password, project);
+                ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", true, project.getLogger())
+                  .then(function(){
+                    _this.hook("logic","post",projectName, connection, password, project);
+                    cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)').then(function(proceed){
+                      if (proceed){
+                        _this.hook("app","pre",projectName, connection, password, project);
+                        ShellHelper.executeScript(gradleStringApp, executePath+"/db/"+project.getName()+"_app", true, project.getLogger())
+                        .then(()=>{
+                          _this.hook("app","post",projectName, connection, password, project).then(()=>{
+                              if (!schemaOnly){
+                                Application.installApplication(projectName, connection, password, ords);
+                              }
+                              _this.hook("app","finally",projectName, connection, password, project);
+                              _this.hook("logic","finally",projectName, connection, password, project);
+                              _this.hook("data","finally",projectName, connection, password, project);
+                              resolve(true);
+                          })
+                        })
+                      }else{
+                        resolve(true);
+                      }
                     })
-                  }
-                })
-              })
-          }
+                  })
+              }else{
+                resolve(true);
+              }
+            })
+          })
         })
       });
     }
 
-    public async silentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean):Promise<boolean>{
+    public async silentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean, executePath:string):Promise<boolean>{
       return new Promise((resolve, reject)=>{
         let _this = this;
-        _this.hook("data","pre",projectName, connection, password, project);
-        ShellHelper.executeScript(gradleStringData, project.getPath()+"/db/"+project.getName()+"_data", false, project.getLogger())
-        .then(function(){
-          _this.hook("data","post",projectName, connection, password, project);
-          _this.hook("logic","pre",projectName, connection, password, project);
-          ShellHelper.executeScript(gradleStringLogic, project.getPath()+"/db/"+project.getName()+"_logic", false, project.getLogger())
-            .then(function(){
-              _this.hook("logic","post",projectName, connection, password, project);
-              _this.hook("app","pre",projectName, connection, password, project);
-              ShellHelper.executeScript(gradleStringApp, project.getPath()+"/db/"+project.getName()+"_app", false, project.getLogger())
-                .then(()=>{
-                  _this.hook("app","post",projectName, connection, password, project);
-                  if (!schemaOnly){
-                    Application.installApplication(projectName, connection, password, ords);
-                  }
-                  _this.hook("app","finally",projectName, connection, password, project);
-                  _this.hook("logic","finally",projectName, connection, password, project);
-                  _this.hook("data","finally",projectName, connection, password, project);  
-                  resolve(true);
-                })
-            })
+        _this.hook("data","pre",projectName, connection, password, project).then(()=>{
+          ShellHelper.executeScript(gradleStringData, executePath+"/db/"+project.getName()+"_data", false, project.getLogger())
+          .then(function(){
+            _this.hook("data","post",projectName, connection, password, project);
+            _this.hook("logic","pre",projectName, connection, password, project);
+            ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", false, project.getLogger())
+              .then(function(){
+                _this.hook("logic","post",projectName, connection, password, project);
+                _this.hook("app","pre",projectName, connection, password, project);
+                ShellHelper.executeScript(gradleStringApp, executePath+"/db/"+project.getName()+"_app", false, project.getLogger())
+                  .then(()=>{
+                    _this.hook("app","post", projectName, connection, password, project).then(()=>{
+                      if (!schemaOnly){
+                        Application.installApplication(projectName, connection, password, ords);
+                      }
+                      _this.hook("app", "finally", projectName, connection, password, project);
+                      _this.hook("logic", "finally", projectName, connection, password, project);
+                      _this.hook("data", "finally", projectName, connection, password, project);  
+                      resolve(true);
+                    })
+                  });
+              })
+          });
         });
       });
     }
@@ -201,33 +238,36 @@ export class Orcas implements DeliveryMethod{
       }
     }
 
-    public build(projectName:string, version:string){
+    public async build(projectName:string, version:string){
       let release  = ProjectManager.getInstance().getProject(projectName).getVersion();
+      let project:Project = ProjectManager.getInstance().getProject(projectName);
+    
       ProjectManager.getInstance().getProject(projectName).setVersion(version);
       let path = "";
+      let buildZip:AdmZip = await this.patch(version, project);
       //Read apex-folder and find the correct file
-      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/").forEach(file=>{
-        if ( fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file).isDirectory() ){
+      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/").forEach(file=>{
+        if ( fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file).isDirectory() ){
           if(file.startsWith('f')){
             //If Application was exportet with Split-Option
-            if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql")){
-              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql";
+            if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file + "/application/create_application.sql")){
+              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file + "/application/create_application.sql";
             }
             //If Application was exportet with SplitFlat-Option
-            else if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql")){
-              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql";
+            else if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file + "/create_application.sql")){
+              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file + "/create_application.sql";
             }
 
           }
         }else{
           if(file.startsWith('f')){
-            path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file;
+            path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file;
           }
         }
   
         if(path != ""){
           let createApp = fs.readFileSync(path);
-  
+          console.log(path);
           if(createApp.toString().search("p_flow_version=>'" + release + "'") > 0){
             let newCreateApp = createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
             fs.writeFileSync(path, newCreateApp);
@@ -242,7 +282,82 @@ export class Orcas implements DeliveryMethod{
         }else{
           console.log("File could not be found!");
         }
-      });     
-      
+      });  
+
+      buildZip.addLocalFolder(project.getPath() + "/apps", "apps");
+     
+      buildZip.writeZip(project.getPath()+ "/" + version + ".zip");
+      fs.moveSync(project.getPath()+ "/" + version + ".zip",project.getPath()+ "/dist/" + version + ".zip");
+    }
+
+
+    async patch(version:string, project:Project):Promise<AdmZip>{
+      let fileMap:Map<string,string> = new Map();
+      let fileList:string[] = await Git.getChangedFiles('patch', project.getName());
+      let tablesPath:string = "";
+      let buildZip = new AdmZip();
+
+      if (project.getMode()===Project.MODE_MULTI){
+        tablesPath = `db/${project.getName()}_data/tables/`;
+      }else{
+        tablesPath = `db/${project.getName()}/tables/`;
+      }
+       //Orcas needs all tables to be part of every Build, or else there will be errors in build
+       let tables:string = (await ShellHelper.executeScript('ls *.sql -A1', project.getPath()+`/${tablesPath}`,false, new Logger(project.getPath()))).result;
+       if (tables.includes('\n')){
+         let tableList:string[] = tables.split('\n');
+         for(let i=0; i<tableList.length; i++){
+           fileList.push(tablesPath+tableList[i]);
+         }
+       }
+
+       for(let i=0; i<fileList.length; i++){
+         if(fileList[i]!='' && !fileList[i].endsWith('/')){
+           fileMap.set(fileList[i],fileList[i]);
+         }
+       }
+       
+       for await (const iterator of fileMap.keys()) {
+         if(fs.pathExistsSync(iterator)){
+          let path = iterator.substring(0, iterator.lastIndexOf('/'));
+          console.log(`${iterator} .. added to build!`);
+          buildZip.addLocalFile(iterator, path);
+         }
+       } 
+       console.log(fileMap.entries());
+
+       for await (const schema of ["data","logic","app"]) {
+         for await (const file of ["build.gradle","gradlew","gradlew.bat"]) {
+          if (project.getMode()===Project.MODE_MULTI){
+              if (!fileMap.has(`db/${project.getName()}_${schema}/${file}`)){
+                buildZip.addLocalFile(`db/${project.getName()}_${schema}/${file}`, `db/${project.getName()}_${schema}/`);
+              }
+          }else{
+            if (!fileMap.has(`db/${project.getName()}/${file}`)){
+              buildZip.addLocalFile(`db/${project.getName()}/${file}`, `db/${project.getName()}/`);
+            }
+          }
+         }
+         buildZip.addLocalFolder(`db/${project.getName()}_${schema}/gradle/`,`db/${project.getName()}_${schema}/gradle`)
+        }
+        
+       return buildZip;
+    }
+
+    private cleanUp(path:string){
+      if(path.includes('dist')){
+        try{
+          cli.action.start('Cleaning up...');
+          ps.lookup({command: 'java', arguments: 'org.gradle.launcher.daemon.bootstrap.GradleDaemon'}, function(err:string, resultList:any ) {
+              for (const process of resultList) {
+                ps.kill(process.pid);
+              }
+              fs.removeSync(path);
+              cli.action.stop('done');
+          });
+        }catch(error){
+          console.log(error);
+        }
+      }
     }
 }
