@@ -38,7 +38,7 @@ export default class FeatureAdd extends Command {
               ];
 
   async run() {
-    const {args, flags} = this.parse(FeatureAdd);
+    const {args} = this.parse(FeatureAdd);
 
 
     if(!args.version && args.feature){

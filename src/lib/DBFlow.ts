@@ -1,4 +1,4 @@
-import { injectable, inject } from "inversify";
+import { injectable } from "inversify";
 import "reflect-metadata";
 import { DeliveryMethod } from "./DeliveryMethod";
 import { ProjectFeature } from './ProjectFeature';

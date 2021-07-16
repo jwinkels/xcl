@@ -7,7 +7,6 @@ import { Utils } from './Utils';
 export class Application{
 
     public static installApplication(projectName:string,connection:string, password:string, ords:string){
-        let path = "";
         let installFileList:Map<string,string>;
         installFileList=new Map();
 

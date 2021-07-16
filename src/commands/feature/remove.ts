@@ -51,7 +51,7 @@ export default class FeatureRemove extends Command {
         }
         
         if ( flags.deinstall && ( flags.connection && flags.syspw ) ){
-          await FeatureManager.getInstance().deinstallProjectFeature(args.feature, flags.connection!, flags.syspw!, project);
+          await FeatureManager.getInstance().deinstallProjectFeature(args.feature, flags.connection, flags.syspw, project);
         }else{
           if (flags.deinstall){
             throw Error(chalk.red('ERROR: When using deinstall option you need to provide a connection and the SYS-User password!'));
@@ -59,7 +59,7 @@ export default class FeatureRemove extends Command {
         }
 
         if ( flags.owner && ( flags.connection && flags.syspw ) ){
-          await FeatureManager.getInstance().dropOwnerSchema(args.feature, flags.connection!, flags.syspw!, project);
+          await FeatureManager.getInstance().dropOwnerSchema(args.feature, flags.connection, flags.syspw, project);
         }else{
           if (flags.owner){
             throw Error(chalk.red('ERROR: When using drop owner schema option you need to provide a connection and the SYS-User password!'));

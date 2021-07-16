@@ -44,5 +44,6 @@ export default class ProjectPlan extends Command {
         ProjectManager.getInstance().apply(args.project, true);
       }
     }
+    console.log('Needed : ' + process.uptime().toPrecision(2) + 's');
   }
 }

@@ -1,5 +1,4 @@
 import {Command, flags} from '@oclif/command'
-import * as readline from 'readline-sync';
 import {GithubCredentials} from '../../lib/GithubCredentials';
 
 export default class ConfigGithub extends Command {
@@ -12,7 +11,7 @@ export default class ConfigGithub extends Command {
   static args = [{name: 'user', required: true}]
 
   async run() {
-    const {args, flags} = this.parse(ConfigGithub);
+    const {args} = this.parse(ConfigGithub);
     GithubCredentials.oauth(args.user);
   }
 }

@@ -15,7 +15,7 @@ export default class FeatureVersions extends Command {
                 }];
 
   async run() {
-    const {args, flags} = this.parse(FeatureVersions)
+    const {args} = this.parse(FeatureVersions)
     FeatureManager.getInstance().getFeatureReleases(args.feature);
   }
 }
