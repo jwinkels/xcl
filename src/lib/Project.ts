@@ -547,7 +547,10 @@ class ProjectStatus {
     this.statusConfig=this.deserialize();
     this.checkSetup("./db/.setup");
 
-    if( this.statusConfig.xcl.hash == Md5.hashStr( yaml.stringify( this.project.getConfig() ) ).toString()
+    let projectConfig = this.project.getConfig();
+    delete projectConfig.xcl["version"];
+
+    if( this.statusConfig.xcl.hash == Md5.hashStr( yaml.stringify( projectConfig ) ).toString()
           &&
         !this.changeList.get("SETUP") ){
       return false;
@@ -610,13 +613,15 @@ class ProjectStatus {
   public updateStatus(){
     this.project.reloadConfig();
     this.statusConfig=this.deserialize();
-    this.statusConfig.xcl.hash = Md5.hashStr(yaml.stringify(this.project.getConfig())).toString();
+    let projectConfig = this.project.getConfig();
+    delete projectConfig.xcl["version"];
+    this.statusConfig.xcl.hash = Md5.hashStr(yaml.stringify( projectConfig )).toString();
     this.serialize();
   }
 
   public setCommitId(commitId:string){
     this.statusConfig=this.deserialize();
-    this.statusConfig.xcl['commit']=commitId.replace(/[^a-zA-Z0-9]/g,'');
+    this.statusConfig.xcl['commit'] = commitId.replace(/[^a-zA-Z0-9]/g,'');
     this.serialize();
   }
 
@@ -624,6 +629,21 @@ class ProjectStatus {
     this.statusConfig = this.deserialize();
     if(this.statusConfig.xcl.commit){
       return this.statusConfig.xcl.commit;
+    }else{
+      return '';
+    }
+  }
+
+  public setVersion(version:string){
+    this.statusConfig=this.deserialize();
+    this.statusConfig.xcl['version'] = version;
+    this.serialize();
+  }
+
+  public getVersion():string{
+    this.statusConfig = this.deserialize();
+    if(this.statusConfig.xcl.version){
+      return this.statusConfig.xcl.version;
     }else{
       return '';
     }
