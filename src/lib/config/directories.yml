@@ -71,8 +71,7 @@ db:
     - dml
   - finally
 apps:
-  - apex:
-    - f1000 
+  - apex
   - rest
 apex_files:
   - f1000:

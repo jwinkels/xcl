@@ -9,6 +9,7 @@ logs
 /tmp
 /yarn.lock
 node_modules
+.scannerwork
 
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
