@@ -34,6 +34,7 @@
     "inquirer": "^8.1.1",
     "inversify": "^5.1.1",
     "oracledb": "^5.2.0",
+    "ps-node": "^0.1.6",
     "readline-sync": "^1.4.10",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",

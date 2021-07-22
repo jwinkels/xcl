@@ -1,28 +1,69 @@
 import { ShellHelper } from "./ShellHelper";
-
+import { Logger } from "./Logger";
 export class Git{
 
    public static async getCurrentCommitId():Promise<string>{
-     return (await ShellHelper.executeScript('git rev-parse HEAD',process.cwd())).result;
+     return (await ShellHelper.executeScript('git rev-parse HEAD',process.cwd(),false , new Logger(process.cwd()))).result;
    }
 
    public static async getLatestTaggedCommitId():Promise<string>{
-      return (await ShellHelper.executeScript('git rev-list --tags --max-count=1', process.cwd())).result;
+      return (await ShellHelper.executeScript('git rev-list --tags --max-count=1', process.cwd(), false , new Logger(process.cwd()))).result;
    }
    
    public static async getLatestTagName():Promise<string>{
-      return (await ShellHelper.executeScript(`git describe --tags ${(await this.getLatestTaggedCommitId())}`, process.cwd(), true)).result;
+      return (await ShellHelper.executeScript(`git describe --tags ${(await this.getLatestTaggedCommitId())}`, process.cwd(), true, new Logger(process.cwd()))).result;
    }
 
    public static async getCommitIdOfTag(tag:string):Promise<string>{
-      return (await ShellHelper.executeScript(`git rev-list -n 1 ${tag}`,process.cwd())).result;
+      return (await ShellHelper.executeScript(`git rev-list -n 1 ${tag}`,process.cwd(), false , new Logger(process.cwd()))).result;
    }
 
    public static async getPreviousTaggedCommitId():Promise<string>{
-      return (await ShellHelper.executeScript(`git rev-list --tags --no-walk --skip 1 --max-count=1`, process.cwd())).result;
+      return (await ShellHelper.executeScript(`git rev-list --tags --no-walk --skip 1 --max-count=1`, process.cwd(), false , new Logger(process.cwd()))).result;
    }
 
    public static async getPreviousTagName():Promise<string>{
-      return (await ShellHelper.executeScript(`git describe --tags ${(await this.getPreviousTaggedCommitId())}`, process.cwd(), true)).result;
+      return (await ShellHelper.executeScript(`git describe --tags ${(await this.getPreviousTaggedCommitId())}`, process.cwd(), false, new Logger(process.cwd()))).result;
+   }
+
+   public static async getChangedFiles(mode:string, projectName:string):Promise<string[]>{
+
+      const endings:string = `*.sql *.pks *.pkb *.zip`;
+      const exclude:string = `:!apps :!db/${projectName}_app/build :!db/${projectName}_data/build :!db/${projectName}_logic/build`;
+
+      const excludeInit:string = `:!db/${projectName}_app/dml_post :!db/${projectName}_app/ddl_post :!db/${projectName}_app/ddl_pre :!db/${projectName}_app/dml_post`;
+      const excludePatch:string = `:!db/${projectName}_app/dml_init :!db/${projectName}_app/ddl_init`;
+
+      let modifiers:string = `${endings} ${exclude}`; 
+
+      if(mode == 'patch'){
+         modifiers = modifiers + ` ${excludePatch}`;
+      }else if(mode == 'init'){
+            modifiers = modifiers + ` ${excludeInit}`;
+      }
+
+      let fileList:string="";
+      const commitA:string = await this.getLatestTagName();
+      const commitB:string = await this.getPreviousTagName();
+     
+      if (mode == 'patch'){
+      fileList=(await ShellHelper.executeScript(`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`,
+                                                         process.cwd(), 
+                                                         false, 
+                                                         new Logger(process.cwd())
+                                                      )).result;
+      console.log(`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`);                                                      
+      }else if(mode == 'init'){
+         fileList = (await ShellHelper.executeScript(`git ls-files --cached -- ${modifiers}`,
+                        process.cwd(), 
+                        false, 
+                        new Logger(process.cwd())
+                     )).result;
+      }
+      if (fileList){
+         return fileList.split('\n');
+      }else{
+         return [""];
+      }
    }
 }

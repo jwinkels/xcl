@@ -4,8 +4,6 @@ import { ProjectManager } from '../../lib/ProjectManager'
 import cli from 'cli-ux'
 import chalk from 'chalk'
 import { Environment } from '../../lib/Environment'
-import { injectable } from 'inversify'
-import { resolve } from 'dns'
 const Table = require('cli-table')
 
 export default class ConfigDefaults extends Command{
@@ -111,12 +109,12 @@ export default class ConfigDefaults extends Command{
     }
 
     if (variableName.toUpperCase()==="SYSPW"){
-      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'normal'});
+      input = value ? value : await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"', {type: 'hide'});
     }else{
-      input = value ? value : await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"', {type: 'normal'});
+      input = value ? value : await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"', {type: 'normal'});
     } 
 
-    await project.setEnvironmentVariable(variableName, input);
+    project.setEnvironmentVariable(variableName, input);
   }
 
   async listVariables(project:Project){
@@ -153,8 +151,7 @@ export default class ConfigDefaults extends Command{
   }
 
   async resetAllVariables(project:Project){
-    let variables:Map<string,string>=new Map<string,string>();
-
+    
     let projectEnv=project.getEnvironment()
     for (let key of projectEnv.keys()){
       project.setEnvironmentVariable(key, "", true);
@@ -164,8 +161,8 @@ export default class ConfigDefaults extends Command{
 
   async setGlobalVariable(variableName:string){
     let globals = Environment.initialize('all');
-    let input = await cli.prompt('Insert a value for "' + variableName!.toUpperCase() + '"');
-    globals.set(variableName!, input);
+    let input = await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"');
+    globals.set(variableName, input);
     Environment.writeEnvironment('all', globals);
     console.log(chalk.green('OK'));
   }
@@ -231,7 +228,7 @@ export default class ConfigDefaults extends Command{
   }
 
   public async runCommand(argv:string[]){
-    return await ConfigDefaults.run(argv);
+    return ConfigDefaults.run(argv);
   }
 
 }

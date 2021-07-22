@@ -1,6 +1,5 @@
 import {Command, flags} from '@oclif/command'
 import { FeatureManager } from '../../lib/FeatureManager'
-import { ProjectManager } from '../../lib/ProjectManager'
 import { Environment } from '../../lib/Environment'
 import cli from 'cli-ux';
 

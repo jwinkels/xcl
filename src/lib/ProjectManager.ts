@@ -315,6 +315,7 @@ export class ProjectManager {
       Git.getCurrentCommitId()
         .then((commitId)=>{p.getStatus().setCommitId(commitId)})
         .catch((reason)=>{});
+      p.getStatus().setVersion(version);
       //Git.getLatestTaggedCommitId().then((commitId)=>{p.getStatus().setCommitId(commitId)});
     }else{
       console.log( chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!') );

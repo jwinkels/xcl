@@ -6,7 +6,7 @@ import chalk from 'chalk';
 export default class ProjectBuild extends Command {
   static description = 'create build to deploy'
 
-  static flags = {
+  static flags =  {
     help: flags.help({char: 'h'}),
     mode: flags.string({char: 'm',
                         description: 'mode of build (init/patch)',

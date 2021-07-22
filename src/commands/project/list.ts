@@ -12,7 +12,6 @@ export default class ProjectList extends Command {
   static args = []
 
   async run() {
-    const {args, flags} = this.parse(ProjectList)
     ProjectManager.getInstance().listProjects();
   }
 }
