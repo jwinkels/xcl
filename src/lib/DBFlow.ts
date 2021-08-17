@@ -25,6 +25,7 @@ export class DBFlow implements DeliveryMethod{
         fs.removeSync(featurePath);
 
         // init git
+        // TODO in git.ts implementier
         if (!fs.pathExistsSync(path.join(projectPath, '.git'))) {
           const initGit = await cli.prompt('Project has to be a git repositoy. Do you want to git init [Y/N] ', {type: 'normal'});
           if (initGit.toUpperCase() === "Y") {
@@ -127,18 +128,19 @@ STAGE=${responses.stage}
     }
 
 
-    public build(projectName:string, version:string, mode:string){
+    public build(projectName:string, version:string, mode:string, commit:string|undefined){
       let project=ProjectManager.getInstance().getProject(projectName);
       // check if git is installed
       if (fs.pathExistsSync(path.join(project.getPath(), '.git'))) {
         console.log("projectName", projectName);
         console.log("version", version);
         console.log("mode", mode);
+        console.log("commit", mode);
         const appSchema = project.getUsers().get('APP')?.getName();
         const dataSchema = project.getUsers().get('DATA')?.getName();
         const logicSchema = project.getUsers().get('LOGIC')?.getName();
         const multiSchema = ("" + project.isMultiSchema()).toUpperCase();
-        ShellHelper.executeScriptWithEnv(`bash .dbFlow/build.sh ${mode} ${version}`,
+        ShellHelper.executeScriptWithEnv(`bash .dbFlow/build.sh ${mode} ${mode==='patch' ? commit:''} ${version}`,
                                          project.getPath(),
                                          {
                                            "PROJECT": project.getName(),

@@ -316,11 +316,11 @@ export class ProjectManager {
     // app erstellen
   }
 
-  public async build(projectName: string, version:string, mode:string):Promise<void>{
+  public async build(projectName: string, version:string, mode:string, commit:string|undefined):Promise<void>{
 
     const p:Project = this.getProject(projectName);
 
-    deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).build(projectName, version, mode);
+    deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).build(projectName, version, mode, commit);
   }
 
   public deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined):void{
