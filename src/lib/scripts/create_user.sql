@@ -4,7 +4,7 @@ set concat .
 set verify off
 
 prompt ^1 anlegen
-create user ^1 identified by ^2
+create user ^1 identified by "^2"
 default tablespace users
 temporary tablespace temp
 profile default

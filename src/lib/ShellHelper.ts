@@ -9,33 +9,36 @@ export class ShellHelper{
     public static executeScriptWithEnv(script: string, executePath:string, envObject:any, consoleOutput:boolean=false, logger:Logger):Promise<{status: boolean, result: string}>{
     return new Promise((resolve, reject)=>{
             let retObj:any = {}
-            try{    
-                const childProcess = spawnSync(
+            try{
+                const childProcess = spawn(
                     script, 
                     [], {
-                        encoding: 'utf8',
                         cwd: executePath,
                         shell: true,
                         env: envObject,
-                        stdio:[process.stdin, consoleOutput ? process.stdout : null, process.stderr]
                     }
                 );
 
-                if(!childProcess.error){
-                    if (childProcess.stdout){
-                        retObj.result = childProcess.stdout;
-                        logger.getLogger().info(childProcess.stdout.trim());
+                childProcess.stdout.on('data',function(data){
+                    if (consoleOutput){
+                        if(data.toString().trim()!==""){
+                            logger.getLogger().log("info", data.toString().trim());
+                        }
                     }
+                });
+
+                childProcess.stderr.on('data',function(data){
+                    if(data.toString().trim()!==""){
+                        retObj.status=false;
+                        retObj.result="";
+                        logger.getLogger().log("info", data.toString().trim());
+                    }
+                });
+
+                childProcess.on('close',function(code){
                     retObj.status = true;
                     resolve(retObj);
-
-                }else{
-                    logger.getLogger().error(childProcess.stderr);
-                    retObj.status=false;
-                    retObj.result="";
-                    resolve(retObj);
-                }
-            
+                });
         
             }catch(err){
                 console.log(executePath);

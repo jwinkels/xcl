@@ -18,6 +18,7 @@ import {Operation} from './Operation';
 import { Application } from './Application';
 import { Utils } from './Utils';
 import { Git } from "./Git";
+const password = require('secure-random-password');
 //import FeatureInstall from "../commands/feature/install";
 
 const Table = require('cli-table')
@@ -145,7 +146,8 @@ export class ProjectManager {
           DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/drop_xcl_users.sql' ) + ' ' + project.getName() + '_data ' +
                                                                                project.getName() + '_logic ' +
                                                                                project.getName() + '_app ' +
-                                                                               project.getName() + '_depl');
+                                                                               project.getName() + '_depl',
+                                                                               project.getLogger());
         }else{
           console.log( chalk.red("ERROR: You need to provide a connection-String and the sys-user password") );
           console.log( chalk.yellow("INFO: xcl project:remove -h to see command options") );
@@ -251,27 +253,41 @@ export class ProjectManager {
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/drop_xcl_users.sql' ) + ' ' + p.getName() + '_data ' +
                                                                            p.getName() + '_logic ' +
                                                                            p.getName() + '_app ' +
-                                                                           p.getName() + '_depl');
+                                                                           p.getName() + '_depl',
+                                                                           p.getLogger());
       }
     }
 
     if (flags.users){
       console.log(chalk.green(`install schemas...`));
+      
+      let randomPassword = password.randomPassword({characters: password.upper, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
+                           password.randomPassword({characters: password.lower, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
+                           password.randomPassword({characters: password.digits, length:  ( Math.floor( Math.random() *6 ) + 4)}) +
+                           password.randomPassword({characters: password.symbols, length: ( Math.floor( Math.random() *6 ) + 2)});
 
       if (p.getMode() === 'multi'){
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
-                                                                            p.getName() + ' ' +  //TODO: Generate strong password!
+                                                                            randomPassword + ' ' + 
                                                                             p.getName() + '_data ' +
                                                                             p.getName() + '_logic ' +
-                                                                            p.getName() + '_app');
+                                                                            p.getName() + '_app',
+                                                                            p.getLogger());
       }else{
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_user.sql') + ' ' + p.getName() + ' ' +
-                                                                            p.getName()  //TODO: Generate strong password!
+                                                                            randomPassword,  
+                                                                            p.getLogger()
                                                                             );
       }
 
       if ( await DBHelper.isProjectInstalled(p, c) ) {
         console.log( chalk.green(`Project successfully installed`) );
+        if (p.getMode() === Project.MODE_MULTI){
+          //console.log( chalk.yellow(`${p.getName().toUpperCase()}_DEPL[${p.getName().toUpperCase()}_<DATA,LOGIC,APP>] - Password: ${randomPassword}`));
+          console.log( chalk.yellow(` ${p.getUsers().get('DATA')}, ${p.getUsers().get('LOGIC')}, ${p.getUsers().get('APP')} - Password: ${randomPassword}`));
+        }else{
+          console.log( chalk.yellow(` ${p.getUsers().get('APP')} - Password: ${randomPassword}`));
+        }
         p.getStatus().updateUserStatus();
       }
     }
@@ -282,7 +298,7 @@ export class ProjectManager {
       if( config.xcl.setup ){
         await config.xcl.setup.forEach( ( element: { name: string; path: string; } ) => {
             console.log( element.name, element.path );
-            DBHelper.executeScriptIn( c, element.name, element.path );
+            DBHelper.executeScriptIn( c, element.name, element.path, p.getLogger() );
           	p.updateSetupStep( element.name, element.path );
         });
       }
@@ -309,14 +325,13 @@ export class ProjectManager {
 
   public deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined):void{
     const p:Project = this.getProject(projectName);
-    console.log('Start Deploying...');
+    p.getLogger().getLogger().log("info", 'Start XCL - Deploy...\n---------------------------------------------------------------');
     if ( !p.getStatus().hasChanged() ){
       deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema );
       Git.getCurrentCommitId()
         .then((commitId)=>{p.getStatus().setCommitId(commitId)})
         .catch((reason)=>{});
       p.getStatus().setVersion(version);
-      //Git.getLatestTaggedCommitId().then((commitId)=>{p.getStatus().setCommitId(commitId)});
     }else{
       console.log( chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!') );
     }

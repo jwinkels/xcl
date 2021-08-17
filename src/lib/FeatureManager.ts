@@ -78,7 +78,7 @@ export class FeatureManager{
           let feature:Feature;
 
           for(feature of FeatureManager.features.values()){
-            if (feature.getType()===type || type==="ALL"){
+            if (feature.getType()===type || type==="all"){
               table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType() ]);
             }
           }
@@ -99,7 +99,7 @@ export class FeatureManager{
           let feature:Feature;
 
           for(feature of FeatureManager.features.values()){
-            if (feature.getType()===type || type==="ALL"){
+            if (feature.getType()===type || type==="all"){
               if(p.getFeatures().has(feature.getName())){
                 table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'added ',  p.getFeatures().get(feature.getName())?.getStatus()]);
               }else{
@@ -197,7 +197,7 @@ export class FeatureManager{
         let feature:ProjectFeature;
         let project:Project = ProjectManager.getInstance().getProject(projectName);
         for(feature of project.getFeatures().values()){
-          if (feature.getType()===type || type==="ALL"){
+          if (feature.getType()===type || type==="all"){
             if (feature.getType()==='DEPLOY'){
               table.push([
                 feature.getName(), 
@@ -309,7 +309,7 @@ export class FeatureManager{
                                   throw Error(`Script '${__dirname + "/scripts/" + installSteps.scripts[i].path}' couldn't be found!`);
                                 }
                               }
-                              DBHelper.executeScript(c, executeString);
+                              DBHelper.executeScript(c, executeString, project.getLogger());
                             }
                             fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
                           }else{
@@ -404,7 +404,7 @@ export class FeatureManager{
                         }
                       }
                       console.log(executeString);
-                      DBHelper.executeScript(c, executeString);
+                      DBHelper.executeScript(c, executeString, project.getLogger());
                     }
                     fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
                   }else{
@@ -428,8 +428,9 @@ export class FeatureManager{
         return new Promise((resolve,reject)=>{
           var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
           const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
-          if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
-            DBHelper.executeScript(c,`${__dirname}/scripts/drop_user.sql ${ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)?.getUser().getConnectionName()}` );
+          const project = ProjectManager.getInstance().getProject(projectName);
+          if (project.getFeatures().has(featureName)){
+            DBHelper.executeScript(c,`${__dirname}/scripts/drop_user.sql ${project.getFeatures().get(featureName)?.getUser().getConnectionName()}`, project.getLogger() );
             resolve();
           }else{
             reject();

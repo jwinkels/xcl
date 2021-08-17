@@ -50,7 +50,7 @@ export default class ProjectDeploy extends Command {
           }
         }     
 
-        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"], flags['ords-url'], flags.yes, flags.version, flags.mode, flags.schema); 
+        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"], flags['ords-url'], flags.yes, flags.version!, flags.mode, flags.schema); 
        
       }else{
         console.log(chalk.red("ERROR: Deploy-Method undefined!"));
