@@ -70,7 +70,7 @@ export class Application{
         let script =      "@.env.sql" + "\n" +
                           '@'+Utils.enwrapInQuotes('&XCLBIN/scripts/create_workspace.sql')+' '+
                           workspace + " "+
-                          ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
+                          ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getName();
 
         if(!fs.existsSync(filename)){
           fs.writeFileSync(filename,script);

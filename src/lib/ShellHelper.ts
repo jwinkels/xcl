@@ -16,6 +16,7 @@ export class ShellHelper{
                         cwd: executePath,
                         shell: true,
                         env: envObject,
+                        stdio: ['inherit', null, null] 
                     }
                 );
 
