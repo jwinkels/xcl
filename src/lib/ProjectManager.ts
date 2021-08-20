@@ -261,10 +261,12 @@ export class ProjectManager {
     if (flags.users){
       console.log(chalk.green(`install schemas...`));
       
-      let randomPassword = password.randomPassword({characters: password.upper, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
+      let randomPassword:string = password.randomPassword({characters: password.upper, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
                            password.randomPassword({characters: password.lower, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
                            password.randomPassword({characters: password.digits, length:  ( Math.floor( Math.random() *6 ) + 4)}) +
                            password.randomPassword({characters: password.symbols, length: ( Math.floor( Math.random() *6 ) + 2)});
+      randomPassword = randomPassword.replace("&","_");
+      randomPassword = randomPassword.replace("!","#");                           
 
       if (p.getMode() === 'multi'){
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
@@ -284,10 +286,11 @@ export class ProjectManager {
         console.log( chalk.green(`Project successfully installed`) );
         if (p.getMode() === Project.MODE_MULTI){
           //console.log( chalk.yellow(`${p.getName().toUpperCase()}_DEPL[${p.getName().toUpperCase()}_<DATA,LOGIC,APP>] - Password: ${randomPassword}`));
-          console.log( chalk.yellow(` ${p.getUsers().get('DATA')}, ${p.getUsers().get('LOGIC')}, ${p.getUsers().get('APP')} - Password: ${randomPassword}`));
+          console.log( chalk.yellow(` ${p.getUsers().get('DATA')?.getConnectionName()}, ${p.getUsers().get('LOGIC')?.getConnectionName()}, ${p.getUsers().get('APP')?.getConnectionName()} - Password: ${randomPassword}`));
         }else{
-          console.log( chalk.yellow(` ${p.getUsers().get('APP')} - Password: ${randomPassword}`));
+          console.log( chalk.yellow(` ${p.getUsers().get('APP')?.getName()} - Password: ${randomPassword}`));
         }
+        p.setEnvironmentVariable('password', randomPassword);
         p.getStatus().updateUserStatus();
       }
     }
@@ -327,11 +330,16 @@ export class ProjectManager {
     const p:Project = this.getProject(projectName);
     p.getLogger().getLogger().log("info", 'Start XCL - Deploy...\n---------------------------------------------------------------');
     if ( !p.getStatus().hasChanged() ){
-      deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema );
-      Git.getCurrentCommitId()
-        .then((commitId)=>{p.getStatus().setCommitId(commitId)})
-        .catch((reason)=>{});
-      p.getStatus().setVersion(version);
+      if (p.getDeployMethod()){
+        deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema );
+        Git.getCurrentCommitId()
+          .then((commitId)=>{p.getStatus().setCommitId(commitId)})
+          .catch((reason)=>{});
+        p.getStatus().setVersion(version);
+      }else{
+        console.log('No Deploy-Method defined, add deploy method via xcl feature:add first.');
+        console.log('To get a list of available deploy methods use xcl feature:list -a DEPLOY');
+      }
     }else{
       console.log( chalk.yellow('Project config has changed! Execute xcl project:plan and xcl project:apply!') );
     }
@@ -379,9 +387,13 @@ export class ProjectManager {
       p.getStatus().getRemovedDependencies();
 
       if( !p.getStatus().checkUsers() ){
-        p.getUsers().forEach( ( user:Schema, key:string ) => {
-            console.log( chalk.green('+') + ' create user '+ key );
-        });
+        if (p.getMode() === Project.MODE_MULTI){
+          p.getUsers().forEach( ( user:Schema, key:string ) => {
+              console.log( chalk.green('+') + ' create user '+ key );
+          });
+        }else{
+          console.log( chalk.green('+') + ' create user '+ p.getUsers().get('APP')?.getName() );
+        }
         console.log( chalk.green('+++') + ' xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom( path, "connection" ) );
         commands[commandCount] =  'xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom(path, "connection");
 
@@ -446,9 +458,8 @@ export class ProjectManager {
           const command = commands[i].substr( 0, commands[i].indexOf( " ", 5 ) ).trim();
           const argv    = commands[i].substr( command.length + 1, commands[i].length ).split(" ");
 
-          //IF ITS AN INTERACTIVE COMMAND WE CAN NOT USE ShellHelper-Class
-          if(command){
-            let status = (await ShellHelper.executeScript( commands[i], project.getPath(), true, project.getLogger() )).status;
+          if(command){            
+            let status:any = (await ShellHelper.executeScript( commands[i], project.getPath(), true, project.getLogger() )).status;
             if (!status){
               console.log('An unexpected error occured, please check log for details!');
               process.exit();
@@ -468,12 +479,12 @@ export class ProjectManager {
           if( !setupOnly ){
             console.log( 'DEPLOY APPLICATION: ' );
             this.deploy(projectName,
-                        Environment.readConfigFrom(project.getPath(),'connection'),
-                        Environment.readConfigFrom(project.getPath(),'password'),
+                        Environment.readConfigFrom( project.getPath(), 'connection' ),
+                        Environment.readConfigFrom( project.getPath(), 'password' ),
                         false,
-                        Environment.readConfigFrom(project.getPath(),'ords'),
+                        Environment.readConfigFrom( project.getPath(), 'ords'),
                         true,
-                        "a", "b", undefined); // FIXME: version und mode noch in apply einbauen);
+                        "a", "b", Environment.readConfigFrom( project.getPath(), 'schema' ) ); // FIXME: version und mode noch in apply einbauen);
           }
         }else{
           console.log("\n\n\r");
