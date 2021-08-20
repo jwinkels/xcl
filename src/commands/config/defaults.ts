@@ -109,10 +109,16 @@ export default class ConfigDefaults extends Command{
     }
 
     if (variableName.toUpperCase()==="SYSPW"){
-      input = value ? value : await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"', {type: 'hide'});
+      input = value ? value : await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"', {type: 'hide'});                                               
     }else{
       input = value ? value : await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"', {type: 'normal'});
     } 
+
+    if (variableName.toUpperCase()==='SCHEMA' && project.getMode()===Project.MODE_SINGLE){
+      input = 'app';
+      console.log(chalk.yellow('SCHEMA variable must not be changed in single schema mode!'));
+      console.log(chalk.yellow('Reset variable to: app'));
+    }
 
     project.setEnvironmentVariable(variableName, input);
   }
