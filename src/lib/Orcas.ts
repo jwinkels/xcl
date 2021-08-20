@@ -12,6 +12,7 @@ import { Application } from './Application';
 import { Git } from "./Git";
 import { Logger } from "./Logger";
 import AdmZip = require("adm-zip");
+import { resolve } from "dns";
 const ps = require("ps-node");
 @injectable()
 export class Orcas implements DeliveryMethod{
@@ -52,7 +53,7 @@ export class Orcas implements DeliveryMethod{
       feature.setInstalled(true);
     }
 
-    public deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined){
+    public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined){
       
       let project=ProjectManager.getInstance().getProject(projectName);
       let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " --continue";
@@ -72,8 +73,6 @@ export class Orcas implements DeliveryMethod{
         path = project.getPath();
       }
 
-      console.log(path);
-
       if (schema){
         let gradleString:string = "";
         switch (schema){
@@ -92,9 +91,13 @@ export class Orcas implements DeliveryMethod{
         }
         
         if (gradleString){
-          this.hook(schema, "pre", projectName, connection, password, project);
-          this.deploySchema(gradleString, project, schema);
-          this.hook(schema, "post", projectName, connection, password, project);
+          console.log("Deploy Schema");
+          await this.hook(schema, "pre", projectName, connection, password, project);
+          await this.deploySchema(gradleString, project, schema);
+          await this.hook(schema, "post", projectName, connection, password, project);
+          if (project.getMode() === Project.MODE_SINGLE && !schemaOnly){
+            Application.installApplication(projectName, connection, password, ords);
+          }
         }
 
       }else{
@@ -123,6 +126,7 @@ export class Orcas implements DeliveryMethod{
      
       let conn:any;
       cli.action.start(`${type}-${schema}-hooks: ...` );
+      project.getLogger().getFileLogger().log("info",`${type}-${schema}-hooks`);
       switch (schema.toLowerCase()){
         case 'data':
           conn=DBHelper.getConnectionProps(project.getUsers().get('DATA')?.getConnectionName(),
@@ -141,7 +145,7 @@ export class Orcas implements DeliveryMethod{
           break;
         }
 
-        fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/")
+        fs.readdirSync(project.getPath() + "/db/.hooks/")
               .filter( f => ( 
                             f.toLowerCase().substr(0, f.indexOf('_', f.indexOf('_', 0) + 1)).includes( type.toLowerCase() ) && 
                             f.toLowerCase().substr(0, f.indexOf('_', f.indexOf('_', 0) + 1)).includes( schema.toLowerCase() ) 
@@ -150,7 +154,8 @@ export class Orcas implements DeliveryMethod{
               .forEach(file=>{
                 DBHelper.executeScriptIn(conn, 
                                          file, 
-                                         ProjectManager.getInstance().getProject(projectName).getPath() + "/db/.hooks/"
+                                         project.getPath() + "/db/.hooks/",
+                                         project.getLogger()
                                         );
               });
         cli.action.stop('done');
@@ -158,45 +163,39 @@ export class Orcas implements DeliveryMethod{
 
     public async unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean, executePath:string):Promise<boolean>{
       let _this = this;
-      console.log(gradleStringData);
-      return new Promise((resolve, reject)=>{
-        _this.hook("data","pre",projectName, connection, password, project)
-        .then(()=>{
-          ShellHelper.executeScript(gradleStringData, executePath+"/db/"+project.getName()+"_data", true, project.getLogger())
-          .then(function(){
-            _this.hook("data","post",projectName, connection, password, project);
-            cli.confirm('Proceed with '+projectName.toUpperCase()+'_LOGIC? (y/n)').then(function(proceed){
-              if (proceed){
-                _this.hook("logic","pre",projectName, connection, password, project);
-                ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", true, project.getLogger())
-                  .then(function(){
-                    _this.hook("logic","post",projectName, connection, password, project);
-                    cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)').then(function(proceed){
-                      if (proceed){
-                        _this.hook("app","pre",projectName, connection, password, project);
-                        ShellHelper.executeScript(gradleStringApp, executePath+"/db/"+project.getName()+"_app", true, project.getLogger())
-                        .then(()=>{
-                          _this.hook("app","post",projectName, connection, password, project).then(()=>{
-                              if (!schemaOnly){
-                                Application.installApplication(projectName, connection, password, ords);
-                              }
-                              _this.hook("app","finally",projectName, connection, password, project);
-                              _this.hook("logic","finally",projectName, connection, password, project);
-                              _this.hook("data","finally",projectName, connection, password, project);
-                              resolve(true);
-                          })
-                        })
-                      }else{
-                        resolve(true);
-                      }
-                    })
-                  })
-              }else{
-                resolve(true);
+      return new Promise(async (resolve, reject)=>{
+        await _this.hook("data","pre",projectName, connection, password, project);
+        project.getLogger().getFileLogger().log("info",`pre-data-hooks done`);
+        await ShellHelper.executeScript(gradleStringData, executePath+"/db/"+project.getName()+"_data", true, project.getLogger())
+        await _this.hook("data","post",projectName, connection, password, project);
+        project.getLogger().getFileLogger().log("info",`post-data-hooks done`);
+        let proceed:boolean = await cli.confirm('Proceed with '+projectName.toUpperCase()+'_LOGIC? (y/n)');
+        if (proceed){
+          await _this.hook("logic","pre",projectName, connection, password, project);
+          ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", true, project.getLogger());
+          _this.hook("logic","post",projectName, connection, password, project);
+          proceed = await cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)');
+            if (proceed){
+              await _this.hook("app","pre",projectName, connection, password, project);
+              await ShellHelper.executeScript(gradleStringApp, executePath+"/db/"+project.getName()+"_app", true, project.getLogger());
+              await _this.hook("app","post",projectName, connection, password, project);
+              if (!schemaOnly){
+                Application.installApplication(projectName, connection, password, ords);
               }
-            })
-          })
-        })
+              await _this.hook("app","finally",projectName, connection, password, project);
+              await _this.hook("logic","finally",projectName, connection, password, project);
+              await _this.hook("data","finally",projectName, connection, password, project);
+              project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
+              resolve(true);
+                         
+            }else{
+              project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
+              resolve(true);
+            }
+        }else{
+          project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
+          resolve(true);
+        }
       });
     }
 
@@ -221,6 +220,7 @@ export class Orcas implements DeliveryMethod{
                       _this.hook("app", "finally", projectName, connection, password, project);
                       _this.hook("logic", "finally", projectName, connection, password, project);
                       _this.hook("data", "finally", projectName, connection, password, project);  
+                      project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
                       resolve(true);
                     })
                   });
@@ -230,12 +230,16 @@ export class Orcas implements DeliveryMethod{
       });
     }
 
-    public deploySchema(gradleString:string, project:Project, schema:string){
-      if(project.getMode()==='multi'){
-        ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName() + "_" + schema, true, project.getLogger());
-      }else{
-        ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName(), true, project.getLogger());
-      }
+    public async deploySchema(gradleString:string, project:Project, schema:string):Promise<boolean>{
+      return new Promise(async (resolve, reject)=>{
+        if(project.getMode()===Project.MODE_MULTI){
+          await ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName() + "_" + schema, true, project.getLogger());
+          resolve(true);
+        }else{
+          await ShellHelper.executeScript(gradleString, project.getPath() + "/db/" + project.getName(), true, project.getLogger());
+          resolve(true);
+        }
+      });
     }
 
     public async build(projectName:string, version:string){
@@ -267,7 +271,6 @@ export class Orcas implements DeliveryMethod{
   
         if(path != ""){
           let createApp = fs.readFileSync(path);
-          console.log(path);
           if(createApp.toString().search("p_flow_version=>'" + release + "'") > 0){
             let newCreateApp = createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
             fs.writeFileSync(path, newCreateApp);
@@ -324,7 +327,6 @@ export class Orcas implements DeliveryMethod{
           buildZip.addLocalFile(iterator, path);
          }
        } 
-       console.log(fileMap.entries());
 
        for await (const schema of ["data","logic","app"]) {
          for await (const file of ["build.gradle","gradlew","gradlew.bat"]) {

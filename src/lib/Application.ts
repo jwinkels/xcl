@@ -3,6 +3,7 @@ import * as fs from "fs-extra"
 import { DBHelper } from './DBHelper';
 import { Md5 } from 'ts-md5';
 import { Utils } from './Utils';
+import { Project } from './Project';
 
 export class Application{
 
@@ -11,7 +12,8 @@ export class Application{
         installFileList=new Map();
 
         let baseFolderApex = "/apps/apex/";
-        let projectPath    = ProjectManager.getInstance().getProject(projectName).getPath();
+        let project = ProjectManager.getInstance().getProject(projectName);
+        let projectPath    = project.getPath();
         let baseUrlIp      = connection.substr(0,connection.indexOf(':'));
   
         //Read apex-folder and find the correct file
@@ -20,7 +22,7 @@ export class Application{
             if(fs.statSync(projectPath + baseFolderApex + file).isDirectory()){
               if(fs.existsSync(projectPath + baseFolderApex + file + "/install.sql")){
                 //Get Application ID
-                    // In Zukunft: ProjectManager.getInstance().getProject(projectName).getApplicationId()
+                    // In Zukunft: project.getApplicationId()
                 
                 //Jetzt mal noch über auslesen der ID vom pfad
                 let appId = file.substr(1,file.length-1);
@@ -29,21 +31,31 @@ export class Application{
                                 projectPath + baseFolderApex + file + "/pre_install_application.sql");
 
                 let script= projectPath + baseFolderApex + file + "/pre_install_application.sql " + 
-                            ProjectManager.getInstance().getProject(projectName).getWorkspace() + " " +
+                            project.getWorkspace() + " " +
                             appId +" "+
-                            ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP" + " "+
+                            project.getMode() === Project.MODE_MULTI ? project.getName().toUpperCase()+"_APP" : project.getName() + " "+
                             ords + " " + projectName;
                 installFileList.set(projectPath + baseFolderApex + file,
                                       script);
+              }
+            }else{
+              if (file.includes('.sql')){
+                let appId = file.substr(1,file.indexOf('.') - 2);
+                let script = projectPath + baseFolderApex + file + 
+                                project.getWorkspace() + " " +
+                                appId +" "+
+                                project.getMode() === Project.MODE_MULTI ? project.getName().toUpperCase()+"_APP" : project.getName() + " "+
+                                ords + " " + projectName;
+                installFileList.set(projectPath + baseFolderApex + file, script);
               }
             }
         });
   
         installFileList.forEach((script, path)=>{
-          let conn=DBHelper.getConnectionProps(ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getConnectionName(),
+          let conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(),
                                       password,
                                       connection);
-          DBHelper.executeScriptIn(conn, script, path);
+          DBHelper.executeScriptIn(conn, script, path, project.getLogger());
         });
       }
 
@@ -58,7 +70,7 @@ export class Application{
         let script =      "@.env.sql" + "\n" +
                           '@'+Utils.enwrapInQuotes('&XCLBIN/scripts/create_workspace.sql')+' '+
                           workspace + " "+
-                          ProjectManager.getInstance().getProject(projectName).getName().toUpperCase()+"_APP";
+                          ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getName();
 
         if(!fs.existsSync(filename)){
           fs.writeFileSync(filename,script);

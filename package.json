@@ -39,6 +39,7 @@
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
     "request-promise-native": "^1.0.9",
+    "secure-random-password": "^0.2.3",
     "ts-md5": "^1.2.9",
     "tslib": "^1.14.1",
     "yaml": "^1.10.2"

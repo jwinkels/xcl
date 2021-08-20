@@ -15,12 +15,12 @@ export default class FeatureList extends Command {
       {
         name: 'type',
         description: 'Show all Features of type [DB or DEPLOY]',
-        default: 'ALL'
+        default: 'all'
       },
       {
         name: 'project',
         description: 'Show Features added to a Project (when not in a XCL-Directory it shows all Features available)',
-        default: Environment.readConfigFrom(process.cwd(),"project")
+        default: Environment.readConfigFrom(process.cwd(),"project") ? Environment.readConfigFrom(process.cwd(),"project") : 'all'
       }
    ]
 

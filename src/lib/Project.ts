@@ -36,13 +36,13 @@ export class Project {
 
     if (create) {
       this.config = this.initialzeConfig(workspaceName, singleSchema);
-      this.features=new Map();
-      this.users=new Map();
+      this.features = new Map();
+      this.users = new Map();
       this.directories = this.createDirectoryStructure(singleSchema);
       this.status = new ProjectStatus(this);
       this.writeConfig();
       this.status.serialize()
-      this.environment=Environment.initialize(this.name, singleSchema ? 'app' : '');
+      this.environment = Environment.initialize(this.name, singleSchema ? 'app' : '', this);
     } else {
       this.config = this.readConfig();
       this.directories = this.createDirectoryStructure(this.getMode()=== Project.MODE_MULTI ? false : true);
@@ -50,7 +50,7 @@ export class Project {
       this.status = new ProjectStatus(this);
       this.features = this.getFeatures();
       this.users = this.getUsers();
-      this.environment=Environment.initialize(this.name, singleSchema ? 'app' : '');
+      this.environment = Environment.initialize(this.name, singleSchema ? 'app' : '', this);
     }
 
   }
@@ -524,8 +524,8 @@ export class Project {
 }
 
 class ProjectStatus {
-  private static xclHome = os.homedir + "/AppData/Roaming/xcl";
   private static stateFileName = "";
+  private static xclHome = os.homedir + "/AppData/Roaming/xcl/";
   private project: Project;
   private statusConfig: any;
   private changeList:Map<string, boolean>;
@@ -538,20 +538,24 @@ class ProjectStatus {
     this.changeList.set('SETUP',false);
     this.changeList.set('USER',false);
 
-    if (!fs.existsSync(ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml')){
-      this.statusConfig ={
-        xcl: {
-          version: "Release 1.0",
-          workspace: project.getWorkspace(),
-          users: {},
-          hash: "",
-          dependencies: {}
-        },
-      };
-      ProjectStatus.stateFileName = ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml';
-      this.serialize();
+    if (!fs.existsSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml')){
+      if(fs.existsSync(ProjectStatus.xclHome + this.project.getName() + '.yaml')){
+        fs.moveSync(ProjectStatus.xclHome + this.project.getName() + '.yaml', this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml');
+      }else{
+        this.statusConfig ={
+          xcl: {
+            version: "Release 1.0",
+            workspace: project.getWorkspace(),
+            users: {},
+            hash: "",
+            dependencies: {}
+          },
+        };
+        ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml';
+        this.serialize();
+      }
     }else{
-      ProjectStatus.stateFileName = ProjectStatus.xclHome + '/' + this.project.getName() + '.yaml';
+      ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml';
       this.statusConfig=this.deserialize();
     }
   }
@@ -564,7 +568,7 @@ class ProjectStatus {
     this.changeList=new Map<string, boolean>();
     this.project.reloadConfig();
     this.statusConfig=this.deserialize();
-    this.checkSetup("./db/.setup");
+    this.checkSetup(this.project.getPath() +"/"+ "./db/.setup");
 
     let projectConfig = this.project.getConfig();
     delete projectConfig.xcl["version"];
