@@ -568,7 +568,7 @@ class ProjectStatus {
     this.changeList=new Map<string, boolean>();
     this.project.reloadConfig();
     this.statusConfig=this.deserialize();
-    this.checkSetup(this.project.getPath() +"/"+ "./db/.setup");
+    this.checkSetup("./db/.setup");
 
     let projectConfig = this.project.getConfig();
     delete projectConfig.xcl["version"];
