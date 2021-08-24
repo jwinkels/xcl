@@ -328,6 +328,15 @@ export class ProjectManager {
 
   public deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined):void{
     const p:Project = this.getProject(projectName);
+    if (!connection){
+      if (!p.getEnvironmentVariable('connection')){
+        console.log(chalk.red('No connection declared! Use xcl config:defaults -s connection or read deploy help!'));
+      }else{
+        console.log(p.getEnvironmentVariable('connection'));
+        connection = p.getEnvironmentVariable('connection')!;
+      }
+    }
+
     p.getLogger().getLogger().log("info", 'Start XCL - Deploy...\n---------------------------------------------------------------');
     if ( !p.getStatus().hasChanged() ){
       if (p.getDeployMethod()){

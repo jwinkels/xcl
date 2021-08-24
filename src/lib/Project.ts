@@ -51,6 +51,7 @@ export class Project {
       this.features = this.getFeatures();
       this.users = this.getUsers();
       this.environment = Environment.initialize(this.name, singleSchema ? 'app' : '', this);
+      process.chdir(this.getPath());
     }
 
   }
