@@ -10,12 +10,12 @@ TODO:
     => DONE
 
     - Vergleiche Status mit Config                                                    (plan)
-        * local-Status wird nicht in die Versionskontrolle aufgenommen sondern liegt 
+        * local-Status wird nicht in die Versionskontrolle aufgenommen sondern liegt
           im lokalen Install-Verzeichnis, oder ist in der gitignore
           GRUND: Eine der Dateien muss die Führende sein, imo, die xcl.yaml
                 GRUND: Weil die xcl.yaml in der Versionskontrolle ist
     => DONE
-    
+
     - Ableiten der notwendigen Befehle um Ziel auf den beschriebenen Stand zu bringen (plan)
         * Ableitung schreibt befehle in eine pseudo sh-Datei
         * es werden auch wieder xcl oder sql verwendet
@@ -35,12 +35,6 @@ TODO:
         * Kann auch manuell ausgeführt werden, wenn sich aber die xcl.yaml ändert muss plan / apply gemacht werden
     => DONE
 
-    - Bauen eines neuen Releases                                                    (build)
-        * Es wird eine neue Versionsnummer festgelegt
-        * Projektstand gepusht
-        * Eingespielt wird das release dann wieder über plan / apply
-        GRUND: Plan erkennt die Änderung an der Versionsnummer und generiert die notwendigen Befehle...
-
     - Passwort für Benutzer generieren @JAW
 
     - Multi Application Support?
@@ -51,14 +45,7 @@ TODO:
         * Es werden nur Ordner hinzugefügt nicht gelöscht!
     => DONE
 
-    - setup 
-        * Der Ordner setup beinhaltet alle Maßnahmen, die für die Installation der Application notwendig sind, für die aber Admin Rechte auf der DB erforderlich sind
-          wie zum Beispiel: ACLs, Workspace anlegen, User anlegen etc. pp.
-        * IDEE:
-            - Benenne init um in setup
-            - flags:
-                -- schemata
-                -- objects
+
 
     - LOGGING-Klasse schreiben:
         * damit die Logs während des Deploys weggeschrieben werden brauchen wir eine Logging-Klasse!
@@ -75,23 +62,23 @@ TODO:
     - DBFLOW: @MMI
         * Implementieren der Build Funktionen
         * Implementieren der Deploy Funktionen
-    
+
     - AutoApply: @JAW
         * xcl project:plan --auto --yes
     =>DONE
-    
+
     - Bug in apply @JAW
-        * Hier wird der Hash nicht sauber weggeschrieben 
+        * Hier wird der Hash nicht sauber weggeschrieben
     =>DONE
-    
-    - Projekt init aufräumen @JAW    
+
+    - Projekt init aufräumen @JAW
     =>DONE?
 
     - SingleSchema @JAW
     =>DONE
- 
+
     - Project create mit Wizard @MMI
-    
+
     - Deploy Method für welche xcl-Version?
         * Warum: Wenn sich dinge in der Ordnerstruktur ändern, muss auch die deploy Methode angeglichen werden
         * Um kompatibilität zu gewähren muss die deploy feature version zur xcl version passen
