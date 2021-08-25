@@ -4,6 +4,7 @@ import { FeatureManager } from '../../lib/FeatureManager'
 import { Environment } from '../../lib/Environment'
 import chalk from 'chalk'
 import { cli } from 'cli-ux';
+import inquirer = require('inquirer')
 
 export default class ProjectDeploy extends Command {
   static description = 'deploy the project'
@@ -11,7 +12,7 @@ export default class ProjectDeploy extends Command {
   static flags = {
     help: flags.help({char: 'h'}),
     connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true, default: Environment.readConfigFrom(process.cwd(),"connection")}),
-    password: flags.string( {char: 'p', description:'Password for Deployment User', required: true} ),
+    password: flags.string( {char: 'p', description:'Password for Deployment User'} ),
     dependencies: flags.boolean({char: 'd', description:'Deploy inclusive dependencies (you will be asked for sys-user password)'}),
     syspw: flags.string({char:'s', description:'Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users will be overwritten!]'}),
     'schema-only': flags.boolean({description:'Deploys only schema objects', default: false}),
@@ -26,7 +27,7 @@ export default class ProjectDeploy extends Command {
     'quiet': flags.boolean({description: 'suppress output', default: false})
   }
 
-  static args = [{name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom(process.cwd(),"project")}]
+  static args = [{name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom( process.cwd(), "project") }]
 
   async run() {
     const {args, flags} = this.parse(ProjectDeploy);
@@ -37,6 +38,17 @@ export default class ProjectDeploy extends Command {
 
       if (!args.project){
         args.project=ProjectManager.getInstance().getProjectNameByPath(process.cwd());
+      }
+
+      if (!flags.password){
+        let envPassword = Environment.readConfigFrom(process.cwd(), 'password');
+        flags.password = envPassword ? envPassword :  (await inquirer.prompt([{
+                                                                              type: 'password',
+                                                                              name: 'password',
+                                                                              message: `Insert deploy user password: `,
+                                                                              mask: true
+                                                                            }])).password;
+      console.log(flags.password);                                                                            
       }
 
       if(ProjectManager.getInstance().getProject((args.project)).getDeployMethod()!==""){
@@ -50,7 +62,7 @@ export default class ProjectDeploy extends Command {
           }
         }     
 
-        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password, flags["schema-only"], flags['ords-url'], flags.yes, flags.version, flags.mode, flags.schema); 
+        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password!, flags["schema-only"], flags['ords-url'], flags.yes, flags.version!, flags.mode, flags.schema); 
        
       }else{
         console.log(chalk.red("ERROR: Deploy-Method undefined!"));

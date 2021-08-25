@@ -4,6 +4,7 @@ import { ProjectFeature } from './ProjectFeature';
 import chalk from 'chalk'
 import * as fs from "fs-extra";
 import * as os from "os";
+import { Logger } from './Logger';
 
 const oracledb = require('oracledb');
 const xclHome = os.homedir() + "/AppData/Roaming/xcl";
@@ -113,11 +114,8 @@ export class DBHelper {
       let query = `select substr(version, 1, instr(version, '.', 1, 1)-1) 
       from product_component_version
      where product like 'Oracle Database %'`;
-
-      console.log(query);
       
       const result = await connection.execute(query);
-      console.log(result)
       
       version = result.rows[0][0];
 
@@ -143,7 +141,7 @@ export class DBHelper {
     return  `${conn.user}/${conn.password}@${conn.connectString}${conn.user === 'sys' ? ' as sysdba' : ''}` 
   }
 
-  public static executeScript(conn: IConnectionProperties, script: string){
+  public static executeScript(conn: IConnectionProperties, script: string,  logger:Logger){
     
     fs.appendFileSync(process.cwd()+'/xcl.log', 'Start script: '+script); 
     
@@ -158,21 +156,21 @@ export class DBHelper {
     
 
     if (!childProcess.error){
-      console.log(chalk.gray(childProcess.stdout));
-      fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.stdout); 
+      //console.log(chalk.gray(childProcess.stdout));
+      //fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.stdout); 
+      logger.getLogger().log("info", childProcess.stdout); 
     }else{
-      console.log(chalk.red(childProcess.error.message));
-      fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.error.message); 
+      //console.log(chalk.red(childProcess.error.message));
+      //fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.error.message); 
+      logger.getLogger().log("error", childProcess.stderr);
     }
     
   }
 
-  public static executeScriptIn(conn: IConnectionProperties, script: string, cwd:string){
+  public static executeScriptIn(conn: IConnectionProperties, script: string, cwd:string, logger:Logger){
     
-    console.log(script);
-    console.log(process.cwd());
-    
-    fs.appendFileSync(process.cwd()+'/xcl.log', 'Start script: '+script); 
+    //fs.appendFileSync(process.cwd()+'/xcl.log', 'Start script: '+script); 
+    logger.getLogger().log("info", 'Start script: '+script);
 
     const childProcess = spawnSync(
       'sql', // Sqlcl path should be in path
@@ -185,11 +183,13 @@ export class DBHelper {
     );
     
     if (!childProcess.error){
-      console.log(chalk.gray(childProcess.stdout));
-      fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.stdout); 
+      //console.log(chalk.gray(childProcess.stdout));
+      //fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.stdout);
+      logger.getLogger().log("info", childProcess.stdout); 
     }else{
-      console.log(chalk.red(childProcess.error.message));
-      fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.error.message); 
+      //console.log(chalk.red(childProcess.error.message));
+      //fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.error.message); 
+      logger.getLogger().log("error", childProcess.stderr); 
     }
 
   }
