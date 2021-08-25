@@ -93,12 +93,11 @@ export class Environment{
         let envFileName = "";
         let env:any;
         let projectName:string = ProjectManager.getInstance().getProjectNameByPath(path);
-        let project:Project    = ProjectManager.getInstance().getProject(projectName);
-        
         // Decide which environment variables context should be loaded 
         if (projectName === "all"){
             envFileName = this.xclHome + "/environment.yml";
         }else{
+            let project:Project    = ProjectManager.getInstance().getProject(projectName);
             envFileName = project.getPath()+"/.xcl/environment_" + projectName + ".yml";
         }
 

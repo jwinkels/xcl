@@ -42,12 +42,13 @@ export default class ProjectDeploy extends Command {
 
       if (!flags.password){
         let envPassword = Environment.readConfigFrom(process.cwd(), 'password');
-        flags.password = envPassword ? envPassword :  await inquirer.prompt([{
-          type: 'password',
-          name: 'syspw',
-          message: `Insert value for password: `,
-          mask: true
-        }]);
+        flags.password = envPassword ? envPassword :  (await inquirer.prompt([{
+                                                                              type: 'password',
+                                                                              name: 'password',
+                                                                              message: `Insert deploy user password: `,
+                                                                              mask: true
+                                                                            }])).password;
+      console.log(flags.password);                                                                            
       }
 
       if(ProjectManager.getInstance().getProject((args.project)).getDeployMethod()!==""){
