@@ -11,6 +11,7 @@ import cli from 'cli-ux'
 import { Project } from "./Project";
 import inquirer = require("inquirer");
 import * as dotenv from "dotenv";
+import { Environment } from "./Environment";
 
 @injectable()
 export class DBFlow implements DeliveryMethod{
@@ -99,31 +100,33 @@ STAGE=${responses.stage}
         console.log("projectName", projectName);
         console.log("version", version);
         console.log("mode", mode);
-        // let project=ProjectManager.getInstance().getProject(projectName);
-        // const appSchema = project.getUsers().get('APP')?.getName();
-        // const dataSchema = project.getMode() === Project.MODE_SINGLE ? appSchema : project.getUsers().get('DATA')?.getName();
-        // const logicSchema = project.getMode() === Project.MODE_SINGLE ? appSchema : project.getUsers().get('LOGIC')?.getName();
+        let project=ProjectManager.getInstance().getProject(projectName);
+        console.log("stage", Environment.readConfigFrom( project.getPath(), "stage" ));
 
-        // const proxyUserName =project.getMode() === Project.MODE_SINGLE ? appSchema : project.getUsers().get('DATA')?.getProxy()?.getName() || `${projectName}_depl`;
-        // ShellHelper.executeScriptWithEnv(`bash .dbFLow/apply.sh ${mode} ${version}`,
-        //                                  project.getPath(),
-        //                                  {
-        //                                    "PROJECT": project.getName(),
-        //                                    "APP_SCHEMA": appSchema,
-        //                                    "DATA_SCHEMA": dataSchema,
-        //                                    "LOGIC_SCHEMA": logicSchema,
-        //                                    "WORKSPACE": project.getName(),
-        //                                    "SCHEMAS": `( ${dataSchema} ${logicSchema} ${appSchema} )`,
-        //                                    //"SCHEMASDELIMITED": `${dataSchema},${logicSchema},${appSchema}`,
-        //                                    "BRANCHES": `( develop test master )`, // TODO: das muss ausgelagert werden
-        //                                    "DEPOT_PATH": `_depot`, // TODO: das muss ausgelagert werden
-        //                                    "STAGE": `master`, // TODO: das muss ausgelagert werden
-        //                                    "DB_APP_USER": proxyUserName,
-        //                                    "DB_APP_PWD":`${password}`,
-        //                                    "DB_TNS":`${connection}`,
-        //                                    "USE_PROXY": "TRUE",
-        //                                    "APP_OFFSET": 0
-        //                                  });
+        const appSchema = project.getUsers().get('APP')?.getName();
+        const dataSchema = project.getUsers().get('DATA')?.getName();
+        const logicSchema = project.getUsers().get('LOGIC')?.getName();
+        const multiSchema = ("" + project.isMultiSchema()).toUpperCase();
+
+        const proxyUserName = !project.isMultiSchema() ? appSchema : project.getUsers().get('DATA')?.getProxy()?.getName() || `${projectName}_depl`;
+        ShellHelper.executeScriptWithEnv(`bash .dbFLow/apply.sh ${mode} ${version}`,
+                                         project.getPath(),
+                                         {
+                                           "PROJECT": project.getName(),
+                                           "APP_SCHEMA": appSchema,
+                                           "DATA_SCHEMA": dataSchema,
+                                           "LOGIC_SCHEMA": logicSchema,
+                                           "WORKSPACE": project.getWorkspace(),
+                                           "DEPOT_PATH": project.depotPath,
+                                           "STAGE": Environment.readConfigFrom( project.getPath(), "stage" ),
+                                           "DB_APP_USER": proxyUserName,
+                                           "DB_APP_PWD":`${password}`,
+                                           "DB_TNS":`${connection}`,
+                                           "USE_PROXY": `${multiSchema}`,
+                                           "APP_OFFSET": 0
+                                         },
+                                         true,
+                                         project.getLogger());
 
     }
 
@@ -147,8 +150,7 @@ STAGE=${responses.stage}
                                            "APP_SCHEMA": appSchema,
                                            "DATA_SCHEMA": dataSchema,
                                            "LOGIC_SCHEMA": logicSchema,
-                                           "WORKSPACE": project.getName(),
-                                           "SCHEMAS": `( ${dataSchema} ${logicSchema} ${appSchema} )`,
+                                           "WORKSPACE": project.getWorkspace(),
                                            "DEPOT_PATH": project.depotPath,
                                            "USE_PROXY": `${multiSchema}`
                                          },

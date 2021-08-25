@@ -260,24 +260,24 @@ export class ProjectManager {
 
     if (flags.users){
       console.log(chalk.green(`install schemas...`));
-      
+
       let randomPassword:string = password.randomPassword({characters: password.upper, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
                            password.randomPassword({characters: password.lower, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
                            password.randomPassword({characters: password.digits, length:  ( Math.floor( Math.random() *6 ) + 4)}) +
                            password.randomPassword({characters: password.symbols, length: ( Math.floor( Math.random() *6 ) + 2)});
       randomPassword = randomPassword.replace("&","_");
-      randomPassword = randomPassword.replace("!","#");                           
+      randomPassword = randomPassword.replace("!","#");
 
       if (p.getMode() === 'multi'){
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
-                                                                            randomPassword + ' ' + 
+                                                                            randomPassword + ' ' +
                                                                             p.getName() + '_data ' +
                                                                             p.getName() + '_logic ' +
                                                                             p.getName() + '_app',
                                                                             p.getLogger());
       }else{
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_user.sql') + ' ' + p.getName() + ' ' +
-                                                                            randomPassword,  
+                                                                            randomPassword,
                                                                             p.getLogger()
                                                                             );
       }
@@ -444,7 +444,7 @@ export class ProjectManager {
     fs.chmodSync(fileName, '777');
   }
 
-  public async apply(projectName: string, setupOnly:boolean):Promise<void>{
+  public async apply(projectName: string, setupOnly:boolean, version:string, mode:string):Promise<void>{
     let ready:boolean = false;
     const project:Project = this.getProject(projectName);
     if ( fs.existsSync( project.getPath() + '/plan.sh' ) ){
@@ -458,7 +458,7 @@ export class ProjectManager {
           const command = commands[i].substr( 0, commands[i].indexOf( " ", 5 ) ).trim();
           const argv    = commands[i].substr( command.length + 1, commands[i].length ).split(" ");
 
-          if(command){            
+          if(command){
             let status:any = (await ShellHelper.executeScript( commands[i], project.getPath(), true, project.getLogger() )).status;
             if (!status){
               console.log('An unexpected error occured, please check log for details!');
@@ -484,7 +484,7 @@ export class ProjectManager {
                         false,
                         Environment.readConfigFrom( project.getPath(), 'ords'),
                         true,
-                        "a", "b", Environment.readConfigFrom( project.getPath(), 'schema' ) ); // FIXME: version und mode noch in apply einbauen);
+                        version, mode, Environment.readConfigFrom( project.getPath(), 'schema' ) );
           }
         }else{
           console.log("\n\n\r");
