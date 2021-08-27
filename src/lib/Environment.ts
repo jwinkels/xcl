@@ -30,11 +30,12 @@ export class Environment{
                 if (project !== undefined && fs.existsSync(project.getPath() + "/.xcl/environment_" + project.getName()+".yml")){
                     fs.renameSync(project.getPath() + "/.xcl/environment_" + project.getName()+".yml", envFileName);
                 }
-
-                variables.forEach((variable: {value:string, required:boolean}, key)=>{
-                    env[key] = variable.value;
-                });
-                fs.writeFileSync(envFileName,yaml.stringify(env));
+                if (!fs.existsSync(envFileName)){
+                    variables.forEach((variable: {value:string, required:boolean}, key)=>{
+                        env[key] = variable.value;
+                    });
+                    fs.writeFileSync(envFileName,yaml.stringify(env));
+                }
             }
         }
 
