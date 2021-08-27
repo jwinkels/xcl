@@ -543,7 +543,7 @@ class ProjectStatus {
     if (!fs.existsSync(this.project.getPath() + '/.xcl/state.yml')){
 
       if (fs.existsSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml')){
-        fs.moveSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml', this.project.getPath() + '/.xcl/state.yml');
+        fs.renameSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml', this.project.getPath() + '/.xcl/state.yml');
         fs.removeSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml');
       }
 

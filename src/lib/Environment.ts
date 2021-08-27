@@ -30,8 +30,7 @@ export class Environment{
             }else{
 
                 if (project && fs.existsSync(project.getPath() + "/.xcl/ + environment_" + project.getName()+".yaml")){
-                    fs.moveSync(project.getPath() + "/.xcl/ + environment_" + project.getName()+".yaml", envFileName);
-                    fs.removeSync(project.getPath() + "/.xcl/ + environment_" + project.getName()+".yaml");
+                    fs.renameSync(project.getPath() + "/.xcl/ + environment_" + project.getName()+".yml", envFileName);
                 }
 
                 variables.forEach((variable: {value:string, required:boolean}, key)=>{
