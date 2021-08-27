@@ -27,7 +27,6 @@ export class Environment{
             if (fs.existsSync(this.xclHome + "/" + projectVariables) && project){
                 fs.moveSync(this.xclHome + "/" + projectVariables, envFileName);
             }else{
-                console.log(project?.getPath() + "/.xcl/environment_" + project?.getName()+".yml");
                 if (project !== undefined && fs.existsSync(project.getPath() + "/.xcl/environment_" + project.getName()+".yml")){
                     fs.renameSync(project.getPath() + "/.xcl/environment_" + project.getName()+".yml", envFileName);
                 }
@@ -80,7 +79,7 @@ export class Environment{
         // Decide which environment variables context should be written
         if (projectName.toLocaleLowerCase() !== "all"){
             let project:Project = ProjectManager.getInstance().getProject(projectName);
-            envFileName = project.getPath() + "/.xcl/environment_" + projectName + ".yml";
+            envFileName = project.getPath() + "/.xcl/env.yml";
         }else{
             envFileName = this.xclHome + "/environment.yml";
         }
