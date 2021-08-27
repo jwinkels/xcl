@@ -173,7 +173,7 @@ export class Project {
       if (!fs.existsSync(this.getPath() + fullPath + path)) {
         fullPath = this.getPath() + fullPath + path;
         fs.mkdirSync(fullPath, { recursive: true });
-        fs.createFileSync(fullPath+'/.gitkeep');
+        fs.createFileSync(fullPath + '/.gitkeep');
       }
     }
   }
@@ -199,7 +199,7 @@ export class Project {
 
 
 
-    fs.copySync(__dirname + "/config/readme.md", this.getPath()+"/readme.md");
+    fs.copySync(__dirname + "/config/readme.md", this.getPath() + "/readme.md");
     return Md5.hashStr(yaml.stringify(parsedDirs)).toString();
   }
 
@@ -228,7 +228,7 @@ export class Project {
     }else{
       return {
         xcl: {
-          project: this.getName(),
+          project: this.getName(), 
           description: "XCL- Projekt " + this.getName(),
           version: "Release 1.0",
           workspace: workspaceName,
@@ -574,7 +574,7 @@ class ProjectStatus {
 
     let projectConfig = this.project.getConfig();
     delete projectConfig.xcl["version"];
-
+    
     if( this.statusConfig.xcl.hash == Md5.hashStr( yaml.stringify( projectConfig ) ).toString()
           &&
         !this.changeList.get("SETUP") ){
@@ -586,13 +586,13 @@ class ProjectStatus {
 
   public checkSetup(path:string){
     fs.readdirSync(path).forEach(file=>{
-      if(fs.lstatSync(path+'/'+file).isFile() && !file.startsWith(".")){
-        const content = fs.readFileSync(path+'/'+file);
+      if(fs.lstatSync(path + '/' + file).isFile() && !file.startsWith(".")){
+        const content = fs.readFileSync(path + '/' + file);
         const contentHash = Md5.hashStr(content.toString()).toString();
         this.project.addSetupStep(file, path, contentHash);
       }else{
-        if(fs.lstatSync(path+'/'+file).isDirectory()){
-          this.checkSetup(path+"/"+file);
+        if(fs.lstatSync(path + '/' + file).isDirectory()){
+          this.checkSetup(path + "/" + file);
         }
       }
     });
