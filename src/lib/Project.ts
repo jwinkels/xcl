@@ -51,6 +51,7 @@ export class Project {
       this.features = this.getFeatures();
       this.users = this.getUsers();
       this.environment = Environment.initialize(this.name, singleSchema ? 'app' : '', this);
+      this.depotPath = this.config.xcl.depot_path;
       process.chdir(this.getPath());
     }
 

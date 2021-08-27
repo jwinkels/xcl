@@ -8,13 +8,18 @@ export default class ProjectApply extends Command {
 
   static flags = {
     help: flags.help({char: 'h'}),
-    "setup-only": flags.boolean({description:'Deploys only dependeny changes', default: false})
+    "setup-only": flags.boolean({description:'Deploys only dependeny changes', default: false}),
+    mode: flags.string({char:         'm',
+                        description:  'mode of build (init/patch)',
+                        default:      'init'}),
+    version: flags.string({char:        'v',
+                           description: 'Version to tag build'}),
   }
 
   static args = [
     {
       name: 'project',
-      description: "name of the project that the changes should be applied to", 
+      description: "name of the project that the changes should be applied to",
       default: Environment.readConfigFrom( process.cwd(), "project" )
     }
   ]
@@ -23,10 +28,10 @@ export default class ProjectApply extends Command {
     const {args, flags} = this.parse(ProjectApply);
 
     if ( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ) !== 'all' ){
-      ProjectManager.getInstance().apply( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ), flags["setup-only"] );
+      ProjectManager.getInstance().apply( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ), flags["setup-only"], flags.version!, flags.mode);
     }else{
       if ( args.project ){
-        ProjectManager.getInstance().apply( args.project, flags["setup-only"]);
+        ProjectManager.getInstance().apply( args.project, flags["setup-only"], flags.version!, flags.mode);
       }else{
         console.log( chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!') );
       }
