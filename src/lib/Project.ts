@@ -544,28 +544,30 @@ class ProjectStatus {
 
       if (fs.existsSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml')){
         fs.renameSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml', this.project.getPath() + '/.xcl/state.yml');
-        fs.removeSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml');
+        //fs.removeSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml');
       }
 
       if(fs.existsSync(ProjectStatus.xclHome + this.project.getName() + '.yaml')){
         fs.moveSync(ProjectStatus.xclHome + this.project.getName() + '.yaml', this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml');
       }else{
-        this.statusConfig ={
-          xcl: {
-            version: "Release 1.0",
-            workspace: project.getWorkspace(),
-            users: {},
-            hash: "",
-            dependencies: {}
-          },
-        };
-        ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/state.yml';
-        this.serialize();
+        if (!fs.existsSync(this.project.getPath() + '/.xcl/state.yml')){
+          this.statusConfig ={
+            xcl: {
+              version: "Release 1.0",
+              workspace: project.getWorkspace(),
+              users: {},
+              hash: "",
+              dependencies: {}
+            },
+          };
+          ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/state.yml';
+          this.serialize();
+        }
       }
-    }else{
-      ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/state.yml';
-      this.statusConfig=this.deserialize();
     }
+    
+    ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/state.yml';
+    this.statusConfig=this.deserialize();
   }
 
   public addToChanges(change:string){

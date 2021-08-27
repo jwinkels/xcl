@@ -13,7 +13,6 @@ export class Environment{
         let variables:Map<string,{value:string, required:boolean}> = Environment.getVariablesMap(projectName, schema);
         let globals = "environment.yml";
         let projectVariables  = "env.yml";
-
         // Decide which environment variables context should be loaded
         if(projectName.toLocaleLowerCase() !== "all" && project){
             // environment variable of project
@@ -28,9 +27,9 @@ export class Environment{
             if (fs.existsSync(this.xclHome + "/" + projectVariables) && project){
                 fs.moveSync(this.xclHome + "/" + projectVariables, envFileName);
             }else{
-
-                if (project && fs.existsSync(project.getPath() + "/.xcl/ + environment_" + project.getName()+".yaml")){
-                    fs.renameSync(project.getPath() + "/.xcl/ + environment_" + project.getName()+".yml", envFileName);
+                console.log(project?.getPath() + "/.xcl/environment_" + project?.getName()+".yml");
+                if (project !== undefined && fs.existsSync(project.getPath() + "/.xcl/environment_" + project.getName()+".yml")){
+                    fs.renameSync(project.getPath() + "/.xcl/environment_" + project.getName()+".yml", envFileName);
                 }
 
                 variables.forEach((variable: {value:string, required:boolean}, key)=>{
