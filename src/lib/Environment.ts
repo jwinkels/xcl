@@ -7,14 +7,14 @@ export class Environment{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
 
     public static initialize(projectName:string, schema:string = '', project:Project|undefined=undefined):Map<string,{value:string, required:boolean}>{
-        
+
         let envFileName="";
         let env:any={};
         let variables:Map<string,{value:string, required:boolean}> = Environment.getVariablesMap(projectName, schema);
         let globals = "environment.yml";
-        let projectVariables  = "environment_" + projectName + ".yml";
-        
-        // Decide which environment variables context should be loaded 
+        let projectVariables  = "env.yml";
+
+        // Decide which environment variables context should be loaded
         if(projectName.toLocaleLowerCase() !== "all" && project){
             // environment variable of project
             envFileName = project.getPath() + "/.xcl/" + projectVariables;
@@ -28,10 +28,16 @@ export class Environment{
             if (fs.existsSync(this.xclHome + "/" + projectVariables) && project){
                 fs.moveSync(this.xclHome + "/" + projectVariables, envFileName);
             }else{
+
+                if (project && fs.existsSync(project.getPath() + "/.xcl/ + environment_" + project.getName()+".yaml")){
+                    fs.moveSync(project.getPath() + "/.xcl/ + environment_" + project.getName()+".yaml", envFileName);
+                    fs.removeSync(project.getPath() + "/.xcl/ + environment_" + project.getName()+".yaml");
+                }
+
                 variables.forEach((variable: {value:string, required:boolean}, key)=>{
                     env[key] = variable.value;
                 });
-                fs.writeFileSync(envFileName,yaml.stringify(env)); 
+                fs.writeFileSync(envFileName,yaml.stringify(env));
             }
         }
 
@@ -49,7 +55,7 @@ export class Environment{
     }
 
     private static getVariablesMap(projectName:string, schema:string = ''):Map<string,{value:string, required:boolean}>{
-        // Available environment variable declaration 
+        // Available environment variable declaration
         // List can be extended
         let variables:Map<string,{value:string, required:boolean}>=new Map<string, {value:string, required:boolean}>();
         variables=new Map<string, {value:string, required:boolean}>();
@@ -62,7 +68,7 @@ export class Environment{
         return variables;
     }
 
-    public static setVariable(variableName:string, value:string, variables:Map<string,{value:string, required:boolean}>):Map<string,{value:string, required:boolean}>{ 
+    public static setVariable(variableName:string, value:string, variables:Map<string,{value:string, required:boolean}>):Map<string,{value:string, required:boolean}>{
         let variable:{value:string, required:boolean} = variables.get(variableName)!;
         variable.value = value;
         variables.set(variableName, variable);
@@ -72,15 +78,15 @@ export class Environment{
     public static writeEnvironment(projectName:string, variables:Map<string,{value:string, required:boolean}>){
         let envFileName="";
         let env:any={};
-        
+
         // Decide which environment variables context should be written
         if (projectName.toLocaleLowerCase() !== "all"){
             let project:Project = ProjectManager.getInstance().getProject(projectName);
             envFileName = project.getPath() + "/.xcl/environment_" + projectName + ".yml";
-        }else{ 
+        }else{
             envFileName = this.xclHome + "/environment.yml";
         }
-       
+
         // Set variables
         variables.forEach((variable, key)=>{
             env[key] = variable.value;
@@ -93,12 +99,12 @@ export class Environment{
         let envFileName = "";
         let env:any;
         let projectName:string = ProjectManager.getInstance().getProjectNameByPath(path);
-        // Decide which environment variables context should be loaded 
+        // Decide which environment variables context should be loaded
         if (projectName === "all"){
             envFileName = this.xclHome + "/environment.yml";
         }else{
             let project:Project    = ProjectManager.getInstance().getProject(projectName);
-            envFileName = project.getPath()+"/.xcl/environment_" + projectName + ".yml";
+            envFileName = project.getPath()+"/.xcl/env.yml";
         }
 
         if(!fs.existsSync(envFileName)){
@@ -108,7 +114,7 @@ export class Environment{
         if (projectName !== "all" && variableName === "project"){
             return projectName;
         }else{
-            // Load 
+            // Load
             try{
                 env = yaml.parse(fs.readFileSync(envFileName).toString());
                 return env[variableName];

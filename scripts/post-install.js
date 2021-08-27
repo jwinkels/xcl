@@ -6,10 +6,8 @@ var zip = require ('adm-zip');
 var os = require ('os');
 var dmg = require ('dmg');
 
-
-console.log('CREATING DIRECTORIES AND FILES: ');
-
 if (!fs.existsSync(xclHome)) {
+  console.log('CREATING DIRECTORIES AND FILES: ');
   fs.mkdirSync(xclHome, { recursive: true });
   console.log('...'+xclHome);
 }
@@ -26,73 +24,75 @@ if (!fs.existsSync(xclHome+'/local.yml')) {
   console.log('...'+xclHome+'/local.yml');
 }
 
-var options = {};
+if (!fs.existsSync(xclHome + '/.instantClient')){
+  var options = {};
 
-var setPath = "";
+  var setPath = "";
 
-console.log('DOWNLOAD DEPENDENCY ORACLE INSTANT CLIENT: ');
-console.log('for: ', os.platform());
+  console.log('DOWNLOAD DEPENDENCY ORACLE INSTANT CLIENT: ');
+  console.log('for: ', os.platform());
 
-var filename = "";
+  var filename = "";
 
-if (os.platform() === 'win32'){
-  options.uri = "https://download.oracle.com/otn_software/nt/instantclient/19900/instantclient-basic-windows.x64-19.9.0.0.0dbru.zip";
-  filename = xclHome + '/instantclient-basic.zip';
-}
+  if (os.platform() === 'win32'){
+    options.uri = "https://download.oracle.com/otn_software/nt/instantclient/19900/instantclient-basic-windows.x64-19.9.0.0.0dbru.zip";
+    filename = xclHome + '/instantclient-basic.zip';
+  }
 
-if (os.platform() === 'linux'){
-  options.uri = "https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-basic-linux.x64-19.9.0.0.0dbru.zip";
-  filename = xclHome + '/instantclient-basic.zip';
-}
+  if (os.platform() === 'linux'){
+    options.uri = "https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-basic-linux.x64-19.9.0.0.0dbru.zip";
+    filename = xclHome + '/instantclient-basic.zip';
+  }
 
-if (os.platform() === 'darwin'){
-  options.uri = "https://download.oracle.com/otn_software/mac/instantclient/198000/instantclient-basic-macos.x64-19.8.0.0.0dbru.dmg";
-  filename = xclHome + '/instantclient-basic.dmg';
-}
+  if (os.platform() === 'darwin'){
+    options.uri = "https://download.oracle.com/otn_software/mac/instantclient/198000/instantclient-basic-macos.x64-19.8.0.0.0dbru.dmg";
+    filename = xclHome + '/instantclient-basic.dmg';
+  }
 
-options.headers = {};
+  options.headers = {};
 
-request(options)
-    .pipe(
-      fs.createWriteStream(filename)
-          .on('close', function(){
-            if (os.platform()==='win32' || os.platform()==='linux'){
-              var ic = new zip(filename);
-              ic.extractAllTo(xclHome+'/');
-              
-              let path = ic.getEntries()[0].entryName;
+  request(options)
+      .pipe(
+        fs.createWriteStream(filename)
+            .on('close', function(){
+              if (os.platform()==='win32' || os.platform()==='linux'){
+                var ic = new zip(filename);
+                ic.extractAllTo(xclHome+'/');
 
-              if (path.toString().includes('/') ){
-                path = path.toString().substr(0,path.toString().indexOf('/'));
+                let path = ic.getEntries()[0].entryName;
+
+                if (path.toString().includes('/') ){
+                  path = path.toString().substr(0,path.toString().indexOf('/'));
+                }
+
+                if (os.platform() === 'win32'){
+                  fs.writeFile(xclHome + '/.instantClient','\\\\' + path);
+                }else{
+
+                  fs.writeFile(xclHome + '/.instantClient','/' + path);
+                }
               }
 
-              if (os.platform() === 'win32'){
-                fs.writeFile(xclHome + '/.instantClient','\\\\' + path);
-              }else{
-                
-                fs.writeFile(xclHome + '/.instantClient','/' + path);
+              if (os.platform()==='darwin'){
+                console.log(filename);
+                dmg.mount(filename, function(err, path){
+                  fs.mkdirSync(xclHome + '/.instantClient');
+                  fs.readdirSync(path).forEach(function(file){
+                    fs.copySync(path+'/'+file, xclHome+'/.instantClient/' + file);
+                  });
+
+                  dmg.unmount(path, function(err){
+                    if(err){
+                      console.log(err);
+                    }
+                  });
+                });
               }
-            }
 
-            if (os.platform()==='darwin'){
-              console.log(filename);
-              dmg.mount(filename, function(err, path){
-                fs.mkdirSync(xclHome + '/.instantClient');
-                fs.readdirSync(path).forEach(function(file){
-                  fs.copySync(path+'/'+file, xclHome+'/.instantClient/' + file);
-                });
-                
-                dmg.unmount(path, function(err){
-                  if(err){
-                    console.log(err);
-                  }
-                });
-              });
-            }
 
-            
 
-            console.log('... ready');
-            console.log('You can use XCL now: Type xcl to your commandline and happy coding!');
-          })
-      );
+              console.log('... ready');
+              console.log('You can use XCL now: Type xcl to your commandline and happy coding!');
+            })
+        );
+}

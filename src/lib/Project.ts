@@ -526,7 +526,7 @@ export class Project {
 }
 
 class ProjectStatus {
-  private static stateFileName = "";
+  private static stateFileName:string = "";
   private static xclHome = os.homedir + "/AppData/Roaming/xcl/";
   private project: Project;
   private statusConfig: any;
@@ -540,7 +540,13 @@ class ProjectStatus {
     this.changeList.set('SETUP',false);
     this.changeList.set('USER',false);
 
-    if (!fs.existsSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml')){
+    if (!fs.existsSync(this.project.getPath() + '/.xcl/state.yml')){
+
+      if (fs.existsSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml')){
+        fs.moveSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml', this.project.getPath() + '/.xcl/state.yml');
+        fs.removeSync(this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml');
+      }
+
       if(fs.existsSync(ProjectStatus.xclHome + this.project.getName() + '.yaml')){
         fs.moveSync(ProjectStatus.xclHome + this.project.getName() + '.yaml', this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml');
       }else{
@@ -553,11 +559,11 @@ class ProjectStatus {
             dependencies: {}
           },
         };
-        ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml';
+        ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/state.yml';
         this.serialize();
       }
     }else{
-      ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/' + this.project.getName() + '.yaml';
+      ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/state.yml';
       this.statusConfig=this.deserialize();
     }
   }
