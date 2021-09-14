@@ -1,4 +1,4 @@
-- .xcl
+.xcl:
 db:
 - .hooks
 - .setup
@@ -79,4 +79,3 @@ apex_files:
     - js
     - css
     - img
-
