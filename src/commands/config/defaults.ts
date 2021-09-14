@@ -19,8 +19,7 @@ export default class ConfigDefaults extends Command{
     "reset-all": flags.boolean({description: 'resets all environment variables'})
   }
 
-  static args = [{name: 'project'},
-                  {name: 'value'}]
+  static args = [{name: 'project'}]
 
   async run() {
     const {args, flags} = this.parse(ConfigDefaults)
