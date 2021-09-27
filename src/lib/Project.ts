@@ -228,7 +228,7 @@ export class Project {
     }else{
       return {
         xcl: {
-          project: this.getName(), 
+          project: this.getName(),
           description: "XCL- Projekt " + this.getName(),
           version: "Release 1.0",
           workspace: workspaceName,
@@ -251,7 +251,7 @@ export class Project {
 
     try {
       conf = fs.readFileSync(this.getPath() + "/xcl.yml").toString();
-    } catch (err) {
+    } catch (err:any) {
       if (err.code === 'ENOENT') {
         conf = yaml.stringify({xcl: {
                                 project: this.getName(),
@@ -565,7 +565,7 @@ class ProjectStatus {
         }
       }
     }
-    
+
     ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/state.yml';
     this.statusConfig=this.deserialize();
   }
@@ -582,7 +582,7 @@ class ProjectStatus {
 
     let projectConfig = this.project.getConfig();
     delete projectConfig.xcl["version"];
-    
+
     if( this.statusConfig.xcl.hash == Md5.hashStr( yaml.stringify( projectConfig ) ).toString()
           &&
         !this.changeList.get("SETUP") ){
@@ -743,7 +743,7 @@ class ProjectStatus {
 
     try {
       conf = fs.readFileSync(ProjectStatus.stateFileName).toString();
-    } catch (err) {
+    } catch (err:any) {
       if (err.code === 'ENOENT') {
         return 'File not found!';
       } else {
