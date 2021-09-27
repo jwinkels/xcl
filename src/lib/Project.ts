@@ -161,8 +161,7 @@ export class Project {
     } else if (path instanceof Object) {
       for (let i = 0; i < Object.keys(path).length; i++) {
         const objName = Object.keys(path)[i];
-
-        this.createDirectoryPath(path[objName], fullPath + objName + "/");
+        this.createDirectoryPath(path[objName] != null ? path[objName] : "", fullPath + objName + "/");
       }
     } else {
 

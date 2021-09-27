@@ -1,5 +1,5 @@
-- .xcl
-- db:
+.xcl:
+db:
 - .hooks
 - .setup
 - :projectName_app:
