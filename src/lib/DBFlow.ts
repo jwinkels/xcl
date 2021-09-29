@@ -122,7 +122,6 @@ STAGE=${responses.stage}
                                            "DB_APP_USER": proxyUserName,
                                            "DB_APP_PWD":`${password}`,
                                            "DB_TNS":`${connection}`,
-                                           "USE_PROXY": `${multiSchema}`,
                                            "APP_OFFSET": 0
                                          },
                                          true,
@@ -151,8 +150,7 @@ STAGE=${responses.stage}
                                            "DATA_SCHEMA": dataSchema,
                                            "LOGIC_SCHEMA": logicSchema,
                                            "WORKSPACE": project.getWorkspace(),
-                                           "DEPOT_PATH": project.depotPath,
-                                           "USE_PROXY": `${multiSchema}`
+                                           "DEPOT_PATH": project.depotPath
                                          },
                                          true,
                                          project.getLogger());

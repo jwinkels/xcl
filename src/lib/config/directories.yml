@@ -71,10 +71,10 @@ db:
     - ddl
     - dml
   - finally
-apps:
+- apps:
   - apex
   - rest
-apex_files:
+- apex_files:
   - f1000:
     - js
     - css
