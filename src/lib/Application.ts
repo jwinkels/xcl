@@ -15,6 +15,7 @@ export class Application{
         let project = ProjectManager.getInstance().getProject(projectName);
         let projectPath    = project.getPath();
         let baseUrlIp      = connection.substr(0,connection.indexOf(':'));
+        let schema         = project.getMode() === Project.MODE_MULTI ? project.getName().toUpperCase()+"_APP" : project.getName();
   
         //Read apex-folder and find the correct file
         fs.readdirSync( projectPath + baseFolderApex).forEach(file=>{
@@ -32,9 +33,11 @@ export class Application{
 
                 let script= projectPath + baseFolderApex + file + "/pre_install_application.sql " + 
                             project.getWorkspace() + " " +
-                            appId +" "+
-                            project.getMode() === Project.MODE_MULTI ? project.getName().toUpperCase()+"_APP" : project.getName() + " "+
-                            ords + " " + projectName;
+                            appId + " " +
+                            schema + " " +
+                            ords + " " + 
+                            projectName;
+
                 installFileList.set(projectPath + baseFolderApex + file,
                                       script);
               }
@@ -43,14 +46,15 @@ export class Application{
                 let appId = file.substr(1,file.indexOf('.') - 2);
                 let script = projectPath + baseFolderApex + file + 
                                 project.getWorkspace() + " " +
-                                appId +" "+
-                                project.getMode() === Project.MODE_MULTI ? project.getName().toUpperCase()+"_APP" : project.getName() + " "+
-                                ords + " " + projectName;
+                                appId + " " +
+                                schema + " " +
+                                ords + " " + 
+                                projectName;
                 installFileList.set(projectPath + baseFolderApex + file, script);
               }
             }
         });
-  
+        
         installFileList.forEach((script, path)=>{
           let conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(),
                                       password,
