@@ -85,6 +85,7 @@ software:
       scripts:
         - path: create_user.sql
           sys: true
+          xcl: true
           arguments:
             - credentials
         - path: logger_install.sql
@@ -105,6 +106,13 @@ software:
             arguments:
               - credentials
         - path: install.sql
+  console:
+    owner: ogobrecht
+    repo: console
+    call: tag
+    install:
+      scripts:
+        - path: install/create_console_objects.sql   
   orcas:
     owner: jwinkels
     repo: orcas4xcl

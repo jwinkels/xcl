@@ -16,6 +16,7 @@ import {Project} from './Project';
 import { Environment } from './Environment';
 import { Operation } from './Operation';
 import { Utils } from './Utils';
+import { Logger } from "./Logger";
 const Table = require('cli-table');
 
 export class FeatureManager{
@@ -270,7 +271,6 @@ export class FeatureManager{
                           if (installSteps.scripts){
                             for (var i=0; i<installSteps.scripts.length; i++){
                               var argumentString="";
-                              var argumentValues=[];
 
                               if (installSteps.scripts[i].arguments){
                                 for (var j=0; j<installSteps.scripts[i].arguments.length; j++){
@@ -294,7 +294,8 @@ export class FeatureManager{
                               }
 
                               var executeString="";
-                              if (fs.existsSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '/' + installSteps.scripts[i].path)){
+                              var xclScript = installSteps.scripts[i].xcl ? installSteps.scripts[i].xcl : false;
+                              if (!xclScript && fs.existsSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '/' + installSteps.scripts[i].path)){
                                 executeString = Utils.checkPathForSpaces(projectPath + '/dependencies/' 
                                                             + feature.getName() 
                                                             + '_' 
@@ -304,6 +305,9 @@ export class FeatureManager{
                                                             + argumentString;
                               }else{
                                 if(fs.existsSync(__dirname + "/scripts/" + installSteps.scripts[i].path)){
+                                  if(xclScript){
+                                    project.getLogger().getLogger().log("warning", 'Using XCL-Script instead of native script!');
+                                  }
                                   executeString=Utils.checkPathForSpaces(__dirname + "/scripts/" + installSteps.scripts[i].path) + argumentString;
                                 }else{
                                   throw Error(`Script '${__dirname + "/scripts/" + installSteps.scripts[i].path}' couldn't be found!`);
@@ -400,6 +404,7 @@ export class FeatureManager{
                         if(fs.existsSync(__dirname + "/scripts/" + deinstallSteps.scripts[i].path)){
                           executeString=Utils.checkPathForSpaces(__dirname + "/scripts/" + deinstallSteps.scripts[i].path) + argumentString;
                         }else{
+                          console.log(__dirname + "/scripts/" + deinstallSteps.scripts[i].path);
                           throw Error("Script couldn't be found!");
                         }
                       }
