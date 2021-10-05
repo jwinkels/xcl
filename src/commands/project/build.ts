@@ -22,7 +22,7 @@ export default class ProjectBuild extends Command {
   static args = [{
                   name: 'project',
                   description: "name of the project that should be build",
-                  default: Environment.readConfigFrom(process.cwd(),"project")
+                  default: Environment.readConfigFrom(process.cwd(),"project", false)
                 }]
 
   async run() {

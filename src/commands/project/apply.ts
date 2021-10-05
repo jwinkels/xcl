@@ -20,7 +20,7 @@ export default class ProjectApply extends Command {
     {
       name: 'project',
       description: "name of the project that the changes should be applied to",
-      default: Environment.readConfigFrom( process.cwd(), "project" )
+      default: Environment.readConfigFrom( process.cwd(), "project", false )
     }
   ]
 

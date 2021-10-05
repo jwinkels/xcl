@@ -4,12 +4,12 @@ import { Environment } from '../../lib/Environment'
 import  chalk from 'chalk'
 
 export default class FeatureInstall extends Command{
- 
+
   static description = 'install a Feature to target Schema'
 
   static flags = {
     help: flags.help({char: 'h'}),
-    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', default: Environment.readConfigFrom(process.cwd(),"connection")} ),
+    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', default: Environment.readConfigFrom(process.cwd(),"connection", false)} ),
     syspw: flags.string( {char: 's', description:'Password of SYS-User'})
   }
 
@@ -17,7 +17,7 @@ export default class FeatureInstall extends Command{
         {
           name: 'feature',
           description: 'Name of the Project-Feature to be installed',
-          required: true          
+          required: true
         },
         {
           name: 'project',

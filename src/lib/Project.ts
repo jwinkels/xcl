@@ -42,7 +42,7 @@ export class Project {
       this.status = new ProjectStatus(this);
       this.writeConfig();
       this.status.serialize()
-      this.environment = Environment.initialize(this.name, singleSchema ? 'app' : '', this);
+      this.environment = Environment.initialize(this.name, this, singleSchema ? 'app' : '');
     } else {
       this.config = this.readConfig();
       this.directories = this.createDirectoryStructure(this.getMode()=== Project.MODE_MULTI ? false : true);
@@ -50,7 +50,7 @@ export class Project {
       this.status = new ProjectStatus(this);
       this.features = this.getFeatures();
       this.users = this.getUsers();
-      this.environment = Environment.initialize(this.name, singleSchema ? 'app' : '', this);
+      this.environment = Environment.initialize(this.name, this, singleSchema ? 'app' : '');
       this.depotPath = this.config.xcl.depot_path;
       process.chdir(this.getPath());
     }
@@ -164,7 +164,6 @@ export class Project {
         this.createDirectoryPath(path[objName] != null ? path[objName] : "", fullPath + objName + "/");
       }
     } else {
-
       if (fullPath.includes(':projectName')){
         fullPath = fullPath.replace(':projectName',this.getName());
       }
@@ -492,6 +491,10 @@ export class Project {
 
   public getEnvironment():Map<string, {value:string, required:boolean}>{
     return this.environment;
+  }
+
+  public setEnvironment(envMap: Map<string, {value:string, required:boolean}>):void{
+    this.environment = envMap;
   }
 
   public getEnvironmentVariable(key:string):string|undefined{

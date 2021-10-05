@@ -9,7 +9,7 @@ export default class ProjectInit extends Command {
   static flags = {
     help: flags.help({char: 'h'}),
     syspw: flags.string({char: 's', description: 'Password of user sys'}),
-    connection: flags.string({char: 'c', description: 'Connectstring ex. localhost:1521/xepdb1', default: Environment.readConfigFrom( process.cwd(),"connection") }),
+    connection: flags.string({char: 'c', description: 'Connectstring ex. localhost:1521/xepdb1', default: Environment.readConfigFrom( process.cwd(),"connection", false) }),
     force: flags.boolean({char: 'f', description: 'Attention: force will drop existing schemas'}),
     yes: flags.boolean({char: 'y', description: 'Answers force-action with yes (Use with caution)'}),
     objects: flags.boolean({char: 'o', description: 'Install basic objects defined in setup directory'}),
@@ -20,20 +20,19 @@ export default class ProjectInit extends Command {
     {
       name: 'project',
       description: 'name of the project to initialze',
-      default: Environment.readConfigFrom(process.cwd(),"project")     
+      default: Environment.readConfigFrom(process.cwd(),"project")
     }
   ]
 
   async run() {
-    const {args, flags} = this.parse(ProjectInit)    
+    const {args, flags} = this.parse(ProjectInit)
 
-    // Wenn kein Projekt angegeben wurde gehen wir davon aus, das der letzte Teil des 
+    // Wenn kein Projekt angegeben wurde gehen wir davon aus, das der letzte Teil des
     // aktuellen Pfads, der Projektname ist
-    if (!args.project) {      
+    if (!args.project) {
       args.project = path.basename( path.resolve( process.cwd() ) );
     }
-    
+
     ProjectManager.getInstance().initializeProject(args.project, flags)
   }
 }
-
