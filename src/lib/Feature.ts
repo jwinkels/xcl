@@ -10,7 +10,6 @@ export class Feature{
     private isManagedByTag:boolean=false;
     private isManagedByRelease:boolean=false;
     private type:String;
-    
 
     constructor(args: {name:string, owner:String, repo:String, gitAttribute:String, type:String }){
         this.name=args.name;
