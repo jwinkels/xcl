@@ -12,91 +12,76 @@ export default class ConfigDefaults extends Command{
   static flags = {
     help: flags.help({char: 'h'}),
     list: flags.boolean({char: 'l', description:'list environment variables'}),
-    set: flags.string({char: 's', description:'set the value of an environment variable'}),
     "set-all": flags.boolean({description:'set all available environment variables'}),
     "set-required": flags.boolean({description:'set all required environment variables'}),
-    reset: flags.string({char: 'r', description: 'resets an environment variable'}),
+    reset: flags.boolean({char: 'r', description: 'resets an environment variable'}),
     "reset-all": flags.boolean({description: 'resets all environment variables'})
   }
 
-  static args = [{name: 'project'}]
+  static args = [{name: 'variable', description: 'the project in which you would like to set the variable'},
+                 {name: 'value',  description: 'value of the variable you chose to set'},
+                 {name: 'project', description: 'the project in which you would like to set the variable', default: ProjectManager.getInstance().getProjectNameByPath(process.cwd())}
+                ]
 
   async run() {
     const {args, flags} = this.parse(ConfigDefaults)
     let project:any = undefined;
-    if (args.project){
+
+    //On a reset command there are only two arguments and we need to rewrite the value argument to the projectName argument
+    if (flags.reset){
+      args.project = args.value ? args.value : args.project ;
+      args.value = undefined;
+    }
+
+    if (flags.list){
+      args.project = args.variable ? args.variable : args.project;
+      args.variable = undefined;
+      args.value = undefined;
+    }
+
+    if (args.project!="all"){
       project = ProjectManager.getInstance().getProject(args.project);
     }else{
-      args.project=ProjectManager.getInstance().getProjectNameByPath(process.cwd());
-      if (args.project!="all"){
-        project = ProjectManager.getInstance().getProject(args.project);
-      }else{
-        args.name="all";
-      }
+      args.name="all";
     }
 
     if (project!==undefined){
       if (flags.list){
         this.listVariables(project);
-      }
-
-      if(flags["set-all"]){
+      }else if(flags["set-all"]){
         this.setAllVariables(project);
-      }else{
-        if (flags.set && flags.set !==""){
-          await this.setVariable(flags.set, project, args.value);
-        }
-
-        if(flags['set-required']){
-          this.setRequiredVariables(project);
-        }
-      }
-
-      if (flags.reset){
-        if (flags.reset !==""){
-          this.resetVariable(flags.reset, project);
-        }else{
-          console.log(chalk.red("ERROR: provide a variable name"));
-        }
-      }
-
-      if (flags["reset-all"]){
+      }else if(flags.reset){
+        this.resetVariable(args.variable, project);
+      }else if (flags["reset-all"]){
         this.resetAllVariables(project);
+      }else  if(flags['set-required']){
+        this.setRequiredVariables(project);
+      }else{
+        if ((args.variable && args.value) && (args.variable!=="" && args.value !=="")){
+          await this.setVariable(args.variable, project, args.value);
+        }
       }
     }else{
       if (flags.list){
         this.listGlobalVariables();
-      }
-      
-      if(flags["set-all"]){
+      }else if(flags["set-all"]){
           this.setAllGlobalVariables();
-      }else{
-        if (flags.set){
-          this.setGlobalVariable(flags.set);
-        }else{
-          if(flags.set && flags.set ===""){
-            console.log(chalk.red('ERROR: Please provide a variable name you want to set a value for'));
-          }
-        }
-      }
-
-      if (flags.reset){
-        if (flags.reset !==""){
-          this.resetGlobalVariable(flags.reset);
-        }else{
-          console.log(chalk.red("ERROR: provide a variable name"));
-        }
-      }
-
-      if (flags["reset-all"]){
+      }else if (flags.reset){
+        this.resetGlobalVariable(args.variable);
+      }else if (flags["reset-all"]){
         this.resetAllGlobalVariables();
+      }else{
+        if ((args.variable && args.value) && (args.variable!=="" && args.value !=="")){
+          this.setGlobalVariable(args.variable, args.value);
+        }else{
+            console.log(chalk.red('ERROR: Please provide a variable name you want to set a value for'));
+        }
       }
     }
   }
 
   async setVariable(variableName:string, project:Project, value:string|undefined){
     let input = "";
-
     if (value && value.startsWith('$')){
       value = value.replace('$','');
       value = process.env[value]?.trim();
@@ -164,10 +149,10 @@ export default class ConfigDefaults extends Command{
     console.log(chalk.green('OK'));
   }
 
-  async setGlobalVariable(variableName:string){
+  async setGlobalVariable(variableName:string, value:string){
     let globals = Environment.initialize('all');
-    let input = await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"');
-    globals.set(variableName, input);
+    let input = value ? value : (await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"'));
+    Environment.setVariable(variableName, input, globals);
     Environment.writeEnvironment('all', globals);
     console.log(chalk.green('OK'));
   }
