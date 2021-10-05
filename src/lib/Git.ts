@@ -1,5 +1,6 @@
 import { ShellHelper } from "./ShellHelper";
 import { Logger } from "./Logger";
+import * as fs from "fs-extra";
 export class Git{
 
    public static async getCurrentCommitId():Promise<string>{
@@ -65,5 +66,18 @@ export class Git{
       }else{
          return [""];
       }
+   }
+
+   public static async addToGitignore(projectPath:string, filePath:string){
+      let content:string="";
+      const gitignore:string = projectPath + '/.gitignore';
+      const crlf = '\n\r';
+      
+      if (fs.existsSync(gitignore)){
+         content = (await fs.readFile(gitignore)).toString();
+      }
+
+      content.concat(content, crlf , filePath);
+      fs.writeFile(gitignore, content);
    }
 }
