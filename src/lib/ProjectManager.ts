@@ -1,6 +1,7 @@
 //Imports
 import * as yaml from "yaml";
 import * as fs from "fs-extra";
+import * as path from "path";
 import * as os from "os";
 import { Project } from "./Project";
 import { ProjectNotFoundError } from "./errors/ProjectNotFoundError";
@@ -18,6 +19,7 @@ import {Operation} from './Operation';
 import { Application } from './Application';
 import { Utils } from './Utils';
 import { Git } from "./Git";
+import { ProjectWizardConfiguration } from "../commands/project/create";
 const password = require('secure-random-password');
 //import FeatureInstall from "../commands/feature/install";
 
@@ -60,11 +62,13 @@ export class ProjectManager {
     if( ProjectManager.project && ProjectManager.project.getName() == projectName ){
       return ProjectManager.project;
     }else{
+
       if ( ProjectManager.projectsJson.projects && ProjectManager.projectsJson.projects[projectName] ) {
         const projectJSON      = ProjectManager.projectsJson.projects[projectName];
         ProjectManager.project = new Project( projectName, projectJSON.path, '', false );
         return ProjectManager.project;
       } else {
+        // console.log(new Error().stack);
         throw new ProjectNotFoundError(`project ${projectName} not found`);
       }
     }
@@ -111,11 +115,9 @@ export class ProjectManager {
       if (err instanceof ProjectNotFoundError) {
         // start to create the project
         console.log(projectName + " is to be created in: " + process.cwd());
-        if (os.platform() === 'win32'){
-          project = new Project(projectName, process.cwd() + "\\" + projectName, workspaceName, true, singleSchema);
-        }else{
-          project = new Project(projectName, process.cwd() + "/" + projectName, workspaceName, true, singleSchema);
-        }
+
+        project = new Project(projectName, process.cwd() + path.sep + projectName, workspaceName, true, singleSchema);
+
 
         this.addProjectToGlobalConfig( project );
         Application.generateCreateWorkspaceFile( projectName, workspaceName );
@@ -124,6 +126,30 @@ export class ProjectManager {
         throw err;
       }
     }
+
+    return project;
+  }
+
+  /**
+   * return Project, when found otherwise creates it
+   * @param projectConfigFromWizard configuration brought to us by wizard
+   */
+   public createProjectFromConfig(projectConfigFromWizard:ProjectWizardConfiguration): Project {
+    // TODO: when allready defined, why not overwrite? After confirmation?
+    const project = new Project(projectConfigFromWizard.project,
+                                process.cwd() + path.sep + projectConfigFromWizard.project,
+                                projectConfigFromWizard.workspace,
+                                true,
+                                projectConfigFromWizard.multi.toLowerCase() === Project.MODE_SINGLE);
+
+
+    // Project define in GlobalJson
+    this.addProjectToGlobalConfig( project );
+
+
+    Application.generateCreateWorkspaceFile( projectConfigFromWizard.project, projectConfigFromWizard.workspace );
+
+    project.setEnvironment(Environment.setVarsFromWizard(projectConfigFromWizard, project));
 
     return project;
   }

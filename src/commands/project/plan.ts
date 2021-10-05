@@ -16,8 +16,8 @@ export default class ProjectPlan extends Command {
   static args = [
       {
         name: 'project',
-        description: "name of the project", 
-        default: Environment.readConfigFrom( process.cwd(), "project" )
+        description: "name of the project",
+        default: Environment.readConfigFrom( process.cwd(), "project" , false)
       }
     ]
 
@@ -35,11 +35,11 @@ export default class ProjectPlan extends Command {
 
     if ( flags["auto-apply"] ){
       let answer:string = "n";
-      
+
       if ( !flags.yes ){
        answer = await cli.prompt('Do you really want to proceed with the plan described above [y/n]');
       }
-      
+
       if ( answer === 'y' || flags.yes ){
         ProjectManager.getInstance().apply(args.project, true);
       }

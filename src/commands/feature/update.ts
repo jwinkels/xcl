@@ -8,7 +8,7 @@ export default class FeatureUpdate extends Command {
 
   static flags = {
     help: flags.help({char: 'h', description: 'shows this help'}),
-    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true, default: Environment.readConfigFrom(process.cwd(),"connection")} ),
+    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true, default: Environment.readConfigFrom(process.cwd(),"connection", false)} ),
     syspw: flags.string( {char: 's', description:'Password of SYS-User'})
   }
 
@@ -16,7 +16,7 @@ export default class FeatureUpdate extends Command {
     {
       name: 'feature',
       description: 'Name of the Project-Feature to be installed',
-      required: true          
+      required: true
     },
     {
       name: 'version',

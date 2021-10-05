@@ -1,12 +1,13 @@
 import * as fs from "fs-extra";
 import  * as os from 'os';
 import * as yaml from "yaml";
+import { ProjectWizardConfiguration } from "../commands/project/create";
 import { Project } from "./Project";
 import { ProjectManager } from './ProjectManager';
 export class Environment{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
 
-    public static initialize(projectName:string, schema:string = '', project:Project|undefined=undefined):Map<string,{value:string, required:boolean}>{
+    public static initialize(projectName:string, project:Project|undefined=undefined, schema:string = ''):Map<string,{value:string, required:boolean}>{
 
         let envFileName="";
         let env:any={};
@@ -66,11 +67,10 @@ export class Environment{
         return variables;
     }
 
-    public static setVariable(variableName:string, value:string, variables:Map<string,{value:string, required:boolean}>):Map<string,{value:string, required:boolean}>{
+    public static setVariable(variableName:string, value:string, variables:Map<string,{value:string, required:boolean}>):void{
         let variable:{value:string, required:boolean} = variables.get(variableName)!;
         variable.value = value;
         variables.set(variableName, variable);
-        return variables;
     }
 
     public static writeEnvironment(projectName:string, variables:Map<string,{value:string, required:boolean}>){
@@ -93,19 +93,27 @@ export class Environment{
         fs.writeFileSync(envFileName,yaml.stringify(env));
     }
 
-    public static readConfigFrom(path:string, variableName:string):string{
+    public static readConfigFrom(path:string, variableName:string, write:boolean = true):string{
         let envFileName = "";
         let env:any;
         let projectName:string = ProjectManager.getInstance().getProjectNameByPath(path);
+
+
         // Decide which environment variables context should be loaded
         if (projectName === "all"){
             envFileName = this.xclHome + "/environment.yml";
         }else{
-            let project:Project    = ProjectManager.getInstance().getProject(projectName);
-            envFileName = project.getPath()+"/.xcl/env.yml";
+            // BUG: getProject legt unter Umständen ein neues an. Das DARF nicht sein, da diese Methode
+            //        von den Commands direkt aufgerufen wird
+            if (write) {
+                let project:Project    = ProjectManager.getInstance().getProject(projectName);
+                envFileName = project.getPath()+"/.xcl/env.yml";
+            } else {
+                envFileName = process.cwd() + "/.xcl/env.yml";
+            }
         }
 
-        if(!fs.existsSync(envFileName)){
+        if(write && !fs.existsSync(envFileName)){
             this.initialize(projectName);
         }
 
@@ -117,8 +125,28 @@ export class Environment{
                 env = yaml.parse(fs.readFileSync(envFileName).toString());
                 return env[variableName];
             }catch(err:any){
-               throw Error(err);
+               if (write) {
+                    console.log(new Error().stack);
+                    throw Error("hier:" + err);
+               } else {
+                   return "";
+               }
             }
         }
     }
+
+    public static setVarsFromWizard(config:ProjectWizardConfiguration, project:Project):Map<string,{value:string, required:boolean}> {
+      const localEnv = Environment.initialize(config.project, project);
+
+      Environment.setVariable("connection", config.connection, localEnv);
+      Environment.setVariable("project",    config.project,    localEnv);
+      Environment.setVariable("password",   config.password,   localEnv);
+      Environment.setVariable("syspw",      config.adminpass,  localEnv);
+      Environment.setVariable("schema",     config.apexuser,   localEnv);
+
+      Environment.writeEnvironment(config.project, localEnv);
+
+      return localEnv;
+    }
+
 }

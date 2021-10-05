@@ -10,7 +10,7 @@ export default class FeatureRemove extends Command {
   static flags = {
     help: flags.help({char: 'h'}),
     deinstall: flags.boolean( {char: 'd', description: 'deinstall Feature from database'}),
-    connection: flags.string( {char: 'c', description: 'connection to database (required when deinstall Feature) [ HOST:PORT/SERVICE_NAME ]', default: Environment.readConfigFrom(process.cwd(),"connection")} ),
+    connection: flags.string( {char: 'c', description: 'connection to database (required when deinstall Feature) [ HOST:PORT/SERVICE_NAME ]', default: Environment.readConfigFrom(process.cwd(),"connection", false)} ),
     syspw: flags.string( {char: 's', description: 'password of SYS-User'}),
     owner: flags.boolean ( {char: 'o', description: 'drop Feature owner schema'} )
   }
@@ -19,12 +19,12 @@ export default class FeatureRemove extends Command {
     {
       name: 'feature',
       description: 'Name of the Project-Feature to be installed',
-      required: true          
+      required: true
     },
     {
       name: 'project',
       description: 'Name of the Project (when not in a xcl-Project path)',
-      default: Environment.readConfigFrom( process.cwd(), "project" ) 
+      default: Environment.readConfigFrom( process.cwd(), "project" )
     }
   ]
 
@@ -43,13 +43,13 @@ export default class FeatureRemove extends Command {
       }
 
       if (project !== ""){
-        
+
         if ( flags.deinstall && ( flags.connection === undefined || flags.syspw === undefined ) ){
           console.log(chalk.yellow('Please provide a connection and the SYS-User password!'));
           flags.connection = flags.connection ? flags.connection : await cli.prompt('connection [host:port/servicename]');
           flags.syspw      = flags.syspw      ? flags.syspw      : await cli.prompt('sys-password');
         }
-        
+
         if ( flags.deinstall && ( flags.connection && flags.syspw ) ){
           await FeatureManager.getInstance().deinstallProjectFeature(args.feature, flags.connection, flags.syspw, project);
         }else{
@@ -65,7 +65,7 @@ export default class FeatureRemove extends Command {
             throw Error(chalk.red('ERROR: When using drop owner schema option you need to provide a connection and the SYS-User password!'));
           }
         }
-        
+
         await FeatureManager.getInstance().removeFeatureFromProject(args.feature, project);
 
       }else{
