@@ -721,11 +721,20 @@ class ProjectStatus {
 
   public checkUsers(){
     this.statusConfig=this.deserialize();
-    if (!this.statusConfig.xcl.users.schema_app || !this.statusConfig.xcl.users.schema_logic || !this.statusConfig.xcl.users.schema_data || !this.statusConfig.xcl.users.user_deployment ){
+    if (this.project.getMode()===Project.MODE_MULTI){
+      if (!this.statusConfig.xcl.users.schema_app || !this.statusConfig.xcl.users.schema_logic || !this.statusConfig.xcl.users.schema_data || !this.statusConfig.xcl.users.user_deployment ){
+          this.addToChanges('USER');
+          return false;
+      }else{
+        return true;
+      }
+    }else{
+      if (!this.statusConfig.xcl.users.schema_app){
         this.addToChanges('USER');
         return false;
-    }else{
-      return true;
+      }else{
+        return true;
+      }
     }
   }
 
