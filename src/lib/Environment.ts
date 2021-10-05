@@ -116,7 +116,7 @@ export class Environment{
             try{
                 env = yaml.parse(fs.readFileSync(envFileName).toString());
                 return env[variableName];
-            }catch(err){
+            }catch(err:any){
                throw Error(err);
             }
         }
