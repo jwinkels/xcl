@@ -261,12 +261,18 @@ export class ProjectManager {
     if (flags.users){
       console.log(chalk.green(`install schemas...`));
 
-      let randomPassword:string = password.randomPassword({characters: password.upper, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
+      /*let randomPassword:string = password.randomPassword({characters: password.upper, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
                            password.randomPassword({characters: password.lower, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
-                           password.randomPassword({characters: password.digits, length:  ( Math.floor( Math.random() *6 ) + 4)}) +
-                           password.randomPassword({characters: password.symbols, length: ( Math.floor( Math.random() *6 ) + 2)});
-      randomPassword = randomPassword.replace("&","_");
-      randomPassword = randomPassword.replace("!","#");
+                           password.randomPassword({characters: password.digits, length:  ( Math.floor( Math.random() *6 ) + 4)});
+      */
+      let randomPassword:string = password.randomPassword({characters: [password.upper, password.lower , {characters: password.digits, length: ( Math.floor( Math.random() * 4 ) + 4) }], length: ( Math.floor( Math.random() * 12 ) + 4)});
+
+      let numberOfHashtags:number = Math.floor(Math.random()*randomPassword.length/2) + 2;
+
+      for(let i=0; i<numberOfHashtags; i++){
+        let position = Math.floor(Math.random()*randomPassword.length/2) + 1;
+        randomPassword = [randomPassword.slice(0, position), '#', randomPassword.slice(position)].join('');
+      }
 
       if (p.getMode() === 'multi'){
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
@@ -365,7 +371,7 @@ export class ProjectManager {
       p.getFeatures().forEach( ( feature:ProjectFeature ) =>{
         if( feature.getType()==="DB" ){
           if ( FeatureManager.priviledgedInstall( feature.getName() ) && !commands[0] ){
-              commands[0] = 'xcl config:defaults '+ projectName + ' -s syspw $PASSWORD';
+              commands[0] = 'xcl config:defaults syspw $PASSWORD ' + projectName;
           }else{
             console.log( "SYS not needed for feature : " + feature.getName() );
           }
@@ -409,7 +415,7 @@ export class ProjectManager {
         commandCount = commandCount + 1;
 
         if ( !commands[0] ){
-          commands[0] = 'xcl config:defaults ' + projectName + ' -s syspw $PASSWORD';
+          commands[0] = 'xcl config:defaults syspw $PASSWORD ' + projectName;
         }
       }
 
@@ -422,7 +428,7 @@ export class ProjectManager {
         commandCount = commandCount + 1;
 
         if ( !commands[0] ){
-          commands[0] = 'xcl config:defaults ' + projectName + ' -s syspw $PASSWORD';
+          commands[0] = 'xcl config:defaults syspw $PASSWORD ' + projectName;
         }
       }
 
@@ -431,26 +437,26 @@ export class ProjectManager {
       //console.log(chalk.green('+++ ')+commands[commandCount]);
       if ( commands[0] ){
         commandCount = commandCount + 1;
-        console.log( chalk.green('+') + ' xcl config:defaults ' + projectName + ' --reset syspw');
-        commands[commandCount] = 'xcl config:defaults ' + projectName + ' --reset syspw';
+        console.log( chalk.green('+') + ' xcl config:defaults --reset syspw ' + projectName);
+        commands[commandCount] = 'xcl config:defaults --reset syspw ' + projectName;
       }
+
+      let fileName = path;
+
+      fileName = fileName + '/plan.sh';
+
+      fs.removeSync(fileName);
+      fs.writeFileSync(fileName, '#!/bin/bash' + "\n");
+      for (let i = 0; i<commands.length; i++){
+        if( commands[i] ){
+            fs.appendFileSync( fileName, commands[i]+"\n" );
+        }
+      }
+
+      fs.chmodSync(fileName, '777');
     }else{
-      console.log( chalk.yellow('INFO: Project dependencies have no changes!') );
+      console.log( chalk.yellow('INFO: No changes in Project dependencies!') );
     }
-
-    let fileName = path;
-
-    fileName = fileName + '/plan.sh';
-
-    fs.removeSync(fileName);
-    fs.writeFileSync(fileName, '#!/bin/bash' + "\n");
-    for (let i = 0; i<commands.length; i++){
-      if( commands[i] ){
-          fs.appendFileSync( fileName, commands[i]+"\n" );
-      }
-    }
-
-    fs.chmodSync(fileName, '777');
   }
 
   public async apply(projectName: string, setupOnly:boolean, version:string, mode:string):Promise<void>{
@@ -465,7 +471,7 @@ export class ProjectManager {
 
           //SPLIT COMMAND FROM ARGUMENTS
           const command = commands[i].substr( 0, commands[i].indexOf( " ", 5 ) ).trim();
-          const argv    = commands[i].substr( command.length + 1, commands[i].length ).split(" ");
+          //const argv    = commands[i].substr( command.length + 1, commands[i].length ).split(" ");
 
           if(command){
             let status:any = (await ShellHelper.executeScript( commands[i], project.getPath(), true, project.getLogger() )).status;
