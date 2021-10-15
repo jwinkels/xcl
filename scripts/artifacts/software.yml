@@ -89,10 +89,18 @@ software:
           arguments:
             - credentials
         - path: logger_install.sql
+        - path: scripts/grant_logger_to_user.sql
+          arguments:
+            - usernames
+        - path: scripts/create_logger_synonyms.sql
+          executeAs: PROJECT_USER
+          arguments:
+            - username
     uninstall:
       scripts:
         - path: drop_logger.sql
         - path: drop_user.sql
+          sys: true
           arguments:
             - username
   teplsql:
