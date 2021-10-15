@@ -9,6 +9,7 @@ import { Environment } from './Environment';
 import { Md5 } from 'ts-md5/dist/md5';
 import {Operation} from './Operation';
 import { Logger } from "./Logger";
+import { Git } from "./Git";
 
 
 export class Project {
@@ -39,6 +40,7 @@ export class Project {
       this.features = new Map();
       this.users = new Map();
       this.directories = this.createDirectoryStructure(singleSchema);
+      Git.addToGitignore(this.getPath(),'.xcl');
       this.status = new ProjectStatus(this);
       this.writeConfig();
       this.status.serialize()
@@ -195,8 +197,6 @@ export class Project {
 
     }
 
-
-
     fs.copySync(__dirname + "/config/readme.md", this.getPath() + "/readme.md");
     return Md5.hashStr(yaml.stringify(parsedDirs)).toString();
   }
@@ -268,13 +268,11 @@ export class Project {
   //
   public addFeature(feature:ProjectFeature):any{
     let dependencyConf:any = "";
-
     //Do not add the Feature if it is already in dependency list or if deployment method has already been configured
-    if ( ! this.features.has(feature.getName()) || !(feature.getType()==="DEPLOY" && this.hasDeployMethod())){
+    if ( ! this.features.has(feature.getName()) && !(feature.getType()==="DEPLOY" && this.hasDeployMethod())){
       this.config=this.readConfig();
       this.features.set(feature.getName(),feature);
       if(!this.config.xcl.dependencies){
-        console.log('No Dependencies yet initialize Array!');
         this.config.xcl.dependencies=[];
         //this.status.updateStatus();
       }
@@ -302,6 +300,7 @@ export class Project {
       }
       this.config.xcl.dependencies.push(dependencyConf);
       this.writeConfig();
+      return true;
     }else{
       if ( this.features.has(feature.getName()) ){
         console.log(chalk.yellowBright('WARNING: Dependency is already defined to this Project! No dependency added!'));
@@ -479,6 +478,15 @@ export class Project {
     }
 
     return this.users;
+  }
+
+  public getUserNames():string[]{
+    let userNames:string[]=[];
+    this.users.forEach(schema=>{
+        userNames.push(schema.getName().toUpperCase())
+    });
+
+    return userNames;
   }
 
   public getConfig():any{

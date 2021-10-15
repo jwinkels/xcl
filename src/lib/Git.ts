@@ -72,12 +72,15 @@ export class Git{
       let content:string="";
       const gitignore:string = projectPath + '/.gitignore';
       const crlf = '\n\r';
-      
       if (fs.existsSync(gitignore)){
          content = (await fs.readFile(gitignore)).toString();
       }
 
-      content.concat(content, crlf , filePath);
-      fs.writeFile(gitignore, content);
+      if (content){
+         content = content.concat(content, crlf , filePath);
+      }else{
+         content = filePath;
+      }
+      fs.writeFileSync(gitignore, content);
    }
 }

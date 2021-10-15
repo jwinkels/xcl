@@ -48,7 +48,7 @@ export class DBHelper {
 
       return conn;
 
-    } catch (err) {
+    } catch (err:any) {
       console.error(chalk.red(err.message));
       process.exit(1);
     }
@@ -65,7 +65,7 @@ export class DBHelper {
       
       countSchemas = result.rows[0][0];
 
-    } catch (err) {
+    } catch (err:any) {
         console.error(chalk.red(err));
         process.exit(1);
     } finally {
@@ -73,7 +73,7 @@ export class DBHelper {
         try {
           // Connections should always be released when not needed
           await connection.close();
-        } catch (err) {
+        } catch (err:any) {
           console.error(chalk.red(err));
           process.exit(1);
         }
@@ -135,6 +135,41 @@ export class DBHelper {
     }
   };
 
+  public static async getInvalidObjects(conn:IConnectionProperties):Promise<any>{
+    let connection;
+   
+    let invalid_objects:{name:string, type:string}[]=[];
+
+    try{
+      connection = await oracledb.getConnection(conn);
+      let query = `select  object_type, object_name
+                    from user_objects
+                    where status = 'INVALID'
+                    order by object_type`;
+
+      const result = await connection.execute(query);
+      for (let i = 0; i<=result.rows.length-1; i++){
+        let object:{name:string, type:string}={
+          name: result.rows[i][1],
+          type: result.rows[i][0]
+        };
+        invalid_objects.push(object);
+      }
+    }catch(err){
+      console.error(err, "{color:red}");
+    } finally {
+      if (connection) {
+        try {
+          // Connections should always be released when not needed
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      return Promise.resolve(invalid_objects);
+    }
+  }
+
 
   public static getConnectionString(conn: IConnectionProperties):string {
     
@@ -147,7 +182,7 @@ export class DBHelper {
     
     const childProcess = spawnSync(
       'sql', // Sqlcl path should be in path
-      [DBHelper.getConnectionString(conn)], {
+      ["-S", DBHelper.getConnectionString(conn)], {
         encoding: 'utf8',
         input: "@" + script,
         shell: true
@@ -174,7 +209,7 @@ export class DBHelper {
 
     const childProcess = spawnSync(
       'sql', // Sqlcl path should be in path
-      [DBHelper.getConnectionString(conn)], {
+      ["-S", DBHelper.getConnectionString(conn)], {
         encoding: 'utf8',
         cwd: cwd,
         input: "@" + script,

@@ -13,6 +13,7 @@ import { Git } from "./Git";
 import { Logger } from "./Logger";
 import AdmZip = require("adm-zip");
 import { resolve } from "dns";
+import { string } from "@oclif/parser/lib/flags";
 const ps = require("ps-node");
 @injectable()
 export class Orcas implements DeliveryMethod{
@@ -56,9 +57,9 @@ export class Orcas implements DeliveryMethod{
     public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined){
       
       let project=ProjectManager.getInstance().getProject(projectName);
-      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " --continue";
-      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " --continue";
-      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " --continue";
+      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile=false --continue";
+      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile=false --continue";
+      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile=false --continue";
       let path:string = "";
       let buildZip:AdmZip;
       if (version){
@@ -95,6 +96,13 @@ export class Orcas implements DeliveryMethod{
           await this.hook(schema, "pre", projectName, connection, password, project);
           await this.deploySchema(gradleString, project, schema);
           await this.hook(schema, "post", projectName, connection, password, project);
+          let invalids = await DBHelper.getInvalidObjects(DBHelper.getConnectionProps(project.getUsers().get(schema.toUpperCase())?.getConnectionName(),password,connection));
+          //project.getLogger().getFileLogger().log("info",`Number of invalid objects: ${invalids.count}`);
+          project.getLogger().getLogger().log("info",`Number of invalid objects: ${invalids.length}`);
+          invalids.forEach((element: { name: string; type: string; }) => {
+            project.getLogger().getLogger().log("info",`${element.name} (${element.type})`);
+          });
+
           if (project.getMode() === Project.MODE_SINGLE && !schemaOnly){
             Application.installApplication(projectName, connection, password, ords);
           }

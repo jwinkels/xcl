@@ -4,6 +4,7 @@ import { DBHelper } from './DBHelper';
 import { Md5 } from 'ts-md5';
 import { Utils } from './Utils';
 import { Project } from './Project';
+import { Git } from './Git';
 
 export class Application{
 
@@ -82,9 +83,11 @@ export class Application{
     }
 
     public static generateSQLEnvironment(projectName:string, xclHomePath:string){
-      let path=ProjectManager.getInstance().getProject(projectName).getPath()+'/db/.setup/workspaces';
+      let project:Project = ProjectManager.getInstance().getProject(projectName);
+      let path=project.getPath()+'/db/.setup/workspaces';
       let filename = path + '/.env.sql';
 
+      Git.addToGitignore(project.getPath(), filename);
       
       if(!fs.pathExistsSync(path)){
         fs.mkdirSync(path);

@@ -9,7 +9,7 @@ export default class FeatureDeinstall extends Command {
     help: flags.help({char: 'h'}),
     connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true} ),
     syspw: flags.string( {char: 's', description:'Password of SYS-User', required: true}),
-    owner: flags.boolean ( {char: 'o', description: 'drop owner schema'} )
+    drop: flags.boolean ( {char: 'd', description: 'drop owner schema'} )
   }
 
   static args = [
@@ -29,7 +29,7 @@ export default class FeatureDeinstall extends Command {
   async run() {
     const {args, flags} = this.parse(FeatureDeinstall)
     await FeatureManager.getInstance().deinstallProjectFeature(args.feature, flags.connection, flags.syspw ,args.project);
-    if (flags.owner){
+    if (flags.drop){
       FeatureManager.getInstance().dropOwnerSchema(args.feature, flags.connection, flags.syspw ,args.project);
     }
   }
