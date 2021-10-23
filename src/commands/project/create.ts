@@ -8,16 +8,16 @@ import inquirer = require("inquirer");
 import { ProjectManager } from '../../lib/ProjectManager';
 
 export default class ProjectCreate extends Command {
-  static description = 'creates a project (folder and structure)'
+  static description = 'Creates a project including a new directory and the configured folder structure'
 
   static flags = {
     help: flags.help({char: 'h'}),
     workspace: flags.string({char: 'w',
-                             description: 'workspace name the application should be installed in'
-                             ,default: Environment.readConfigFrom(process.cwd(),'project', false)
+                             description: 'workspace name the application should be installed in',
+                             default: Environment.readConfigFrom(process.cwd(),'project', false)
                             }),
     "single-schema" : flags.boolean ({description: 'one schema instead of three, no deployment user'}),
-    "wizard" : flags.boolean ({description: 'kommt noch'})
+    interactive : flags.boolean ({char: 'i', description: 'Interactive wizard that guides you through the creation of the project'})
   }
 
   static args = [
@@ -34,7 +34,7 @@ export default class ProjectCreate extends Command {
     // BUG: Wenn kein Projektname angegeben wird und das Flag falsch geschrieben wird,
     //      wird das Flag zum Projektnamen
 
-    if (flags.wizard) {
+    if (flags.interactive) {
       await doTheWizard(args.project)
     } else {
       if (!args.project) {
@@ -92,11 +92,18 @@ async function doTheWizard(projectName:string | undefined) {
       type: 'password'
     },
     {
-      name: 'apexuser',
-      message: `Enter APEX-Schema name`,
-      type: 'input',
-      default: env.schema || 'APEX_210100'
+      name: 'features',
+      message: `What features would you like to install as base dependencies`,
+      type: 'checkbox',
+      choices: ['Logger', 'utPLSQL', 'oos-utils', 'table-api-generator', 'tePLSQL', 'console'].sort(),
+      default: ['Logger', 'utPLSQL']
     },
+    {
+      name: 'deployment',
+      message: `Which deployment feature do you want to install`,
+      type: 'list',
+      choices: ['orcas', 'dbFlow'].sort()
+    }
     ],
   ).then((answer) => {
     console.log('responses', answer);
@@ -115,5 +122,6 @@ export interface ProjectWizardConfiguration {
   connection: string;
   password:   string;
   adminpass:  string;
-  apexuser:   string;
+  features:   string[];
+  deployment: string;
 }
