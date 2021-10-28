@@ -31,21 +31,18 @@ export default class ProjectCreate extends Command {
   async run() {
     const {args, flags} = this.parse(ProjectCreate)
 
-    // BUG: Wenn kein Projektname angegeben wird und das Flag falsch geschrieben wird,
-    //      wird das Flag zum Projektnamen
-
     if (flags.interactive) {
       await doTheWizard(args.project)
     } else {
       if (!args.project) {
        console.error(chalk.red('ERROR: Missing project name'));
-      }
-      else {
-        if(flags.workspace){
-          ProjectManager.getInstance().createProject(args.project, flags.workspace, flags['single-schema']);
-        } else {
-          ProjectManager.getInstance().createProject(args.project, args.project, flags['single-schema']);
-        }
+      } else if (args.project.startsWith('-')) {
+        console.error(chalk.red('ERROR: Unknown Argument: ' + args.project));
+      } else {
+
+        flags.workspace = flags.workspace ? flags.workspace : args.project;
+        ProjectManager.getInstance().createProject(args.project, flags.workspace, flags['single-schema']);
+
       }
     }
   }
