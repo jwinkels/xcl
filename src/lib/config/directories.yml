@@ -71,11 +71,11 @@ db:
     - ddl
     - dml
   - finally
-- apps:
-  - apex
-  - rest
-- apex_files:
-  - f1000:
-    - js
-    - css
-    - img
+apex:
+rest:
+static:
+  - src:
+    - f1000:
+      - js
+      - css
+      - img

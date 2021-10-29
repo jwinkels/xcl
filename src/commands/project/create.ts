@@ -8,16 +8,16 @@ import inquirer = require("inquirer");
 import { ProjectManager } from '../../lib/ProjectManager';
 
 export default class ProjectCreate extends Command {
-  static description = 'creates a project (folder and structure)'
+  static description = 'Creates a project including a new directory and the configured folder structure'
 
   static flags = {
     help: flags.help({char: 'h'}),
     workspace: flags.string({char: 'w',
-                             description: 'workspace name the application should be installed in'
-                             ,default: Environment.readConfigFrom(process.cwd(),'project', false)
+                             description: 'workspace name the application should be installed in',
+                             default: Environment.readConfigFrom(process.cwd(),'project', false)
                             }),
     "single-schema" : flags.boolean ({description: 'one schema instead of three, no deployment user'}),
-    "wizard" : flags.boolean ({description: 'kommt noch'})
+    interactive : flags.boolean ({char: 'i', description: 'Interactive wizard that guides you through the creation of the project'})
   }
 
   static args = [
@@ -31,20 +31,18 @@ export default class ProjectCreate extends Command {
   async run() {
     const {args, flags} = this.parse(ProjectCreate)
 
-    // BUG: Wenn kein Projektname angegeben wird und das Flag falsch geschrieben wird,
-    //      wird das Flag zum Projektnamen
-    if (flags.wizard) {
+    if (flags.interactive) {
       await doTheWizard(args.project)
     } else {
       if (!args.project) {
        console.error(chalk.red('ERROR: Missing project name'));
-      }
-      else {
-        if(flags.workspace){
-          ProjectManager.getInstance().createProject(args.project, flags.workspace, flags['single-schema']);
-        } else {
-          ProjectManager.getInstance().createProject(args.project, args.project, flags['single-schema']);
-        }
+      } else if (args.project.startsWith('-')) {
+        console.error(chalk.red('ERROR: Unknown Argument: ' + args.project));
+      } else {
+
+        flags.workspace = flags.workspace ? flags.workspace : args.project;
+        ProjectManager.getInstance().createProject(args.project, flags.workspace, flags['single-schema']);
+
       }
     }
   }
@@ -108,5 +106,6 @@ export interface ProjectWizardConfiguration {
   connection: string;
   password:   string;
   adminpass:  string;
-  apexuser:   string;
+  features:   string[];
+  deployment: string;
 }
