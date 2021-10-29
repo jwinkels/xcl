@@ -118,7 +118,6 @@ export class ProjectManager {
 
         project = new Project(projectName, process.cwd() + path.sep + projectName, workspaceName, true, singleSchema);
 
-
         this.addProjectToGlobalConfig( project );
         Application.generateCreateWorkspaceFile( projectName, workspaceName );
       } else {
@@ -142,7 +141,7 @@ export class ProjectManager {
                                 true,
                                 projectConfigFromWizard.multi.toLowerCase() === Project.MODE_SINGLE);
 
-
+    FeatureManager.doFeatureWizard(project);
     // Project define in GlobalJson
     this.addProjectToGlobalConfig( project );
 
@@ -358,7 +357,7 @@ export class ProjectManager {
     deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).build(projectName, version, mode, commit);
   }
 
-  public deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined):void{
+  public deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined, nocompile:boolean|undefined):void{
     const p:Project = this.getProject(projectName);
     if (!connection){
       if (!p.getEnvironmentVariable('connection')){
@@ -372,7 +371,7 @@ export class ProjectManager {
     p.getLogger().getLogger().log("info", 'Start XCL - Deploy...\n---------------------------------------------------------------');
     if ( !p.getStatus().hasChanged() ){
       if (p.getDeployMethod()){
-        deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema );
+        deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema , nocompile);
         Git.getCurrentCommitId()
           .then((commitId)=>{p.getStatus().setCommitId(commitId)})
           .catch((reason)=>{});
@@ -517,7 +516,7 @@ export class ProjectManager {
           console.log("\n\n\r");
           console.log( chalk.green('SUCCESS: Everything up to date!') );
           fs.removeSync( 'plan.sh' );
-          if( !setupOnly ){
+          /*if( !setupOnly ){
             console.log( 'DEPLOY APPLICATION: ' );
             this.deploy(projectName,
                         Environment.readConfigFrom( project.getPath(), 'connection' ),
@@ -526,7 +525,7 @@ export class ProjectManager {
                         Environment.readConfigFrom( project.getPath(), 'ords'),
                         true,
                         version, mode, Environment.readConfigFrom( project.getPath(), 'schema' ) );
-          }
+          }*/
         }else{
           console.log("\n\n\r");
           console.log( chalk.red( 'FAILURE: apply was made but there are still changes!' ) );

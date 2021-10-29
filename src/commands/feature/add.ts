@@ -13,7 +13,8 @@ export default class FeatureAdd extends Command {
   static description = 'add Feature to dependency list'
 
   static flags = {
-    help: flags.help({char: 'h'})
+    help: flags.help({char: 'h'}),
+    interactive: flags.boolean({char: 'i', description: 'interactive mode'})
   }
 
   static args = [{

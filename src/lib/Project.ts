@@ -482,9 +482,13 @@ export class Project {
 
   public getUserNames():string[]{
     let userNames:string[]=[];
-    this.users.forEach(schema=>{
-        userNames.push(schema.getName().toUpperCase())
-    });
+    if (this.isMultiSchema()){
+      this.users.forEach(schema=>{
+          userNames.push(schema.getName().toUpperCase())
+      });
+    }else{
+      userNames.push(this.getUsers().get('APP')!.getName().toUpperCase());
+    }
 
     return userNames;
   }

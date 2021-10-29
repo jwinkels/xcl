@@ -52,8 +52,7 @@ export class Git{
                                                          process.cwd(), 
                                                          false, 
                                                          new Logger(process.cwd())
-                                                      )).result;
-      console.log(`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`);                                                      
+                                                      )).result;                                                      
       }else if(mode == 'init'){
          fileList = (await ShellHelper.executeScript(`git ls-files --cached -- ${modifiers}`,
                         process.cwd(), 

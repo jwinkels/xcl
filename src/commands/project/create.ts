@@ -33,7 +33,6 @@ export default class ProjectCreate extends Command {
 
     // BUG: Wenn kein Projektname angegeben wird und das Flag falsch geschrieben wird,
     //      wird das Flag zum Projektnamen
-
     if (flags.wizard) {
       await doTheWizard(args.project)
     } else {
@@ -90,13 +89,7 @@ async function doTheWizard(projectName:string | undefined) {
       name: 'adminpass',
       message: `Enter password for admin user. Leave blank and you will be prompted when needed`,
       type: 'password'
-    },
-    {
-      name: 'apexuser',
-      message: `Enter APEX-Schema name`,
-      type: 'input',
-      default: env.schema || 'APEX_210100'
-    },
+    }
     ],
   ).then((answer) => {
     console.log('responses', answer);

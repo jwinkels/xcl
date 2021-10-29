@@ -12,8 +12,7 @@ import { Application } from './Application';
 import { Git } from "./Git";
 import { Logger } from "./Logger";
 import AdmZip = require("adm-zip");
-import { resolve } from "dns";
-import { string } from "@oclif/parser/lib/flags";
+
 const ps = require("ps-node");
 @injectable()
 export class Orcas implements DeliveryMethod{
@@ -54,12 +53,12 @@ export class Orcas implements DeliveryMethod{
       feature.setInstalled(true);
     }
 
-    public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined){
+    public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined, nocompile:boolean|undefined){
       
       let project=ProjectManager.getInstance().getProject(projectName);
-      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile=false --continue";
-      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile=false --continue";
-      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile=false --continue";
+      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" --continue";
+      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" --continue";
+      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" --continue";
       let path:string = "";
       let buildZip:AdmZip;
       if (version){

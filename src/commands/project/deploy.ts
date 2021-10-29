@@ -24,7 +24,8 @@ export default class ProjectDeploy extends Command {
     yes: flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),
     'ords-url': flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords', false)}),
     'schema': flags.string({description: 'to deploy a single schema type one of the following: [data, logic, app]', default: Environment.readConfigFrom(process.cwd(), "schema", false)}),
-    'quiet': flags.boolean({description: 'suppress output', default: false})
+    'quiet': flags.boolean({description: 'suppress output', default: false}),
+    'nocompile': flags.boolean({description: 'ignore invalid objects on deploy', default: false})
   }
 
   static args = [{name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom( process.cwd(), "project", false) }]
@@ -62,7 +63,7 @@ export default class ProjectDeploy extends Command {
           }
         }
 
-        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password!, flags["schema-only"], flags['ords-url'], flags.yes, flags.version!, flags.mode, flags.schema);
+        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password!, flags["schema-only"], flags['ords-url'], flags.yes, flags.version!, flags.mode, flags.schema, flags.nocompile);
 
       }else{
         console.log(chalk.red("ERROR: Deploy-Method undefined!"));
