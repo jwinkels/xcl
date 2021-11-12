@@ -1,6 +1,8 @@
 import { ShellHelper } from "./ShellHelper";
 import { Logger } from "./Logger";
 import * as fs from "fs-extra";
+import { ProjectManager } from "./ProjectManager";
+import { Project } from "./Project";
 export class Git{
 
    public static async getCurrentCommitId():Promise<string>{
@@ -12,7 +14,8 @@ export class Git{
    }
    
    public static async getLatestTagName():Promise<string>{
-      return (await ShellHelper.executeScript(`git describe --tags ${(await this.getLatestTaggedCommitId())}`, process.cwd(), true, new Logger(process.cwd()))).result;
+      let commitId:string = await this.getLatestTaggedCommitId();
+      return commitId ? (await ShellHelper.executeScript(`git describe --tags ${(await this.getLatestTaggedCommitId())}`, process.cwd(), false, new Logger(process.cwd()))).result : "";
    }
 
    public static async getCommitIdOfTag(tag:string):Promise<string>{
@@ -27,7 +30,11 @@ export class Git{
       return (await ShellHelper.executeScript(`git describe --tags ${(await this.getPreviousTaggedCommitId())}`, process.cwd(), false, new Logger(process.cwd()))).result;
    }
 
-   public static async getChangedFiles(mode:string, projectName:string):Promise<string[]>{
+   public static async getTagList():Promise<string[]>{
+      return (await ShellHelper.executeScript(`git tag -l`, process.cwd(), false, new Logger(process.cwd()))).result.split("\n");
+   }
+
+   public static async getChangedFiles(mode:string, commit:string|undefined, projectName:string):Promise<string[]>{
 
       const endings:string = `*.sql *.pks *.pkb *.zip`;
       const exclude:string = `:!apps :!db/${projectName}_app/build :!db/${projectName}_data/build :!db/${projectName}_logic/build`;
@@ -44,15 +51,16 @@ export class Git{
       }
 
       let fileList:string="";
-      const commitA:string = await this.getLatestTagName();
-      const commitB:string = await this.getPreviousTagName();
-     
+      let project:Project = ProjectManager.getInstance().getProject(projectName);    
+      
       if (mode == 'patch'){
-      fileList=(await ShellHelper.executeScript(`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`,
-                                                         process.cwd(), 
-                                                         false, 
-                                                         new Logger(process.cwd())
-                                                      )).result;                                                      
+         const commitA:string = commit == 'latest' ? await this.getCurrentCommitId() : await this.getCommitIdOfTag(commit!);
+         const commitB:string = await this.getCommitIdOfTag(project.getVersion());
+         fileList=(await ShellHelper.executeScript(`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`,
+                                                            process.cwd(), 
+                                                            false, 
+                                                            new Logger(process.cwd())
+                                                         )).result;                                  
       }else if(mode == 'init'){
          fileList = (await ShellHelper.executeScript(`git ls-files --cached -- ${modifiers}`,
                         process.cwd(), 
