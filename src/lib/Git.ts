@@ -1,6 +1,7 @@
 import { ShellHelper } from "./ShellHelper";
 import { Logger } from "./Logger";
 import * as fs from "fs-extra";
+import { Utils } from "./Utils";
 export class Git{
 
    public static async getCurrentCommitId():Promise<string>{
@@ -10,7 +11,7 @@ export class Git{
    public static async getLatestTaggedCommitId():Promise<string>{
       return (await ShellHelper.executeScript('git rev-list --tags --max-count=1', process.cwd(), false , new Logger(process.cwd()))).result;
    }
-   
+
    public static async getLatestTagName():Promise<string>{
       return (await ShellHelper.executeScript(`git describe --tags ${(await this.getLatestTaggedCommitId())}`, process.cwd(), true, new Logger(process.cwd()))).result;
    }
@@ -35,7 +36,7 @@ export class Git{
       const excludeInit:string = `:!db/${projectName}_app/dml_post :!db/${projectName}_app/ddl_post :!db/${projectName}_app/ddl_pre :!db/${projectName}_app/dml_post`;
       const excludePatch:string = `:!db/${projectName}_app/dml_init :!db/${projectName}_app/ddl_init`;
 
-      let modifiers:string = `${endings} ${exclude}`; 
+      let modifiers:string = `${endings} ${exclude}`;
 
       if(mode == 'patch'){
          modifiers = modifiers + ` ${excludePatch}`;
@@ -46,18 +47,18 @@ export class Git{
       let fileList:string="";
       const commitA:string = await this.getLatestTagName();
       const commitB:string = await this.getPreviousTagName();
-     
+
       if (mode == 'patch'){
       fileList=(await ShellHelper.executeScript(`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`,
-                                                         process.cwd(), 
-                                                         false, 
+                                                         process.cwd(),
+                                                         false,
                                                          new Logger(process.cwd())
                                                       )).result;
-      console.log(`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`);                                                      
+      console.log(`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`);
       }else if(mode == 'init'){
          fileList = (await ShellHelper.executeScript(`git ls-files --cached -- ${modifiers}`,
-                        process.cwd(), 
-                        false, 
+                        process.cwd(),
+                        false,
                         new Logger(process.cwd())
                      )).result;
       }
@@ -69,18 +70,8 @@ export class Git{
    }
 
    public static async addToGitignore(projectPath:string, filePath:string){
-      let content:string="";
       const gitignore:string = projectPath + '/.gitignore';
-      const crlf = '\n\r';
-      if (fs.existsSync(gitignore)){
-         content = (await fs.readFile(gitignore)).toString();
-      }
 
-      if (content){
-         content = content.concat(content, crlf , filePath);
-      }else{
-         content = filePath;
-      }
-      fs.writeFileSync(gitignore, content);
+      Utils.addLine(gitignore, filePath);
    }
 }
