@@ -12,8 +12,7 @@ import { Application } from './Application';
 import { Git } from "./Git";
 import { Logger } from "./Logger";
 import AdmZip = require("adm-zip");
-import { resolve } from "dns";
-import { string } from "@oclif/parser/lib/flags";
+
 const ps = require("ps-node");
 @injectable()
 export class Orcas implements DeliveryMethod{
@@ -54,12 +53,12 @@ export class Orcas implements DeliveryMethod{
       feature.setInstalled(true);
     }
 
-    public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined){
+    public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined, nocompile:boolean|undefined){
       
       let project=ProjectManager.getInstance().getProject(projectName);
-      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile=false --continue";
-      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile=false --continue";
-      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile=false --continue";
+      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" --continue";
+      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" --continue";
+      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" --continue";
       let path:string = "";
       let buildZip:AdmZip;
       if (version){
@@ -250,30 +249,30 @@ export class Orcas implements DeliveryMethod{
       });
     }
 
-    public async build(projectName:string, version:string){
+    public async build(projectName:string, version:string, mode:string, commit:string|undefined){
       let release  = ProjectManager.getInstance().getProject(projectName).getVersion();
       let project:Project = ProjectManager.getInstance().getProject(projectName);
     
-      ProjectManager.getInstance().getProject(projectName).setVersion(version);
+      //ProjectManager.getInstance().getProject(projectName).setVersion(version);
       let path = "";
-      let buildZip:AdmZip = await this.patch(version, project);
+      let buildZip:AdmZip = await this.patch(version, project, mode, commit!);
       //Read apex-folder and find the correct file
-      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/").forEach(file=>{
-        if ( fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file).isDirectory() ){
+      fs.readdirSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/").forEach(file=>{
+        if ( fs.statSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file).isDirectory() ){
           if(file.startsWith('f')){
             //If Application was exportet with Split-Option
-            if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file + "/application/create_application.sql")){
-              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file + "/application/create_application.sql";
+            if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql")){
+              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/application/create_application.sql";
             }
             //If Application was exportet with SplitFlat-Option
-            else if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file + "/create_application.sql")){
-              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file + "/create_application.sql";
+            else if(fs.existsSync(ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql")){
+              path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file + "/create_application.sql";
             }
 
           }
         }else{
           if(file.startsWith('f')){
-            path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apps/apex/" + file;
+            path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file;
           }
         }
   
@@ -290,21 +289,19 @@ export class Orcas implements DeliveryMethod{
               console.log("Replacement String was not found, Version-Number could not be set automatically!");
             }
           }
-        }else{
-          console.log("File could not be found!");
         }
       });  
 
-      buildZip.addLocalFolder(project.getPath() + "/apps", "apps");
+      buildZip.addLocalFolder(project.getPath() + "/rest", "rest");
      
       buildZip.writeZip(project.getPath()+ "/" + version + ".zip");
       fs.moveSync(project.getPath()+ "/" + version + ".zip",project.getPath()+ "/dist/" + version + ".zip");
     }
 
 
-    async patch(version:string, project:Project):Promise<AdmZip>{
+    async patch(version:string, project:Project, mode:string, commit:string):Promise<AdmZip>{
       let fileMap:Map<string,string> = new Map();
-      let fileList:string[] = await Git.getChangedFiles('patch', project.getName());
+      let fileList:string[] = await Git.getChangedFiles(mode, commit, project.getName());
       let tablesPath:string = "";
       let buildZip = new AdmZip();
 

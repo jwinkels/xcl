@@ -25,6 +25,8 @@ export class ShellHelper{
                         if(data.toString().trim()!==""){
                             logger.getLogger().log("info", data.toString().trim());
                         }
+                    }else{
+                        retObj.result = retObj.result ? retObj.result : "" + data.toString().trim();
                     }
                 });
 
@@ -32,6 +34,7 @@ export class ShellHelper{
                     if(data.toString().trim()!==""){
                         retObj.status=false;
                         retObj.result="";
+                        console.log(script);
                         logger.getLogger().log("info", data.toString().trim());
                     }
                 });

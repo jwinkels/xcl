@@ -31,8 +31,8 @@ export class Feature{
     }
 
     public getReleaseInformation():any{
-        return new Promise<String[]>((resolve, reject)=>{
-            let releases:String[]=[];
+        return new Promise<string[]>((resolve, reject)=>{
+            let releases:string[]=[];
             this.call().then(function(featureData){
                 let featureJSON = JSON.parse(featureData);
                 try{

@@ -87,19 +87,6 @@ async function doTheWizard(projectName:string | undefined) {
       name: 'adminpass',
       message: `Enter password for admin user. Leave blank and you will be prompted when needed`,
       type: 'password'
-    },
-    {
-      name: 'features',
-      message: `What features would you like to install as base dependencies`,
-      type: 'checkbox',
-      choices: ['Logger', 'utPLSQL', 'oos-utils', 'table-api-generator', 'tePLSQL', 'console'].sort(),
-      default: ['Logger', 'utPLSQL']
-    },
-    {
-      name: 'deployment',
-      message: `Which deployment feature do you want to install`,
-      type: 'list',
-      choices: ['orcas', 'dbFlow'].sort()
     }
     ],
   ).then((answer) => {

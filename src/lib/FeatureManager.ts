@@ -17,6 +17,7 @@ import { Environment } from './Environment';
 import { Operation } from './Operation';
 import { Utils } from './Utils';
 import { Logger } from "./Logger";
+import inquirer = require("inquirer");
 const Table = require('cli-table');
 
 export class FeatureManager{
@@ -26,7 +27,7 @@ export class FeatureManager{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
     private static softwareYaml: yaml.Document;
     private static softwareJson: any;
-    private static features: Map<String, Feature>;
+    private static features: Map<string, Feature>;
  
 
     private constructor(){
@@ -581,4 +582,68 @@ export class FeatureManager{
          console.log(chalk.red("ERROR: Unkown Feature!")) 
         }
       }
+
+      static async getUsername(projectName:string):Promise<any> {
+        // read project and env to show current values
+        let prj:any = fs.existsSync("xcl.yml") ? yaml.parse(fs.readFileSync("xcl.yml").toString()) : { xcl: {project: projectName} };
+        let env:any = fs.existsSync(".xcl/env.yml") ? yaml.parse(fs.readFileSync(".xcl/env.yml").toString()) : { };
+        let project:Project = ProjectManager.getInstance().getProject(projectName!);
+        let answer = await inquirer.prompt([{
+      
+            name: 'username',
+            message: `Install Feature in: `,
+            type: 'list',
+            choices: Array.from(project.getUserNames()).concat(['Other'])
+        }]);
+      
+        if (answer.username === 'Other'){
+        answer = await inquirer.prompt([{
+      
+            name: 'username',
+            message: `Enter username: `,
+            type: 'input'
+          },
+          {
+            name: 'password',
+            message: `Enter password:`,
+            type: 'password'
+          }]);
+        }else{
+          let username:string = answer.username;
+          let user:string = username.replace(projectName.toUpperCase()+'_','');;
+          answer.username = user.toUpperCase()
+        }
+      
+        return answer;
+      }
+
+      public getFeatures():string[]{
+        return Array.from(FeatureManager.features.keys());
+      }
+
+      public static async doFeatureWizard(project:Project){
+        let user:any;
+        let featureList = await inquirer.prompt([{
+          name: "features",
+          message: "Choose features: ",
+          type: 'checkbox',
+          choices: FeatureManager.getInstance().getFeatures()
+        }]);
+
+        for(let i = 0; i<featureList.features.length; i++){
+          let version = await inquirer.prompt([{
+            name: 'number',
+            message: `choose a version for ${featureList.features[i]}: `,
+            type: 'list',
+            choices: await FeatureManager.getInstance().getFeatureReleases(featureList.features[i])
+          }]);
+
+          if(FeatureManager.getInstance().getFeatureType(featureList.features[i]) === "DB"){
+            user = await FeatureManager.getUsername(project.getName());
+          }
+
+          await FeatureManager.getInstance().addFeatureToProject(featureList.features[i],version.number, project.getName(), user.username, user.password); 
+        }
+      }
+
 }
