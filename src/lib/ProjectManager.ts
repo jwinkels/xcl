@@ -154,6 +154,10 @@ export class ProjectManager {
   }
 
   private addProjectToGlobalConfig(project: Project) {
+    // reinitialize when all was removed
+    if (!ProjectManager.projectsJson.projects) {
+      ProjectManager.projectsJson.projects = {};
+    }
     ProjectManager.projectsJson.projects[project.getName()] = project.toJSON();
     fs.writeFileSync( ProjectManager.xclHome + "/" + ProjectManager.projectYMLfile, yaml.stringify(ProjectManager.projectsJson ) );
   }
