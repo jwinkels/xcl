@@ -18,6 +18,7 @@ import { Operation } from './Operation';
 import { Utils } from './Utils';
 import { Logger } from "./Logger";
 import inquirer = require("inquirer");
+import { Schema } from "./Schema";
 const Table = require('cli-table');
 
 export class FeatureManager{
@@ -257,94 +258,103 @@ export class FeatureManager{
               var featurePath =projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
               if (feature.getType()==="DB"){
                 var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection);
-                if (project.getStatus().checkDependency(feature) === Operation.INSTALL){
-                  DBHelper.isFeatureInstalled(feature,c)
-                    .then((installed) => {
-                      if(! installed){
-                        var installSteps = FeatureManager.getInstallSteps(feature.getName());
-                        FeatureManager.unzipFeature(installSteps, projectPath, feature).then(()=>{
-                          if (installSteps.scripts){
-                            for (var i=0; i<installSteps.scripts.length; i++){
-                              var argumentString="";
-                              let substeps:string[] = [];
-                              if (installSteps.scripts[i].arguments){
-                                for (var j=0; j<installSteps.scripts[i].arguments.length; j++){
-                                  substeps = [];
-                                  if (installSteps.scripts[i].arguments[j] == 'credentials'){
+                DBHelper.isFeatureInstalled(feature,c)
+                  .then((installed) => {
+                    if(! installed && (project.getStatus().checkDependency(feature) ===  Operation.INSTALL)){ 
+                      var installSteps = FeatureManager.getInstallSteps(feature.getName());
+                      FeatureManager.unzipFeature(installSteps, projectPath, feature).then(()=>{
+                        if (installSteps.scripts){
+                          for (var i=0; i<installSteps.scripts.length; i++){
+                            var argumentString="";
+                            let substeps:string[] = [];
+                            if (installSteps.scripts[i].arguments){
+                              for (var j=0; j<installSteps.scripts[i].arguments.length; j++){
+                                substeps = [];
+                                if (installSteps.scripts[i].arguments[j] == 'credentials'){
+                                  if(project.getUsers().get(feature.getUser().getName())){
+                                    argumentString = " " + project.getUsers().get(feature.getUser().getName())?.getConnectionName() + " ";
+                                    argumentString = argumentString + project.getUsers().get(feature.getUser().getName())?.getProxy()?.getPassword();
+                                    console.log('FEATURE INSTALL: ', argumentString);
+                                  }else{
                                     argumentString = " " + feature.getUser().getConnectionName() + " ";
                                     argumentString = argumentString+feature.getUser().getPassword();
-                                  }else if(installSteps.scripts[i].arguments[j] == 'username'){
+                                  }
+                                }else if(installSteps.scripts[i].arguments[j] == 'username'){
+                                  if(project.getUsers().get(feature.getUser().getName())){
+                                    argumentString = " " +  project.getUsers().get(feature.getUser().getName())?.getName();
+                                  }else{
                                     argumentString = " " + feature.getUser().getConnectionName(); 
-                                  }else if(installSteps.scripts[i].arguments[j] == 'usernames'){
-                                    let k = 0;
-                                    for (let user in project.getUserNames()){
-
-                                      substeps[user] = installSteps.scripts[i].path + ' ' + project.getUserNames()[user];
-                                    }
-                                    console.log(substeps);
-                                  }else{
-                                    argumentString = argumentString + " " + installSteps.parameters[installSteps.scripts[i].arguments[j]];
                                   }
-                                }
-                              }
+                                }else if(installSteps.scripts[i].arguments[j] == 'usernames'){
+                                  let k = 0;
+                                  for (let user in project.getUserNames()){
 
-                              if (installSteps.scripts[i].sys === true){
-                                connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
-                                c = DBHelper.getConnectionProps('sys',syspw,connection);
-                              }else{
-                                connectionWithUser=feature.getUser().getConnectionName() + "/" + feature.getUser().getPassword() + "@" + connection;
-                                if (!installSteps.scripts[i].executeAs){
-                                  if(project.getUsers().has(feature.getUser().getName())){
-                                    c = DBHelper.getConnectionProps(project.getUsers().get(feature.getUser().getName())?.getConnectionName(),
-                                                                    Environment.readConfigFrom(project.getPath(), 'password', false),
-                                                                    connection); 
-                                  }else{
-                                    c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection);
+                                    substeps[user] = installSteps.scripts[i].path + ' ' + project.getUserNames()[user];
                                   }
-                                }
-                              }
-
-                              var executeString="";
-                              var xclScript = installSteps.scripts[i].xcl ? installSteps.scripts[i].xcl : false;
-                              if (!xclScript && fs.existsSync(featurePath + '/' + installSteps.scripts[i].path)){
-                                executeString = Utils.checkPathForSpaces(featurePath 
-                                                            + '/' 
-                                                            + installSteps.scripts[i].path) 
-                                                            + argumentString;
-                              }else{
-                                if(fs.existsSync(__dirname + "/scripts/" + installSteps.scripts[i].path)){
-                                  if(xclScript){
-                                    project.getLogger().getLogger().log("warning", 'Using XCL-Script instead of native script!');
-                                  }
-                                  executeString=Utils.checkPathForSpaces(__dirname + "/scripts/" + installSteps.scripts[i].path) + argumentString;
+                                  console.log(substeps);
                                 }else{
-                                  throw Error(`Script '${__dirname + "/scripts/" + installSteps.scripts[i].path}' couldn't be found!`);
-                                }
-                              }
-
-                              if (substeps.length == 0){
-                                if(installSteps.scripts[i].executeAs === "PROJECT_USER"){
-                                  for (let [user, schema] of project.getUsers()){
-                                    c = DBHelper.getConnectionProps(project.getUsers().get(user)?.getConnectionName(),
-                                                                    Environment.readConfigFrom(project.getPath(), 'password', false),
-                                                                    connection); 
-                                    DBHelper.executeScript(c, executeString, project.getLogger());            
-                                  }
-                                }
-                                else{ 
-                                  DBHelper.executeScript(c, executeString, project.getLogger());
-                                }
-                              }else{
-                                for (let s in substeps){
-                                  DBHelper.executeScript(c, featurePath + '/' + substeps[s], project.getLogger());
+                                  argumentString = argumentString + " " + installSteps.parameters[installSteps.scripts[i].arguments[j]];
                                 }
                               }
                             }
-                            fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
-                          }else{
-                            throw Error('Could not find installation information! Update your software.yml File!');
+
+                            if (installSteps.scripts[i].sys === true){
+                              connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
+                              c = DBHelper.getConnectionProps('sys',syspw,connection);
+                            }else{
+                              connectionWithUser=feature.getUser().getConnectionName() + "/" + feature.getUser().getPassword() + "@" + connection;
+                              if (!installSteps.scripts[i].executeAs){
+                                if(project.getUsers().has(feature.getUser().getName())){
+                                  c = DBHelper.getConnectionProps(project.getUsers().get(feature.getUser().getName())?.getConnectionName(),
+                                                                  Environment.readConfigFrom(project.getPath(), 'password', false),
+                                                                  connection); 
+                                }else{
+                                  c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection);
+                                }
+                              }
+                            }
+
+                            var executeString="";
+                            var xclScript = installSteps.scripts[i].xcl ? installSteps.scripts[i].xcl : false;
+                            if (!xclScript && fs.existsSync(featurePath + '/' + installSteps.scripts[i].path)){
+                              executeString = Utils.checkPathForSpaces(featurePath 
+                                                          + '/' 
+                                                          + installSteps.scripts[i].path) 
+                                                          + argumentString;
+                            }else{
+                              if(fs.existsSync(__dirname + "/scripts/" + installSteps.scripts[i].path)){
+                                if(xclScript){
+                                  project.getLogger().getLogger().log("warning", 'Using XCL-Script instead of native script!');
+                                }
+                                executeString=Utils.checkPathForSpaces(__dirname + "/scripts/" + installSteps.scripts[i].path) + argumentString;
+                              }else{
+                                throw Error(`Script '${__dirname + "/scripts/" + installSteps.scripts[i].path}' couldn't be found!`);
+                              }
+                            }
+
+                            if (substeps.length == 0){
+                              if(installSteps.scripts[i].executeAs === "PROJECT_USER"){
+                                for (let [user, schema] of project.getUsers()){
+                                  c = DBHelper.getConnectionProps(project.getUsers().get(user)?.getConnectionName(),
+                                                                  Environment.readConfigFrom(project.getPath(), 'password', false),
+                                                                  connection); 
+                                  DBHelper.executeScript(c, executeString, project.getLogger());            
+                                }
+                              }
+                              else{ 
+                                DBHelper.executeScript(c, executeString, project.getLogger());
+                              }
+                            }else{
+                              for (let s in substeps){
+                                DBHelper.executeScript(c, featurePath + '/' + substeps[s], project.getLogger());
+                              }
+                            }
                           }
-                        });
+                          fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
+                        }else{
+                          throw Error('Could not find installation information! Update your software.yml File!');
+                        }
+                      });
                       }else{
                         console.warn(chalk.yellow(`WARNING: Feature '${feature.getName()}' is already installed! First remove feature or use xcl feature:update!`));
                         //ProjectManager.getInstance().getProject(projectName).updateFeature(feature);
@@ -359,7 +369,6 @@ export class FeatureManager{
                       resolve();
                     }
                   );
-                }
               }else{
                 if(feature.getType() === "DEPLOY"){
                   FeatureManager.unzipFeature(undefined, projectPath, feature).then(()=>{
@@ -403,7 +412,16 @@ export class FeatureManager{
                             argumentString = " " + feature.getUser().getName() + " ";
                             argumentString = argumentString+feature.getUser().getPassword();
                           }else if(deinstallSteps.scripts[i].arguments[j] == 'username'){
-                            argumentString = " " + feature.getUser().getName(); 
+                            if(project.getUsers().get(feature.getUser().getName())){
+                              argumentString = " " +  project.getUsers().get(feature.getUser().getName())?.getName();
+                            }else{
+                              if (project.getUsers().get(feature.getUser().getConnectionName())){
+                                argumentString = " " + project.getUsers().get(feature.getUser().getConnectionName())?.getName();
+                              }else{
+                                argumentString = " " + feature.getUser().getConnectionName(); 
+                              }
+                              
+                            }
                           }else{
                             argumentString = argumentString + " " + deinstallSteps.parameters[deinstallSteps.scripts[i].arguments[j]];
                           }
@@ -415,11 +433,15 @@ export class FeatureManager{
                         c = DBHelper.getConnectionProps('sys',syspw,connection);
                       }else{
                         //connectionWithUser=feature.getUser().getConnectionName() + "/" + feature.getUser().getPassword() + "@" + connection;
-                        c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection);
+                        if (project.getUsers().get(feature.getUser().getConnectionName())){
+                          let user:Schema = project.getUsers().get(feature.getUser().getConnectionName())!;
+                          c = DBHelper.getConnectionProps(user.getConnectionName(),user.getPassword() ? user.getPassword() : Environment.readConfigFrom(project.getPath(),'password', false),connection);
+                        }else{
+                          c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection);
+                        }
                       }
 
                       var executeString="";
-                      console.log(featurePath + '/' + deinstallSteps.scripts[i].path);
                       if (fs.existsSync(featurePath + '/' + deinstallSteps.scripts[i].path)){
                         executeString = Utils.checkPathForSpaces(projectPath + '/dependencies/' 
                                                     + feature.getName() 
@@ -436,7 +458,6 @@ export class FeatureManager{
                           throw Error("Script couldn't be found!");
                         }
                       }
-                      console.log(executeString);
                       DBHelper.executeScript(c, executeString, project.getLogger());
                     }
                     fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
@@ -459,15 +480,19 @@ export class FeatureManager{
 
       public dropOwnerSchema(featureName:string, connection:string, syspw:string, projectName:string):Promise<void>{
         return new Promise((resolve,reject)=>{
-          var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
-          const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
-          const project = ProjectManager.getInstance().getProject(projectName);
-          if (project.getFeatures().has(featureName)){
-            DBHelper.executeScript(c,`${__dirname}/scripts/drop_user.sql ${project.getFeatures().get(featureName)?.getUser().getConnectionName()}`, project.getLogger() );
-            resolve();
-          }else{
-            reject();
-          }
+            var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
+            const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
+            const project = ProjectManager.getInstance().getProject(projectName);
+            if (!project.getUsers().get(project.getFeatures().get(featureName)?.getUser().getName()!)){
+              if (project.getFeatures().has(featureName)){
+                DBHelper.executeScript(c,`${__dirname}/scripts/drop_user.sql ${project.getFeatures().get(featureName)?.getUser().getConnectionName()}`, project.getLogger() );
+                resolve();
+              }else{
+                reject();
+              }
+            }else{
+              console.log(chalk.red('ERROR: You can not drop a project schema'));
+            }
         });
       }
 
