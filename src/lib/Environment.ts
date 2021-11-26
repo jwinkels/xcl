@@ -142,7 +142,7 @@ export class Environment{
       Environment.setVariable("project",    config.project,    localEnv);
       Environment.setVariable("password",   config.password,   localEnv);
       Environment.setVariable("syspw",      config.adminpass,  localEnv);
-      Environment.setVariable("schema",     config.apexuser,   localEnv);
+      //Environment.setVariable("schema",     config.apexuser,   localEnv);
 
       Environment.writeEnvironment(config.project, localEnv);
 
