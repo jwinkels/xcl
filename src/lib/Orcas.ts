@@ -22,31 +22,32 @@ export class Orcas implements DeliveryMethod{
       let projectName:string = ProjectManager.getInstance().getProjectNameByPath(projectPath);
 
         if (!singleSchema){
-          fs.copyFileSync(featurePath+'/app/build.gradle',projectPath + '/db/' + projectName + '_app/build.gradle');
-          fs.copyFileSync(featurePath+'/logic/build.gradle',projectPath + '/db/' + projectName + '_logic/build.gradle');
-          fs.copyFileSync(featurePath+'/data/build.gradle',projectPath + '/db/' + projectName + '_data/build.gradle');
+          fs.copyFileSync(featurePath + '/schema/build.gradle', projectPath + '/db/' + projectName + '_app/build.gradle');
+          fs.copyFileSync(featurePath + '/schema/build.gradle', projectPath + '/db/' + projectName + '_logic/build.gradle');
+          fs.copyFileSync(featurePath + '/schema/build.gradle', projectPath + '/db/' + projectName + '_data/build.gradle');
           
-          fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + projectName + '_app/gradlew');
-          fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + projectName + '_logic/gradlew');
-          fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + projectName + '_data/gradlew');
+          fs.copyFileSync(featurePath + '/gradlew', projectPath + '/db/' + projectName + '_app/gradlew');
+          fs.copyFileSync(featurePath + '/gradlew', projectPath + '/db/' + projectName + '_logic/gradlew');
+          fs.copyFileSync(featurePath + '/gradlew', projectPath + '/db/' + projectName + '_data/gradlew');
 
-          fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + projectName + '_app/gradlew.bat');
-          fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + projectName + '_logic/gradlew.bat');
-          fs.copyFileSync(featurePath+'/gradlew.bat',projectPath+'/db/' + projectName + '_data/gradlew.bat');
+          fs.copyFileSync(featurePath + '/gradlew.bat', projectPath + '/db/' + projectName + '_app/gradlew.bat');
+          fs.copyFileSync(featurePath + '/gradlew.bat', projectPath + '/db/' + projectName + '_logic/gradlew.bat');
+          fs.copyFileSync(featurePath + '/gradlew.bat', projectPath + '/db/' + projectName + '_data/gradlew.bat');
 
-          fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + projectName + '_app/gradle/');
-          fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + projectName + '_logic/gradle/');
-          fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + projectName + '_data/gradle/');
+          fs.copySync(featurePath+'/gradle/', projectPath + '/db/' + projectName + '_app/gradle/');
+          fs.copySync(featurePath+'/gradle/', projectPath + '/db/' + projectName + '_logic/gradle/');
+          fs.copySync(featurePath+'/gradle/', projectPath + '/db/' + projectName + '_data/gradle/');
 
-          fs.removeSync(projectPath+'/db/'+ projectName + '_data/tables_ddl');
+          /*fs.removeSync(projectPath+'/db/'+ projectName + '_data/tables_ddl');
           fs.removeSync(projectPath+'/db/'+ projectName + '_logic/tables_ddl');
-          fs.removeSync(projectPath+'/db/'+ projectName + '_app/tables_ddl');
+          fs.removeSync(projectPath+'/db/'+ projectName + '_app/tables_ddl');*/
         }else{
-          fs.copyFileSync(featurePath+'/app/build.gradle',projectPath + '/db/' + projectName + '/build.gradle');
-          fs.copyFileSync(featurePath+'/gradlew',projectPath+'/db/' + projectName + '/gradlew');
-          fs.copyFileSync(featurePath+'/gradlew.bat',projectPath + '/db/' + projectName + '/gradlew.bat');
-          fs.copySync(featurePath+'/gradle/',projectPath+'/db/' + projectName + '/gradle/');
-          fs.removeSync(projectPath+'/db/'+ projectName + '/tables_ddl');
+          fs.copyFileSync(featurePath + '/app/build.gradle', projectPath + '/db/' + projectName + '/build.gradle');
+          fs.copyFileSync(featurePath + '/gradlew',          projectPath + '/db/' + projectName + '/gradlew');
+          fs.copyFileSync(featurePath + '/gradlew.bat',      projectPath + '/db/' + projectName + '/gradlew.bat');
+          fs.copySync    (featurePath + '/gradle/',          projectPath + '/db/' + projectName + '/gradle/');
+          
+          //fs.removeSync(projectPath + '/db/'+ projectName + '/tables_ddl');
         }
       fs.removeSync(featurePath);
         
@@ -56,9 +57,9 @@ export class Orcas implements DeliveryMethod{
     public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined, nocompile:boolean|undefined){
       
       let project=ProjectManager.getInstance().getProject(projectName);
-      let gradleStringData = "gradlew deployData -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" --continue";
-      let gradleStringLogic = "gradlew deployLogic -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" --continue";
-      let gradleStringApp = "gradlew deployApp -Ptarget=" + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" --continue";
+      let gradleStringData  = "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName()  + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
+      let gradleStringLogic = "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
+      let gradleStringApp   = "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName()   + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
       let path:string = "";
       let buildZip:AdmZip;
       if (version){
@@ -96,7 +97,6 @@ export class Orcas implements DeliveryMethod{
           await this.deploySchema(gradleString, project, schema);
           await this.hook(schema, "post", projectName, connection, password, project);
           let invalids = await DBHelper.getInvalidObjects(DBHelper.getConnectionProps(project.getUsers().get(schema.toUpperCase())?.getConnectionName(),password,connection));
-          //project.getLogger().getFileLogger().log("info",`Number of invalid objects: ${invalids.count}`);
           project.getLogger().getLogger().log("info",`Number of invalid objects: ${invalids.length}`);
           invalids.forEach((element: { name: string; type: string; }) => {
             project.getLogger().getLogger().log("info",`${element.name} (${element.type})`);
@@ -366,5 +366,33 @@ export class Orcas implements DeliveryMethod{
           console.log(error);
         }
       }
+    }
+
+    public remove(feature:ProjectFeature, projectPath:string, singleSchema:boolean)    : void {
+      let projectName:string = ProjectManager.getInstance().getProjectNameByPath(projectPath);
+
+        if (!singleSchema){
+          fs.removeSync(projectPath + '/db/' + projectName + '_app/build.gradle');
+          fs.removeSync(projectPath + '/db/' + projectName + '_logic/build.gradle');
+          fs.removeSync(projectPath + '/db/' + projectName + '_data/build.gradle');
+          
+          fs.removeSync(projectPath + '/db/' + projectName + '_app/gradlew');
+          fs.removeSync(projectPath + '/db/' + projectName + '_logic/gradlew');
+          fs.removeSync(projectPath + '/db/' + projectName + '_data/gradlew');
+
+          fs.removeSync(projectPath + '/db/' + projectName + '_app/gradlew.bat');
+          fs.removeSync(projectPath + '/db/' + projectName + '_logic/gradlew.bat');
+          fs.removeSync(projectPath + '/db/' + projectName + '_data/gradlew.bat');
+
+          fs.removeSync(projectPath + '/db/' + projectName + '_app/gradle/');
+          fs.removeSync(projectPath + '/db/' + projectName + '_logic/gradle/');
+          fs.removeSync(projectPath + '/db/' + projectName + '_data/gradle/');
+        }else{
+          fs.removeSync(projectPath + '/db/' + projectName + '/build.gradle');
+          fs.removeSync(projectPath + '/db/' + projectName + '/gradlew');
+          fs.removeSync(projectPath + '/db/' + projectName + '/gradlew.bat');
+          fs.removeSync(projectPath + '/db/' + projectName + '/gradle/');
+        }
+      feature.setInstalled(false);
     }
 }
