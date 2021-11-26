@@ -34,7 +34,6 @@ export class ShellHelper{
                     if(data.toString().trim()!==""){
                         retObj.status=false;
                         retObj.result="";
-                        console.log(script);
                         logger.getLogger().log("info", data.toString().trim());
                     }
                 });
