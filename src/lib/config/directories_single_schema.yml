@@ -3,12 +3,17 @@ db:
 - .hooks
 - .setup
 - :projectName:
-  - init:
-    - ddl
-    - dml
-  - pre:
-    - ddl
-    - dml
+  - .hooks
+    - pre
+    - post
+  - ddl:
+    - init
+    - pre
+    - post
+  - dml:
+    - init
+    - pre
+    - post
   - tables
   - sequences
   - tables_ddl
@@ -21,13 +26,8 @@ db:
     - objects
     - views
   - precompile
-  - post:
-    - ddl
-    - dml
-  - finally
-apps:
-  - apex
-  - rest
+apex:
+rest:
 apex_files:
   - f1000:
     - js

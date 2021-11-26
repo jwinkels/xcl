@@ -37,19 +37,23 @@ export class Project {
 
     if (create) {
       this.config = this.initialzeConfig(workspaceName, singleSchema);
+      this.writeConfig();
       this.features = new Map();
       this.users = new Map();
-      this.directories = this.createDirectoryStructure(singleSchema);
-      Git.addToGitignore(this.getPath(),'.xcl');
       this.status = new ProjectStatus(this);
-      this.writeConfig();
+      this.directories = this.status.getDirectoryHash();
+      this.createDirectoryStructure(singleSchema);
+      Git.addToGitignore(this.getPath(),'.xcl');
+      
+      
       this.status.serialize()
       this.environment = Environment.initialize(this.name, this, singleSchema ? 'app' : '');
     } else {
       this.config = this.readConfig();
-      this.directories = this.createDirectoryStructure(this.getMode()=== Project.MODE_MULTI ? false : true);
-      this.name   = this.config.xcl.project;
       this.status = new ProjectStatus(this);
+      this.directories = this.status.getDirectoryHash();
+      this.createDirectoryStructure(this.getMode()=== Project.MODE_MULTI ? false : true);
+      this.name   = this.config.xcl.project;
       this.features = this.getFeatures();
       this.users = this.getUsers();
       this.environment = Environment.initialize(this.name, this, singleSchema ? 'app' : '');
@@ -178,14 +182,15 @@ export class Project {
     }
   }
 
-  private createDirectoryStructure(singleSchema:boolean):string {
+  private createDirectoryStructure(singleSchema:boolean):void {
     let parsedDirs:any;
 
     if (!singleSchema){
-
       parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories.yml").toString());
       if ( this.directories !== Md5.hashStr(yaml.stringify(parsedDirs)).toString()){
         this.createDirectoryPath(parsedDirs.toJSON(), "/");
+        this.updateDirectoryStructure();
+        this.status.setDirectoryHash(Md5.hashStr(yaml.stringify(parsedDirs)).toString());
       }
 
     }else{
@@ -193,12 +198,53 @@ export class Project {
       parsedDirs = yaml.parseDocument(fs.readFileSync(__dirname + "/config/directories_single_schema.yml").toString());
       if ( this.directories !== Md5.hashStr(yaml.stringify(parsedDirs)).toString()){
         this.createDirectoryPath(parsedDirs.toJSON(), "/");
+        this.updateDirectoryStructure();
+        this.status.setDirectoryHash(Md5.hashStr(yaml.stringify(parsedDirs)).toString());
       }
 
     }
 
-    fs.copySync(__dirname + "/config/readme.md", this.getPath() + "/readme.md");
-    return Md5.hashStr(yaml.stringify(parsedDirs)).toString();
+    if (!fs.existsSync(this.getPath() + "/readme.md")){
+      fs.copySync(__dirname + "/config/readme.md", this.getPath() + "/readme.md");
+    }
+  }
+
+  private updateDirectoryStructure():void{
+
+    function copyFromTo(src:string, target:string ){
+      let files:string[] = [];
+      if (fs.existsSync(src)) {
+        files = fs.readdirSync(src);
+        files.forEach((file)=>{
+         fs.copySync(src + '/' + file, target +'/' + file); 
+        });
+      }
+    }
+
+    //Change init, pre, post- (dml, ddl) => ddl, dml - (init, pre, post)
+    this.getUsers().forEach(async (user)=> {
+      if (user.getName()){
+        let dirPath = this.path + '/db/' + user.getName().toLowerCase();
+        let relPath = '/db/' + user.getName().toLowerCase();
+        copyFromTo(dirPath+'/init/dml',dirPath+'/dml/init');
+        copyFromTo(dirPath+'/pre/dml',dirPath+'/dml/pre');
+        copyFromTo(dirPath+'/post/dml',dirPath+'/dml/post');
+        
+        await Git.addToGitignore(this.path, relPath+'/init/dml');
+        await Git.addToGitignore(this.path, relPath+'/pre/dml');
+        await Git.addToGitignore(this.path, relPath+'/post/dml');
+
+        copyFromTo(dirPath+'/init/ddl',dirPath+'/ddl/init');
+        copyFromTo(dirPath+'/pre/ddl',dirPath+'/ddl/pre');
+        copyFromTo(dirPath+'/post/ddl',dirPath+'/ddl/post');
+
+        await Git.addToGitignore(this.path, relPath+'/init/ddl');
+        await Git.addToGitignore(this.path, relPath+'/pre/ddl');
+        await Git.addToGitignore(this.path, relPath+'/post/ddl');
+      }
+    });
+    
+    
   }
 
   public writeConfig():void {
@@ -489,7 +535,6 @@ export class Project {
     }else{
       userNames.push(this.getUsers().get('APP')!.getName().toUpperCase());
     }
-
     return userNames;
   }
 
@@ -572,10 +617,10 @@ class ProjectStatus {
               users: {},
               hash: "",
               dependencies: {}
-            },
+            }
           };
+
           ProjectStatus.stateFileName = this.project.getPath() + '/.xcl/state.yml';
-          this.serialize();
         }
       }
     }
@@ -765,7 +810,11 @@ class ProjectStatus {
     let conf = "";
 
     try {
-      conf = fs.readFileSync(ProjectStatus.stateFileName).toString();
+      if(fs.existsSync(ProjectStatus.stateFileName)){
+        conf = fs.readFileSync(ProjectStatus.stateFileName).toString();
+      }else{
+        return this.statusConfig;
+      }
     } catch (err:any) {
       if (err.code === 'ENOENT') {
         return 'File not found!';
@@ -786,6 +835,21 @@ class ProjectStatus {
       return true;
     }else{
       return false;
+    }
+  }
+
+  public setDirectoryHash(hash:string){
+    this.statusConfig=this.deserialize();
+    this.statusConfig.xcl.directoryHash = hash;
+    this.serialize();
+  }
+
+  public getDirectoryHash():string{
+    this.statusConfig=this.deserialize();
+    if (this.statusConfig.xcl && this.statusConfig.xcl.directoryHash){
+      return this.statusConfig.xcl.directoryHash;
+    }else{
+      return '';
     }
   }
 }

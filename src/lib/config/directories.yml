@@ -1,14 +1,21 @@
 .xcl:
 db:
-- .hooks
+- .hooks:
+  - pre
+  - post
 - .setup
 - :projectName_app:
-  - init:
-    - ddl
-    - dml
-  - pre:
-    - ddl
-    - dml
+  - .hooks:
+    - pre
+    - post
+  - ddl:
+    - init
+    - pre
+    - post
+  - dml:
+    - init
+    - pre
+    - post
   - tables
   - sequences
   - tables_ddl
@@ -21,17 +28,18 @@ db:
     - objects
     - views
   - precompile
-  - post:
-    - ddl
-    - dml
-  - finally
 - :projectName_data:
-  - init:
-    - ddl
-    - dml
-  - pre:
-    - ddl
-    - dml
+  - .hooks:
+    - pre
+    - post
+  - ddl:
+    - init
+    - pre
+    - post
+  - dml:
+    - init
+    - pre
+    - post
   - tables
   - sequences
   - tables_ddl
@@ -44,19 +52,21 @@ db:
     - objects
     - views
   - precompile
-  - post:
-    - ddl
-    - dml
-  - finally
 - :projectName_logic:
-  - init:
-    - ddl
-    - dml
-  - pre:
-    - ddl
-    - dml
+  - .hooks:
+    - pre
+    - post
+  - ddl:
+    - init
+    - pre
+    - post
+  - dml:
+    - init
+    - pre
+    - post
   - tables
   - sequences
+  - views
   - tables_ddl
   - sources:
     - tests
@@ -65,12 +75,7 @@ db:
     - procedures
     - trigger
     - objects
-    - views
   - precompile
-  - post:
-    - ddl
-    - dml
-  - finally
 apex:
 rest:
 static:
