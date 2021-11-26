@@ -290,7 +290,19 @@ export class ProjectManager {
                            password.randomPassword({characters: password.lower, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
                            password.randomPassword({characters: password.digits, length:  ( Math.floor( Math.random() *6 ) + 4)});
       */
-      let randomPassword:string = password.randomPassword({characters: [password.upper, password.lower , {characters: password.digits, length: ( Math.floor( Math.random() * 4 ) + 4) }], length: ( Math.floor( Math.random() * 12 ) + 4)});
+      let randomPassword:string = password.randomPassword({characters: [password.upper, 
+                                                                        password.lower , 
+                                                                        { 
+                                                                          characters: 
+                                                                            password.digits, 
+                                                                            length: ( Math.floor( Math.random() * 4 ) + 4) 
+                                                                        }
+                                                                      ], 
+                                                            length: ( Math.floor( Math.random() * 12 ) + 4)
+                                                          });
+      if (!isNaN(+randomPassword.substr(0,1))){
+        randomPassword = password.randomPassword({characters:[password.upper, password.lower]},2) + randomPassword;
+      }
 
       let numberOfHashtags:number = Math.floor(Math.random()*randomPassword.length/2) + 2;
 
@@ -298,6 +310,8 @@ export class ProjectManager {
         let position = Math.floor(Math.random()*randomPassword.length/2) + 1;
         randomPassword = [randomPassword.slice(0, position), '#', randomPassword.slice(position)].join('');
       }
+
+      randomPassword = randomPassword.substr(0,15);
 
       if (p.getMode() === 'multi'){
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
@@ -393,6 +407,24 @@ export class ProjectManager {
 
     if( p.getStatus().hasChanged() ){
 
+      if( !p.getStatus().checkUsers() ){
+        if (p.getMode() === Project.MODE_MULTI){
+          p.getUsers().forEach( ( user:Schema, key:string ) => {
+              console.log( chalk.green('+') + ' create user '+ key );
+          });
+        }else{
+          console.log( chalk.green('+') + ' create user '+ p.getUsers().get('APP')?.getName() );
+        }
+        console.log( chalk.green('+++') + ' xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom( path, "connection" ) );
+        commands[commandCount] =  'xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom(path, "connection");
+
+        commandCount = commandCount + 1;
+
+        if ( !commands[0] ){
+          commands[0] = 'xcl config:defaults syspw $PASSWORD ' + projectName;
+        }
+      }
+
       p.getFeatures().forEach( ( feature:ProjectFeature ) =>{
         if( feature.getType()==="DB" ){
           if ( FeatureManager.priviledgedInstall( feature.getName() ) && !commands[0] ){
@@ -425,24 +457,6 @@ export class ProjectManager {
       });
 
       p.getStatus().getRemovedDependencies();
-
-      if( !p.getStatus().checkUsers() ){
-        if (p.getMode() === Project.MODE_MULTI){
-          p.getUsers().forEach( ( user:Schema, key:string ) => {
-              console.log( chalk.green('+') + ' create user '+ key );
-          });
-        }else{
-          console.log( chalk.green('+') + ' create user '+ p.getUsers().get('APP')?.getName() );
-        }
-        console.log( chalk.green('+++') + ' xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom( path, "connection" ) );
-        commands[commandCount] =  'xcl project:init ' + projectName + ' --users --connection=' + Environment.readConfigFrom(path, "connection");
-
-        commandCount = commandCount + 1;
-
-        if ( !commands[0] ){
-          commands[0] = 'xcl config:defaults syspw $PASSWORD ' + projectName;
-        }
-      }
 
       if( p.getStatus().getChanges().get('SETUP') ){
 
