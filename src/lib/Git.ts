@@ -44,6 +44,7 @@ export class Git{
       const excludePatch:string = `:!db/${projectName}_app/dml_init :!db/${projectName}_app/ddl_init`;
 
       let modifiers:string = `${endings} ${exclude}`;
+      let project:Project = ProjectManager.getInstance().getProject(projectName);
 
       if(mode == 'patch'){
          modifiers = modifiers + ` ${excludePatch}`;
@@ -52,8 +53,8 @@ export class Git{
       }
 
       let fileList:string="";
-      const commitA:string = await this.getLatestTagName();
-      const commitB:string = await this.getPreviousTagName();
+      const commitA:string = commit == 'latest' ? await this.getCurrentCommitId() : await this.getCommitIdOfTag(commit!);
+      const commitB:string = project.getStatus().getCommitId();
 
       if (mode == 'patch'){
       fileList=(await ShellHelper.executeScript(`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`,
