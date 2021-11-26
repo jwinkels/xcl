@@ -90,7 +90,6 @@ async function doTheWizard(projectName:string | undefined) {
     }
     ],
   ).then((answer) => {
-    console.log('responses', answer);
     ProjectManager.getInstance().createProjectFromConfig(answer);
   });
 }
