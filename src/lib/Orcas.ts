@@ -305,7 +305,8 @@ export class Orcas implements DeliveryMethod{
       let tablesPath:string = "";
       let buildZip = new AdmZip();
 
-      if (project.getMode()===Project.MODE_MULTI){
+      //TODO: All schemas can have tables not just data
+      if (project.getMode() === Project.MODE_MULTI){
         tablesPath = `db/${project.getName()}_data/tables/`;
       }else{
         tablesPath = `db/${project.getName()}/tables/`;
