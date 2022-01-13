@@ -179,7 +179,7 @@ export class Orcas implements DeliveryMethod{
         let proceed:boolean = await cli.confirm('Proceed with '+projectName.toUpperCase()+'_LOGIC? (y/n)');
         if (proceed){
           await _this.hook("logic","pre",projectName, connection, password, project);
-          ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", true, project.getLogger());
+          await ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", true, project.getLogger());
           _this.hook("logic","post",projectName, connection, password, project);
           proceed = await cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)');
             if (proceed){
