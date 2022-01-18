@@ -22,7 +22,7 @@ begin
   ords_url:='^4';
 
   begin
-    if ords_url is not null and trunc(lower(ords_url)) != 'undefined' then
+    if ords_url is not null and trim(lower(ords_url)) != 'undefined' then
       
       if substr(ords_url,-1,1) != '/' then
       

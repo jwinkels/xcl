@@ -12,7 +12,7 @@ export class Application{
         let installFileList:Map<string,string>;
         installFileList=new Map();
 
-        let baseFolderApex = "/apps/apex/";
+        let baseFolderApex = "/apex/";
         let project = ProjectManager.getInstance().getProject(projectName);
         let projectPath    = project.getPath();
         let baseUrlIp      = connection.substr(0,connection.indexOf(':'));

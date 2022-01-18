@@ -28,8 +28,10 @@ db:
   - precompile
 apex:
 rest:
-apex_files:
+  modules:
+static:
   - f1000:
-    - js
-    - css
-    - img
+    -src:
+      - js
+      - css
+      - img

@@ -182,6 +182,9 @@ export class Orcas implements DeliveryMethod{
           ShellHelper.executeScript(gradleStringLogic, executePath + "/db/" + project.getName() + "_logic", true, project.getLogger());
           _this.hook("logic", "post", projectName, connection, password, project);
           proceed = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_APP? (y/n)');
+          await ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", true, project.getLogger());
+          _this.hook("logic","post",projectName, connection, password, project);
+          proceed = await cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)');
             if (proceed){
               await _this.hook("app", "pre", projectName, connection, password, project);
               await ShellHelper.executeScript(gradleStringApp, executePath + "/db/" + project.getName() + "_app", true, project.getLogger());
@@ -305,7 +308,8 @@ export class Orcas implements DeliveryMethod{
       let tablesPath:string = "";
       let buildZip = new AdmZip();
 
-      if (project.getMode()===Project.MODE_MULTI){
+      //TODO: All schemas can have tables not just data
+      if (project.getMode() === Project.MODE_MULTI){
         tablesPath = `db/${project.getName()}_data/tables/`;
       }else{
         tablesPath = `db/${project.getName()}/tables/`;
