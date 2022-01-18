@@ -15,7 +15,7 @@ export class ShellHelper{
                     [], {
                         cwd: executePath,
                         shell: true,
-                        env: envObject,
+                        env: envObject ? envObject : process.env,
                         stdio: ['inherit', null, null] 
                     }
                 );
@@ -54,6 +54,6 @@ export class ShellHelper{
     }
 
     public static executeScript(script: string, executePath:string, consoleOutput:boolean=false, logger:Logger){
-        return ShellHelper.executeScriptWithEnv(script, executePath, {}, consoleOutput, logger);
+        return ShellHelper.executeScriptWithEnv(script, executePath, undefined, consoleOutput, logger);
     }
 }
