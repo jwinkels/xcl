@@ -589,8 +589,14 @@ export class FeatureManager{
 
       public removeFeatureFromProject(featureName:string, projectName:string):Promise<void>{
         return new Promise((resolve, reject)=>{
-          if(ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
-            ProjectManager.getInstance().getProject(projectName).removeFeature(ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)!);
+          let project = ProjectManager.getInstance().getProject(projectName);
+          if( project.getFeatures().has(featureName) ){
+            let feature:ProjectFeature = project.getFeatures().get(featureName)!;
+            if ( feature.getType() === 'DEPLOY' ){
+              deliveryFactory.getNamed<DeliveryMethod>( "Method", project.getDeployMethod().toUpperCase() ).remove(feature, project.getPath(), project.getMode() === Project.MODE_SINGLE);
+            }
+            
+            project.removeFeature(feature);
             console.log(chalk.green(`SUCCESS: Feature ${featureName} removed!`));
             resolve();
           }else{
