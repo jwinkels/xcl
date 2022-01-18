@@ -166,25 +166,21 @@ export class Orcas implements DeliveryMethod{
                                         );
               });
         cli.action.stop('done');
+        project.getLogger().getFileLogger().log("info",`${type}-${schema}-hooks done`);
     }
 
     public async unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean, executePath:string):Promise<boolean>{
       let _this = this;
       return new Promise(async (resolve, reject)=>{
         await _this.hook("data", "pre", projectName, connection, password, project);
-        project.getLogger().getFileLogger().log("info",`pre-data-hooks done`);
         await ShellHelper.executeScript(gradleStringData, executePath + "/db/" + project.getName() + "_data", true, project.getLogger())
         await _this.hook("data", "post", projectName, connection, password, project);
-        project.getLogger().getFileLogger().log("info",`post-data-hooks done`);
         let proceed:boolean = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_LOGIC? (y/n)');
         if (proceed){
           await _this.hook("logic","pre",projectName, connection, password, project);
-          ShellHelper.executeScript(gradleStringLogic, executePath + "/db/" + project.getName() + "_logic", true, project.getLogger());
-          _this.hook("logic", "post", projectName, connection, password, project);
+          await ShellHelper.executeScript(gradleStringLogic, executePath + "/db/" + project.getName() + "_logic", true, project.getLogger());
+          await _this.hook("logic", "post", projectName, connection, password, project);
           proceed = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_APP? (y/n)');
-          await ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", true, project.getLogger());
-          _this.hook("logic","post",projectName, connection, password, project);
-          proceed = await cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)');
             if (proceed){
               await _this.hook("app", "pre", projectName, connection, password, project);
               await ShellHelper.executeScript(gradleStringApp, executePath + "/db/" + project.getName() + "_app", true, project.getLogger());
