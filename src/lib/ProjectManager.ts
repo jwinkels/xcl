@@ -304,6 +304,7 @@ export class ProjectManager {
                                                                       ], 
                                                             length: ( Math.floor( Math.random() * 12 ) + 4)
                                                           });
+      //First character must not be a number                                                          
       if (!isNaN(+randomPassword.substr(0,1))){
         randomPassword = password.randomPassword({characters:[password.upper, password.lower]},2) + randomPassword;
       }

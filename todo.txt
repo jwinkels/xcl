@@ -36,6 +36,7 @@ TODO:
     => DONE
 
     - Passwort für Benutzer generieren @JAW
+    => DONE
 
     - Multi Application Support?
 

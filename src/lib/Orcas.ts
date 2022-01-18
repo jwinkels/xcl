@@ -17,7 +17,7 @@ const ps = require("ps-node");
 @injectable()
 export class Orcas implements DeliveryMethod{
     public install(feature:ProjectFeature, projectPath:string, singleSchema:boolean){
-        
+
       let featurePath:string = projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
       let projectName:string = ProjectManager.getInstance().getProjectNameByPath(projectPath);
 
@@ -25,7 +25,7 @@ export class Orcas implements DeliveryMethod{
           fs.copyFileSync(featurePath + '/schema/build.gradle', projectPath + '/db/' + projectName + '_app/build.gradle');
           fs.copyFileSync(featurePath + '/schema/build.gradle', projectPath + '/db/' + projectName + '_logic/build.gradle');
           fs.copyFileSync(featurePath + '/schema/build.gradle', projectPath + '/db/' + projectName + '_data/build.gradle');
-          
+
           fs.copyFileSync(featurePath + '/gradlew', projectPath + '/db/' + projectName + '_app/gradlew');
           fs.copyFileSync(featurePath + '/gradlew', projectPath + '/db/' + projectName + '_logic/gradlew');
           fs.copyFileSync(featurePath + '/gradlew', projectPath + '/db/' + projectName + '_data/gradlew');
@@ -46,16 +46,16 @@ export class Orcas implements DeliveryMethod{
           fs.copyFileSync(featurePath + '/gradlew',          projectPath + '/db/' + projectName + '/gradlew');
           fs.copyFileSync(featurePath + '/gradlew.bat',      projectPath + '/db/' + projectName + '/gradlew.bat');
           fs.copySync    (featurePath + '/gradle/',          projectPath + '/db/' + projectName + '/gradle/');
-          
+
           //fs.removeSync(projectPath + '/db/'+ projectName + '/tables_ddl');
         }
       fs.removeSync(featurePath);
-        
+
       feature.setInstalled(true);
     }
 
     public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined, nocompile:boolean|undefined){
-      
+
       let project=ProjectManager.getInstance().getProject(projectName);
       let gradleStringData  = "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName()  + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
       let gradleStringLogic = "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
@@ -77,7 +77,7 @@ export class Orcas implements DeliveryMethod{
       if (schema){
         let gradleString:string = "";
         switch (schema){
-          case "data": 
+          case "data":
             gradleString = gradleStringData;
             break;
           case "logic":
@@ -90,7 +90,7 @@ export class Orcas implements DeliveryMethod{
             gradleString = "";
             break;
         }
-        
+
         if (gradleString){
           console.log("Deploy Schema");
           await this.hook(schema, "pre", projectName, connection, password, project);
@@ -130,7 +130,7 @@ export class Orcas implements DeliveryMethod{
     }
 
     private async hook(schema:string, type:string, projectName:string, connection:string, password:string, project:Project):Promise<void>{
-     
+
       let conn:any;
       cli.action.start(`${type}-${schema}-hooks: ...` );
       project.getLogger().getFileLogger().log("info",`${type}-${schema}-hooks`);
@@ -153,14 +153,14 @@ export class Orcas implements DeliveryMethod{
         }
 
         fs.readdirSync(project.getPath() + "/db/.hooks/")
-              .filter( f => ( 
-                            f.toLowerCase().substr(0, f.indexOf('_', f.indexOf('_', 0) + 1)).includes( type.toLowerCase() ) && 
-                            f.toLowerCase().substr(0, f.indexOf('_', f.indexOf('_', 0) + 1)).includes( schema.toLowerCase() ) 
-                          ) 
+              .filter( f => (
+                            f.toLowerCase().substr(0, f.indexOf('_', f.indexOf('_', 0) + 1)).includes( type.toLowerCase() ) &&
+                            f.toLowerCase().substr(0, f.indexOf('_', f.indexOf('_', 0) + 1)).includes( schema.toLowerCase() )
+                          )
                      )
               .forEach(file=>{
-                DBHelper.executeScriptIn(conn, 
-                                         file, 
+                DBHelper.executeScriptIn(conn,
+                                         file,
                                          project.getPath() + "/db/.hooks/",
                                          project.getLogger()
                                         );
@@ -171,21 +171,21 @@ export class Orcas implements DeliveryMethod{
     public async unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean, executePath:string):Promise<boolean>{
       let _this = this;
       return new Promise(async (resolve, reject)=>{
-        await _this.hook("data","pre",projectName, connection, password, project);
+        await _this.hook("data", "pre", projectName, connection, password, project);
         project.getLogger().getFileLogger().log("info",`pre-data-hooks done`);
-        await ShellHelper.executeScript(gradleStringData, executePath+"/db/"+project.getName()+"_data", true, project.getLogger())
-        await _this.hook("data","post",projectName, connection, password, project);
+        await ShellHelper.executeScript(gradleStringData, executePath + "/db/" + project.getName() + "_data", true, project.getLogger())
+        await _this.hook("data", "post", projectName, connection, password, project);
         project.getLogger().getFileLogger().log("info",`post-data-hooks done`);
-        let proceed:boolean = await cli.confirm('Proceed with '+projectName.toUpperCase()+'_LOGIC? (y/n)');
+        let proceed:boolean = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_LOGIC? (y/n)');
         if (proceed){
           await _this.hook("logic","pre",projectName, connection, password, project);
-          ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", true, project.getLogger());
-          _this.hook("logic","post",projectName, connection, password, project);
-          proceed = await cli.confirm('Proceed with '+projectName.toUpperCase()+'_APP? (y/n)');
+          ShellHelper.executeScript(gradleStringLogic, executePath + "/db/" + project.getName() + "_logic", true, project.getLogger());
+          _this.hook("logic", "post", projectName, connection, password, project);
+          proceed = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_APP? (y/n)');
             if (proceed){
-              await _this.hook("app","pre",projectName, connection, password, project);
-              await ShellHelper.executeScript(gradleStringApp, executePath+"/db/"+project.getName()+"_app", true, project.getLogger());
-              await _this.hook("app","post",projectName, connection, password, project);
+              await _this.hook("app", "pre", projectName, connection, password, project);
+              await ShellHelper.executeScript(gradleStringApp, executePath + "/db/" + project.getName() + "_app", true, project.getLogger());
+              await _this.hook("app", "post", projectName, connection, password, project);
               if (!schemaOnly){
                 Application.installApplication(projectName, connection, password, ords);
               }
@@ -194,7 +194,7 @@ export class Orcas implements DeliveryMethod{
               await _this.hook("data","finally",projectName, connection, password, project);
               project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
               resolve(true);
-                         
+
             }else{
               project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
               resolve(true);
@@ -226,7 +226,7 @@ export class Orcas implements DeliveryMethod{
                       }
                       _this.hook("app", "finally", projectName, connection, password, project);
                       _this.hook("logic", "finally", projectName, connection, password, project);
-                      _this.hook("data", "finally", projectName, connection, password, project);  
+                      _this.hook("data", "finally", projectName, connection, password, project);
                       project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
                       resolve(true);
                     })
@@ -252,7 +252,7 @@ export class Orcas implements DeliveryMethod{
     public async build(projectName:string, version:string, mode:string, commit:string|undefined){
       let release  = ProjectManager.getInstance().getProject(projectName).getVersion();
       let project:Project = ProjectManager.getInstance().getProject(projectName);
-    
+
       //ProjectManager.getInstance().getProject(projectName).setVersion(version);
       let path = "";
       let buildZip:AdmZip = await this.patch(version, project, mode, commit!);
@@ -275,7 +275,7 @@ export class Orcas implements DeliveryMethod{
             path = ProjectManager.getInstance().getProject(projectName).getPath() + "/apex/" + file;
           }
         }
-  
+
         if(path != ""){
           let createApp = fs.readFileSync(path);
           if(createApp.toString().search("p_flow_version=>'" + release + "'") > 0){
@@ -290,10 +290,10 @@ export class Orcas implements DeliveryMethod{
             }
           }
         }
-      });  
+      });
 
       buildZip.addLocalFolder(project.getPath() + "/rest", "rest");
-     
+
       buildZip.writeZip(project.getPath()+ "/" + version + ".zip");
       fs.moveSync(project.getPath()+ "/" + version + ".zip",project.getPath()+ "/dist/" + version + ".zip");
     }
@@ -315,7 +315,7 @@ export class Orcas implements DeliveryMethod{
        if (tables.includes('\n')){
          let tableList:string[] = tables.split('\n');
          for(let i=0; i<tableList.length; i++){
-           fileList.push(tablesPath+tableList[i]);
+           fileList.push(tablesPath + tableList[i]);
          }
        }
 
@@ -324,14 +324,14 @@ export class Orcas implements DeliveryMethod{
            fileMap.set(fileList[i],fileList[i]);
          }
        }
-       
+
        for await (const iterator of fileMap.keys()) {
          if(fs.pathExistsSync(iterator)){
           let path = iterator.substring(0, iterator.lastIndexOf('/'));
           console.log(`${iterator} .. added to build!`);
           buildZip.addLocalFile(iterator, path);
          }
-       } 
+       }
 
        for await (const schema of ["data","logic","app"]) {
          for await (const file of ["build.gradle","gradlew","gradlew.bat"]) {
@@ -347,7 +347,7 @@ export class Orcas implements DeliveryMethod{
          }
          buildZip.addLocalFolder(`db/${project.getName()}_${schema}/gradle/`,`db/${project.getName()}_${schema}/gradle`)
         }
-        
+
        return buildZip;
     }
 
@@ -375,7 +375,7 @@ export class Orcas implements DeliveryMethod{
           fs.removeSync(projectPath + '/db/' + projectName + '_app/build.gradle');
           fs.removeSync(projectPath + '/db/' + projectName + '_logic/build.gradle');
           fs.removeSync(projectPath + '/db/' + projectName + '_data/build.gradle');
-          
+
           fs.removeSync(projectPath + '/db/' + projectName + '_app/gradlew');
           fs.removeSync(projectPath + '/db/' + projectName + '_logic/gradlew');
           fs.removeSync(projectPath + '/db/' + projectName + '_data/gradlew');
