@@ -8,74 +8,113 @@ db:
   - .hooks:
     - pre
     - post
+  - constraints:
+    - checks
+    - foreigns
+    - primaries
+    - uniques
+  - contexts
   - ddl:
     - init
     - pre
     - post
   - dml:
+    - base
     - init
     - pre
     - post
-  - tables
+  - indexes:
+    - defaults
+    - primaries
+    - uniques
+  - jobs
+  - policies
   - sequences
+  - tables
   - tables_ddl
   - sources:
-    - tests
     - packages
     - functions
     - procedures
     - trigger
     - objects
-    - views
-  - precompile
+  - tests:
+    - packages
+  - views
 - :projectName_data:
   - .hooks:
     - pre
     - post
+  - constraints:
+    - checks
+    - foreigns
+    - primaries
+    - uniques
+  - contexts
   - ddl:
     - init
     - pre
     - post
   - dml:
+    - base
     - init
     - pre
     - post
-  - tables
+  - indexes:
+    - defaults
+    - primaries
+    - uniques
+  - jobs
+  - policies
   - sequences
+  - tables
   - tables_ddl
   - sources:
-    - tests
     - packages
     - functions
     - procedures
     - trigger
     - objects
-    - views
-  - precompile
+  - tests:
+    - packages
+  - views
 - :projectName_logic:
   - .hooks:
     - pre
     - post
+  - constraints:
+    - checks
+    - foreigns
+    - primaries
+    - uniques
+  - contexts
   - ddl:
     - init
     - pre
     - post
   - dml:
+    - base
     - init
     - pre
     - post
-  - tables
+  - indexes:
+    - defaults
+    - primaries
+    - uniques
+  - jobs
+  - policies
   - sequences
-  - views
+  - tables
   - tables_ddl
   - sources:
-    - tests
     - packages
     - functions
     - procedures
     - trigger
     - objects
-  - precompile
+  - tests:
+    - packages
+  - views
 apex:
 rest:
 static:

@@ -1,31 +1,49 @@
 .xcl:
+.hooks:
+  - pre
+  - post
 db:
-- .hooks
-- .setup
+- .hooks:
+  - pre
+  - post
+- _setup
 - :projectName:
-  - .hooks
+  - .hooks:
     - pre
     - post
+  - constraints:
+    - checks
+    - foreigns
+    - primaries
+    - uniques
+  - contexts
   - ddl:
     - init
     - pre
     - post
   - dml:
+    - base
     - init
     - pre
     - post
-  - tables
+  - indexes:
+    - defaults
+    - primaries
+    - uniques
+  - jobs
+  - policies
   - sequences
+  - tables
   - tables_ddl
   - sources:
-    - tests
     - packages
     - functions
     - procedures
     - trigger
     - objects
-    - views
-  - precompile
+  - tests:
+    - packages
+  - views
 apex:
 rest:
   modules:
