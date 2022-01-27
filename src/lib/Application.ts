@@ -65,7 +65,7 @@ export class Application{
       }
 
     public static generateCreateWorkspaceFile(projectName:string, workspace:string){
-        let path=ProjectManager.getInstance().getProject(projectName).getPath()+'/db/.setup/workspaces';
+        let path=ProjectManager.getInstance().getProject(projectName).getPath()+`/db/${Project.SETUP_DIR}/workspaces`;
         let filename = path+'/create_'+workspace+'.sql'
 
         if(!fs.pathExistsSync(path)){
@@ -105,7 +105,7 @@ export class Application{
     }
 
     public static removeSQLEnvironmentFile(projectName:string){
-      let path=ProjectManager.getInstance().getProject(projectName).getPath()+'/db/.setup/workspaces';
+      let path=ProjectManager.getInstance().getProject(projectName).getPath()+`/db/${Project.SETUP_DIR}/workspaces`;
       let filename = path + '/.env.sql';
       if(fs.existsSync(filename)){
         fs.unlinkSync(filename);

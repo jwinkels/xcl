@@ -15,6 +15,7 @@ import { Git } from "./Git";
 export class Project {
   static MODE_SINGLE: string = "single";
   static MODE_MULTI:  string = "multi";
+  static SETUP_DIR: string   = "_setup";
 
   private name: string;                           //Project-Name
   private path: string; 	                        //Project-Home
@@ -211,12 +212,18 @@ export class Project {
 
   private updateDirectoryStructure():void{
 
-    function copyFromTo(src:string, target:string ){
+    function copyFromTo(src:string, target:string, move:boolean=false ){
       let files:string[] = [];
       if (fs.existsSync(src)) {
         files = fs.readdirSync(src);
         files.forEach((file)=>{
-         fs.copySync(src + '/' + file, target +'/' + file); 
+          if (move){
+            if(file !== '.gitkeep'){
+              fs.moveSync(src + '/' + file, target +'/' + file);
+            }
+          }else{
+            fs.copySync(src + '/' + file, target +'/' + file); 
+          }
         });
       }
     }
@@ -241,6 +248,13 @@ export class Project {
         await Git.addToGitignore(this.path, relPath+'/init/ddl');
         await Git.addToGitignore(this.path, relPath+'/pre/ddl');
         await Git.addToGitignore(this.path, relPath+'/post/ddl');
+
+        copyFromTo(dirPath+'/ddl/pre', dirPath+'/ddl/patch/pre', true);
+        copyFromTo(dirPath+'/ddl/post', dirPath+'/ddl/patch/post', true);
+        copyFromTo(dirPath+'/dml/pre', dirPath+'/dml/patch/pre', true);
+        copyFromTo(dirPath+'/dml/post', dirPath+'/dml/patch/post', true);
+        copyFromTo(dirPath+'/sources/views', dirPath+'/views', true);
+        copyFromTo(dirPath+'/tables_ddl', dirPath+'/tables/tables_ddl', true);
       }
     });
     
@@ -637,7 +651,7 @@ class ProjectStatus {
     this.changeList=new Map<string, boolean>();
     this.project.reloadConfig();
     this.statusConfig=this.deserialize();
-    this.checkSetup("./db/.setup");
+    this.checkSetup(`./db/${Project.SETUP_DIR}`);
 
     let projectConfig = this.project.getConfig();
     delete projectConfig.xcl["version"];

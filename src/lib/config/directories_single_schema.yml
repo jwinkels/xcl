@@ -19,13 +19,15 @@ db:
   - contexts
   - ddl:
     - init
-    - pre
-    - post
+    - patch:
+      - pre
+      - post
   - dml:
     - base
     - init
-    - pre
-    - post
+    - patch:
+      - pre
+      - post
   - indexes:
     - defaults
     - primaries
@@ -33,8 +35,8 @@ db:
   - jobs
   - policies
   - sequences
-  - tables
-  - tables_ddl
+  - tables:
+    - tables_ddl
   - sources:
     - packages
     - functions
