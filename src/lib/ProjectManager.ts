@@ -350,9 +350,13 @@ export class ProjectManager {
       const config = p.getConfig();
       if( config.xcl.setup ){
         await config.xcl.setup.forEach( ( element: { name: string; path: string; } ) => {
+          if (fs.existsSync(element.path + '/' + element.name)){
             console.log( element.name, element.path );
             DBHelper.executeScriptIn( c, element.name, element.path, p.getLogger() );
-          	p.updateSetupStep( element.name, element.path );
+          	p.getStatus().updateSetupStep( element.name, element.path );
+          }else{
+            console.log(`${element.name} does not exist in ${element.path}`);
+          }
         });
       }
     }

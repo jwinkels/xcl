@@ -374,48 +374,30 @@ export class Project {
   }
 
   public addSetupStep(file:string, path:string, hash:string):void{
-      if (!this.config.xcl.setup){
-        this.config.xcl.setup=[];
+
+    
+
+    if (!this.config.xcl.setup){
+      this.config.xcl.setup=[];
+    }
+    const newStep = {name: file, path: path, hash: ""};
+
+    const stepIndex = this.config.xcl.setup.findIndex(
+                      (
+                        e: { name: string; path: string; }
+                      ) => e.name == newStep.name && e.path == newStep.path
+                    );
+    const projectStatus:ProjectStatus = this.getStatus();
+
+    if(stepIndex==-1){
+      this.config.xcl.setup.push({name: newStep.name, path: newStep.path});
+      projectStatus.addSetupFile(newStep);
+      projectStatus.addToChanges('SETUP');
+    }else{
+      if (hash !== projectStatus.getSetupFileHash(file, path)){
+        console.log('File (' + file +') has changed!');
+        projectStatus.addToChanges('SETUP');
       }
-      const newStep = {name: file, path: path, hash: ""};
-
-      const stepIndex = this.config.xcl.setup.findIndex(
-                        (
-                          e: { name: string; path: string; }
-                        ) => e.name == newStep.name && e.path == newStep.path
-                      );
-
-      if(stepIndex==-1){
-        this.config.xcl.setup.push(newStep);
-        this.getStatus().addToChanges('SETUP');
-      }else{
-        if (this.config.xcl.setup[stepIndex].hash !== hash){
-          console.log('File (' + file +') has changed!');
-          this.getStatus().addToChanges('SETUP');
-        }
-      }
-  }
-
-
-  public updateSetupStep (file:string, path:string):void{
-    try{
-      const content = fs.readFileSync(path+'/'+file);
-      const contentHash = Md5.hashStr(content.toString()).toString();
-
-      console.log('HASH: '+contentHash);
-
-      const newStep = {name: file, path: path, hash: contentHash};
-
-      const stepIndex = this.config.xcl.setup.findIndex(
-        (
-          e: { name: string; path: string; }
-        ) => e.name == newStep.name && e.path == newStep.path
-      );
-
-      this.config.xcl.setup[stepIndex].hash=contentHash;
-      this.writeConfig();
-    }catch(error){
-      console.log(error);
     }
   }
 
@@ -630,7 +612,8 @@ class ProjectStatus {
               workspace: project.getWorkspace(),
               users: {},
               hash: "",
-              dependencies: {}
+              dependencies: {},
+              setup: []
             }
           };
 
@@ -864,6 +847,60 @@ class ProjectStatus {
       return this.statusConfig.xcl.directoryHash;
     }else{
       return '';
+    }
+  }
+
+  public addSetupFile(step:{name:string, path:string, hash:string}):void{
+    if (!this.statusConfig.xcl.setup){
+      this.statusConfig.xcl.setup=[];
+    }
+
+    const stepIndex = this.statusConfig.xcl.setup.findIndex(
+                      (
+                        e: { name: string; path: string; }
+                      ) => e.name == step.name && e.path == step.path
+                    );
+    if(stepIndex==-1){
+      this.statusConfig.xcl.setup.push(step);
+      this.serialize();
+    }
+  }
+
+  public getSetupFileHash(name:string, path:string):string|undefined{
+
+    if (!this.statusConfig.xcl.setup){
+      this.statusConfig.xcl.setup=[];
+    }
+
+    const stepIndex = this.statusConfig.xcl.setup.findIndex(
+      (
+        e: { name: string; path: string; }
+      ) => e.name == name && e.path == path
+    );
+
+    if(stepIndex!=-1){
+      return this.statusConfig.xcl.setup[stepIndex].hash;
+    }else{
+      return undefined;
+    }
+  }
+
+  public updateSetupStep (file:string, path:string):void{
+    try{
+      const content = fs.readFileSync(path+'/'+file);
+      const contentHash = Md5.hashStr(content.toString()).toString();
+      const newStep = {name: file, path: path, hash: contentHash};
+
+      const stepIndex = this.statusConfig.xcl.setup.findIndex(
+        (
+          e: { name: string; path: string; }
+        ) => e.name == newStep.name && e.path == newStep.path
+      );
+
+      this.statusConfig.xcl.setup[stepIndex].hash=contentHash;
+      this.serialize();
+    }catch(error){
+      console.log(error);
     }
   }
 }
