@@ -866,7 +866,7 @@ class ProjectStatus {
     }
   }
 
-  public getSetupFileHash(name:string, path:string):string|undefined{
+  public getSetupFileHash(name:string, path:string):string{
 
     if (!this.statusConfig.xcl.setup){
       this.statusConfig.xcl.setup=[];
@@ -881,7 +881,9 @@ class ProjectStatus {
     if(stepIndex!=-1){
       return this.statusConfig.xcl.setup[stepIndex].hash;
     }else{
-      return undefined;
+      this.statusConfig.xcl.setup.push({name: name, path: path, hash:""});
+      this.serialize();
+      return "";
     }
   }
 
