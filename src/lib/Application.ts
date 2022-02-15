@@ -17,7 +17,7 @@ export class Application{
         let projectPath    = project.getPath();
         let baseUrlIp      = connection.substr(0,connection.indexOf(':'));
         let schema         = project.getMode() === Project.MODE_MULTI ? project.getName().toUpperCase()+"_APP" : project.getName();
-  
+
         //Read apex-folder and find the correct file
         fs.readdirSync( projectPath + baseFolderApex).forEach(file=>{
             console.log(file);
@@ -25,18 +25,18 @@ export class Application{
               if(fs.existsSync(projectPath + baseFolderApex + file + "/install.sql")){
                 //Get Application ID
                     // In Zukunft: project.getApplicationId()
-                
+
                 //Jetzt mal noch über auslesen der ID vom pfad
                 let appId = file.substr(1,file.length-1);
                 //Copy PreInstall File - to this location
                 fs.copySync(__dirname+"/scripts/pre_install_application.sql",
                                 projectPath + baseFolderApex + file + "/pre_install_application.sql");
 
-                let script= projectPath + baseFolderApex + file + "/pre_install_application.sql " + 
+                let script= projectPath + baseFolderApex + file + "/pre_install_application.sql " +
                             project.getWorkspace() + " " +
                             appId + " " +
                             schema + " " +
-                            ords + " " + 
+                            ords + " " +
                             projectName;
 
                 installFileList.set(projectPath + baseFolderApex + file,
@@ -45,17 +45,17 @@ export class Application{
             }else{
               if (file.includes('.sql')){
                 let appId = file.substr(1,file.indexOf('.') - 2);
-                let script = projectPath + baseFolderApex + file + 
+                let script = projectPath + baseFolderApex + file +
                                 project.getWorkspace() + " " +
                                 appId + " " +
                                 schema + " " +
-                                ords + " " + 
+                                ords + " " +
                                 projectName;
                 installFileList.set(projectPath + baseFolderApex + file, script);
               }
             }
         });
-        
+
         installFileList.forEach((script, path)=>{
           let conn=DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(),
                                       password,
@@ -84,11 +84,11 @@ export class Application{
 
     public static generateSQLEnvironment(projectName:string, xclHomePath:string){
       let project:Project = ProjectManager.getInstance().getProject(projectName);
-      let path=project.getPath()+'/db/.setup/workspaces';
+      let path=`${project.getPath()}/db/${Project.SETUP_DIR}/workspaces`;
       let filename = path + '/.env.sql';
 
       Git.addToGitignore(project.getPath(), filename);
-      
+
       if(!fs.pathExistsSync(path)){
         fs.mkdirSync(path);
       }
@@ -97,7 +97,7 @@ export class Application{
 
       script = script + xclHomePath;
 
-      if(!fs.existsSync(filename) ||  
+      if(!fs.existsSync(filename) ||
         Md5.hashStr(script) != Md5.hashStr(fs.readFileSync(filename).toString())
       ){
         fs.writeFileSync(filename,script);
@@ -113,4 +113,4 @@ export class Application{
     }
 
 
-} 
+}
