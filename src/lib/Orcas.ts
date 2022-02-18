@@ -11,6 +11,7 @@ import { DBHelper } from './DBHelper';
 import { Application } from './Application';
 import { Git } from "./Git";
 import { Logger } from "./Logger";
+import os = require("os");
 import AdmZip = require("adm-zip");
 
 const ps = require("ps-node");
@@ -57,9 +58,10 @@ export class Orcas implements DeliveryMethod{
     public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string, schema:string|undefined, nocompile:boolean|undefined){
 
       let project=ProjectManager.getInstance().getProject(projectName);
-      let gradleStringData  = "./gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName()  + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
-      let gradleStringLogic = "./gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
-      let gradleStringApp   = "./gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName()   + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
+      let prefix = os.platform() === "win32" ? "" : "./"; 
+      let gradleStringData  = prefix + "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName()  + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
+      let gradleStringLogic = prefix + "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
+      let gradleStringApp   = prefix + "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName()   + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + mode + " --continue";
       let path:string = "";
       let buildZip:AdmZip;
       if (version){
