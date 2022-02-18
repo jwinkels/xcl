@@ -83,3 +83,8 @@ TODO:
     - Deploy Method für welche xcl-Version?
         * Warum: Wenn sich dinge in der Ordnerstruktur ändern, muss auch die deploy Methode angeglichen werden
         * Um kompatibilität zu gewähren muss die deploy feature version zur xcl version passen
+    => Wird nicht gelöst
+
+    - Dateien werden zu setup hinzugefügt, aber lokal wird nie ein plan/apply ausgeführt, sodass
+      die Dateien nicht im setup array von der xcl.yml landen. Im jenkins bemerkt xcl aber die Änderungen
+      und führt ab jetzt jedes mal ein plan/apply lauf aus
