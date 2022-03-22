@@ -88,3 +88,12 @@ TODO:
     - Dateien werden zu setup hinzugefügt, aber lokal wird nie ein plan/apply ausgeführt, sodass
       die Dateien nicht im setup array von der xcl.yml landen. Im jenkins bemerkt xcl aber die Änderungen
       und führt ab jetzt jedes mal ein plan/apply lauf aus
+        => Entscheidung: Setup-Array aus xcl.yml entfernen
+        
+    - Liquibase für XCL - Wie bringt man liquibase hooks bei?
+    => wird nicht gelöst
+
+    - xcl features:... 
+      features müssen vielleicht nur einmal installiert werden, können danach aber an mehrere schemata gegranted werden
+      viele features haben dafür eigene granting skripte, die müssen ausgeführt werden auch wenn das feature bereits installiert ist
+      Idee: ein Flag in der software.yml die ein skript als always execute markiert, diese skripte bei installation des features immer ausgeführt 

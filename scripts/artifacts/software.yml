@@ -86,10 +86,12 @@ software:
             - credentials
         - path: logger_install.sql
         - path: scripts/grant_logger_to_user.sql
+          always: true
           arguments:
             - usernames
         - path: scripts/create_logger_synonyms.sql
           executeAs: PROJECT_USER
+          always: true
           arguments:
             - username
     uninstall:

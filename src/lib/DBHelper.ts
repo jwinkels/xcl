@@ -83,14 +83,21 @@ export class DBHelper {
     }
   };
 
+  //checks if a feature is installed
   public static async isFeatureInstalled(feature: ProjectFeature, conn:IConnectionProperties):Promise<boolean>{
     let connection;
     let userCount;
     try{
       connection = await oracledb.getConnection(conn);
-
-      const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${feature.getUser().getConnectionName().toUpperCase()}'`);
-      userCount = result.rows[0][0];
+      //if the feature is supposed to be installed in a seperate schema named like the feature itself
+      if (feature.getName() === feature.getUser().getName()){
+        const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${feature.getUser().getConnectionName().toUpperCase()}'`);
+        userCount = result.rows[0][0];
+      }else{
+        //check if the schema which is supposed to hold the installation of the feature contains an object called like the feature
+        const result = await connection.execute(`SELECT count(1) FROM all_procedures where owner like '${feature.getUser().getConnectionName().toUpperCase()}' and object_name like '%${feature.getName()}%'`);
+        userCount = result.rows[0][0];
+      }
     }catch(err){
       console.error(err,"{color:red}");
     }finally{
