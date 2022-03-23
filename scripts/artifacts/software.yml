@@ -104,9 +104,10 @@ software:
     install:
       scripts:
         - path: create_user.sql
-            sys: true
-            arguments:
-              - credentials
+          sys: true
+          xcl: true
+          arguments:
+            - credentials
         - path: install.sql
   console:
     owner: ogobrecht
