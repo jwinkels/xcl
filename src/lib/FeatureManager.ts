@@ -2,13 +2,12 @@
 import * as yaml from "yaml";
 import * as fs from "fs-extra";
 import * as os from "os";
-import * as request from "request-promise-native";
+import request = require("request-promise-native");
 import chalk from 'chalk'
 import { Feature } from './Feature';
 import { ProjectManager } from './ProjectManager';
 import { ProjectFeature } from './ProjectFeature';
 import { GithubCredentials } from './GithubCredentials';
-import * as AdmZip from "adm-zip";
 import { DBHelper, IConnectionProperties } from './DBHelper';
 import  { deliveryFactory }  from './DeliveryFactory';
 import { DeliveryMethod } from './DeliveryMethod';
@@ -19,7 +18,7 @@ import { Utils } from './Utils';
 import { Logger } from "./Logger";
 import inquirer = require("inquirer");
 import { Schema } from "./Schema";
-import { string } from "@oclif/parser/lib/flags";
+import AdmZip = require("adm-zip");
 const Table = require('cli-table');
 
 export class FeatureManager{

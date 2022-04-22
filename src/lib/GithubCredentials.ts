@@ -2,9 +2,9 @@ import * as os from "os";
 import * as yaml from "yaml";
 import * as fs from "fs-extra";
 import * as http from 'http';
-import * as Oauth from 'client-oauth2';
-import * as Express from 'express';
-import * as open from 'open';
+import Oauth = require('client-oauth2');
+import Express = require('express');
+import open = require('open');
 
 export class GithubCredentials{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
@@ -12,7 +12,6 @@ export class GithubCredentials{
     static writeCredentials(authString:string){
         var credentials = GithubCredentials.readCredentials();
         credentials.github=authString;
-        console.log(credentials);
         fs.writeFileSync(GithubCredentials.xclHome + "/" + "credentials.yml", yaml.stringify(credentials));     
     }
 

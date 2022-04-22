@@ -28,10 +28,10 @@ export default class ProjectApply extends Command {
     const {args, flags} = this.parse(ProjectApply);
 
     if ( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ) !== 'all' ){
-      ProjectManager.getInstance().apply( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ), flags["setup-only"], flags.version!, flags.mode);
+      ProjectManager.getInstance().apply( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ));
     }else{
       if ( args.project ){
-        ProjectManager.getInstance().apply( args.project, flags["setup-only"], flags.version!, flags.mode);
+        ProjectManager.getInstance().apply( args.project);
       }else{
         console.log( chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!') );
       }
