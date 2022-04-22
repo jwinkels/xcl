@@ -9,18 +9,20 @@ export class Environment{
 
     public static initialize(projectName:string, project:Project|undefined=undefined, schema:string = ''):Map<string,{value:string, required:boolean}>{
 
-        let envFileName="";
-        let env:any={};
-        let variables:Map<string,{value:string, required:boolean}> = Environment.getVariablesMap(projectName, schema);
-        let globals = "environment.yml";
-        let projectVariables  = "env.yml";
+        //initialize variables
+        let envFileName                                              = "";
+        let env:any                                                  = {};
+        let variables:Map<string,{value:string, required:boolean}>   = Environment.getVariablesMap(projectName, schema);
+        const globals                                                = "environment.yml";
+        const projectVariables                                       = "env.yml";
+
         // Decide which environment variables context should be loaded
         if(projectName.toLocaleLowerCase() !== "all" && project){
             // environment variable of project
             envFileName = project.getPath() + "/.xcl/" + projectVariables;
         }else{
             // globals
-            envFileName = this.xclHome + "/environment.yml";
+            envFileName = this.xclHome + globals;
         }
 
         // Check if environment variable file exists if not, write skelleton to file
@@ -44,8 +46,10 @@ export class Environment{
     }
 
     private static loadEnvironmentConfig(envFileName:string, variables:Map<string, {value:string, required:boolean}>):Map<string,{value:string, required:boolean}>{
-        let env:any={};
-        env=yaml.parse(fs.readFileSync(envFileName).toString());
+        
+        let env:any = {}; 
+        env         = yaml.parse(fs.readFileSync(envFileName).toString());
+
         variables.forEach((variable: {value:string, required:boolean}, key)=>{
             this.setVariable(key, env[key], variables);
         });
@@ -56,8 +60,7 @@ export class Environment{
     private static getVariablesMap(projectName:string, schema:string = ''):Map<string,{value:string, required:boolean}>{
         // Available environment variable declaration
         // List can be extended
-        let variables:Map<string,{value:string, required:boolean}>=new Map<string, {value:string, required:boolean}>();
-        variables=new Map<string, {value:string, required:boolean}>();
+        let variables:Map<string,{value:string, required:boolean}> = new Map<string, {value:string, required:boolean}>();
         variables.set('connection', {value: "unset", required: true});
         variables.set('project', {value: projectName !== "all" ? projectName : "", required: true});
         variables.set('syspw', {value:"", required: false});
@@ -99,7 +102,7 @@ export class Environment{
         let projectName:string = ProjectManager.getInstance().getProjectNameByPath(path);
 
 
-        // Decide which environment variables context should be loaded
+        // decide which environment variable context should be loaded
         if (projectName === "all"){
             envFileName = this.xclHome + "/environment.yml";
         }else{
@@ -138,12 +141,12 @@ export class Environment{
     public static setVarsFromWizard(config:ProjectWizardConfiguration, project:Project):Map<string,{value:string, required:boolean}> {
       const localEnv = Environment.initialize(config.project, project);
 
+      //variable 'schema' is not to be set by end-user
       Environment.setVariable("connection", config.connection, localEnv);
       Environment.setVariable("project",    config.project,    localEnv);
       Environment.setVariable("password",   config.password,   localEnv);
       Environment.setVariable("syspw",      config.adminpass,  localEnv);
-      //Environment.setVariable("schema",     config.apexuser,   localEnv);
-
+      
       Environment.writeEnvironment(config.project, localEnv);
 
       return localEnv;

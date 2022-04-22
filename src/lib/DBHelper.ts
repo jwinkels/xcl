@@ -6,15 +6,14 @@ import * as fs from "fs-extra";
 import * as os from "os";
 import { Logger } from './Logger';
 
-const oracledb = require('oracledb');
-const xclHome = os.homedir() + "/AppData/Roaming/xcl";
- //fs.readFileSync(xclHome+"/.instantClient").toString().trimEnd();
+const oracledb                 = require('oracledb');
+const xclHome                  = os.homedir() + "/AppData/Roaming/xcl";
 let instant_client_path:string = "";
 
 if (os.platform() === 'darwin'){
   instant_client_path = xclHome + "/.instantClient";
 }else{
-  instant_client_path = xclHome + fs.readFileSync(xclHome+"/.instantClient").toString().trimEnd();
+  instant_client_path = xclHome + fs.readFileSync(xclHome + "/.instantClient").toString().trimEnd();
 }
 
 fs.existsSync(instant_client_path)?oracledb.initOracleClient({libDir: instant_client_path}):console.log('No Instant Client Installed in '+instant_client_path);
@@ -32,8 +31,8 @@ export class DBHelper {
                                    pConnUrl?: string):IConnectionProperties {
     let conn:IConnectionProperties = {
       user          : "" + (pUserName || process.env.NODE_ORACLEDB_USER ),
-      password      : "" + (pPassWord ||process.env.NODE_ORACLEDB_PASSWORD),
-      connectString : "" + (pConnUrl || process.env.NODE_ORACLEDB_CONNECTIONSTRING),
+      password      : "" + (pPassWord || process.env.NODE_ORACLEDB_PASSWORD),
+      connectString : "" + (pConnUrl  || process.env.NODE_ORACLEDB_CONNECTIONSTRING),
       // could not find constant, so looked up at
       // https://github.com/oracle/node-oracledb/blob/master/doc/api.md#oracledbconstantsprivilege
       privilege     : pUserName === 'sys' ? 2 : undefined
@@ -185,7 +184,7 @@ export class DBHelper {
 
   public static executeScript(conn: IConnectionProperties, script: string,  logger:Logger){
     
-    fs.appendFileSync(process.cwd()+'/xcl.log', 'Start script: '+script); 
+    logger.getLogger().log("info", 'Start script: '+script);
     
     const childProcess = spawnSync(
       'sql', // Sqlcl path should be in path
@@ -196,22 +195,12 @@ export class DBHelper {
       }
     );
     
-
-    if (!childProcess.error){
-      //console.log(chalk.gray(childProcess.stdout));
-      //fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.stdout); 
-      logger.getLogger().log("info", childProcess.stdout); 
-    }else{
-      //console.log(chalk.red(childProcess.error.message));
-      //fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.error.message); 
-      logger.getLogger().log("error", childProcess.stderr);
-    }
+    DBHelper.logResults(childProcess, logger);
     
   }
 
   public static executeScriptIn(conn: IConnectionProperties, script: string, cwd:string, logger:Logger){
     
-    //fs.appendFileSync(process.cwd()+'/xcl.log', 'Start script: '+script); 
     logger.getLogger().log("info", 'Start script: '+script);
 
     const childProcess = spawnSync(
@@ -224,16 +213,16 @@ export class DBHelper {
       }
     );
     
+    DBHelper.logResults(childProcess, logger);
+
+  }
+
+  private static logResults(childProcess:any, logger:Logger):void{
     if (!childProcess.error){
-      //console.log(chalk.gray(childProcess.stdout));
-      //fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.stdout);
       logger.getLogger().log("info", childProcess.stdout); 
     }else{
-      //console.log(chalk.red(childProcess.error.message));
-      //fs.appendFileSync(process.cwd()+'/xcl.log', childProcess.error.message); 
       logger.getLogger().log("error", childProcess.stderr); 
     }
-
   }
 
   

@@ -639,6 +639,9 @@ class ProjectStatus {
     let projectConfig = this.project.getConfig();
     delete projectConfig.xcl["version"];
 
+    //console.log(this.statusConfig.xcl.hash);
+    //console.log(Md5.hashStr( yaml.stringify( projectConfig ) ).toString());
+
     if( this.statusConfig.xcl.hash == Md5.hashStr( yaml.stringify( projectConfig ) ).toString()
           &&
         !this.changeList.get("SETUP") ){
