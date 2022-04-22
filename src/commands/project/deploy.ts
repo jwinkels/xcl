@@ -17,10 +17,10 @@ export default class ProjectDeploy extends Command {
     syspw: flags.string({char:'s', description:'Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users will be overwritten!]'}),
     'schema-only': flags.boolean({description:'Deploys only schema objects', default: false}),
     mode: flags.string({char:         'm',
-                        description:  'mode of build (init/patch)',
-                        default:      'init'}),
+                        description:  'mode of build (init/patch/dev)',
+                        default:      'dev'}),
     version: flags.string({char:        'v',
-                           description: 'Version to tag build'}),
+                           description: 'version to deploy'}),
     yes: flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),
     'ords-url': flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords', false)}),
     'schema': flags.string({description: 'to deploy a single schema type one of the following: [data, logic, app]', default: Environment.readConfigFrom(process.cwd(), "schema", false)}),
@@ -49,7 +49,6 @@ export default class ProjectDeploy extends Command {
                                                                               message: `Insert deploy user password: `,
                                                                               mask: true
                                                                             }])).password;
-      console.log(flags.password);
       }
 
       if(ProjectManager.getInstance().getProject((args.project)).getDeployMethod()!==""){
@@ -70,5 +69,7 @@ export default class ProjectDeploy extends Command {
         console.log(chalk.yellow("INFO: xcl feature:list DEPLOY -a to get an overview about deployment methods"));
       }
     }
+
+    console.log('Needed : ' + process.uptime().toPrecision(2) + 's');
   }
 }
