@@ -12,7 +12,7 @@ export default class ProjectBuild extends Command {
     help: flags.help({char: 'h'}),
     mode: flags.string({char: 'm',
                         description: 'mode of build (init/patch)',
-                        default: 'init'}),
+                        default: 'dev'}),
     version: flags.string({char: 'v',
                           description: 'Version to tag build'
                           }),
@@ -31,22 +31,35 @@ export default class ProjectBuild extends Command {
     const {args, flags} = this.parse(ProjectBuild)
 
     if (!flags.version){
-      let answer = await inquirer.prompt([{
-        name: 'version',
-        message: `Please insert a version number`,
-        type: 'input',
-        default: await Git.getLatestTagName() ? await Git.getLatestTagName() : ''
-      },
-      {
-        name: 'tag',
-        message: 'Please insert the commit or tag-name for the build',
-        type: 'list',
-        choices: await Git.getTagList(),
-        default: await Git.getLatestTagName() ? await Git.getLatestTagName() : await Git.getCurrentCommitId()
-      }]);
+      let answer = await inquirer.prompt([
+        {
+          name: 'mode',
+          message: 'Please build mode',
+          type: 'list',
+          choices: ['init', 'patch'],
+          default: 'init'
+        }]
+      );
+
+      let versionAnswer = await inquirer.prompt([
+        {
+          name: 'version',
+          message: `Please insert a version number`,
+          type: 'input',
+          default: await Git.getLatestTagName() ? await Git.getLatestTagName() : answer.mode
+        },
+        {
+          name: 'tag',
+          message: 'Please insert the commit or tag-name for the build',
+          type: 'list',
+          choices: await Git.getTagList(),
+          default: await Git.getLatestTagName() == "" ? await Git.getLatestTagName() : await Git.getCurrentCommitId()
+        }]
+      );
       
-      flags.version = answer.version;
-      flags.commit = answer.tag;
+      flags.version = versionAnswer.version;
+      flags.commit = versionAnswer.tag;
+      flags.mode = answer.mode;
     }
 
     if ( ProjectManager.getInstance().getProjectNameByPath(process.cwd()) !== 'all' ){
@@ -58,6 +71,5 @@ export default class ProjectBuild extends Command {
         console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project managed directory!'));
       }
     }
-
   }
 }

@@ -158,4 +158,8 @@ STAGE=${responses.stage}
         console.log(chalk.redBright('Error: current folder is not a git folder'));
       }
     }
+
+    public remove(feature:ProjectFeature, projectPath:string, singleSchema:boolean)    : void{
+      console.log('Implement it!');
+    }
 }

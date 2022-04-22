@@ -97,3 +97,6 @@ TODO:
       features müssen vielleicht nur einmal installiert werden, können danach aber an mehrere schemata gegranted werden
       viele features haben dafür eigene granting skripte, die müssen ausgeführt werden auch wenn das feature bereits installiert ist
       Idee: ein Flag in der software.yml die ein skript als always execute markiert, diese skripte bei installation des features immer ausgeführt 
+    
+    - Unterschiedliche Versionsnummern in n Applikationen
+      

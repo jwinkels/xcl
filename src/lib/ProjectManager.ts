@@ -386,7 +386,6 @@ export class ProjectManager {
       if (!p.getEnvironmentVariable('connection')){
         console.log(chalk.red('No connection declared! Use xcl config:defaults -s connection or read deploy help!'));
       }else{
-        console.log(p.getEnvironmentVariable('connection'));
         connection = p.getEnvironmentVariable('connection')!;
       }
     }
@@ -507,8 +506,7 @@ export class ProjectManager {
     }
   }
 
-  public async apply(projectName: string, setupOnly:boolean, version:string, mode:string):Promise<void>{
-    let ready:boolean = false;
+  public async apply(projectName: string):Promise<void>{
     const project:Project = this.getProject(projectName);
     if ( fs.existsSync( project.getPath() + '/plan.sh' ) ){
       Application.generateSQLEnvironment( projectName, __dirname );
@@ -518,7 +516,7 @@ export class ProjectManager {
         for (let i = 1; i <= commands.length - 1; i++){
 
           //SPLIT COMMAND FROM ARGUMENTS
-          const command = commands[i].substr( 0, commands[i].indexOf( " ", 5 ) ).trim();
+          const command = commands[i].substring( 0, commands[i].indexOf( " ", 5 ) ).trim();
           //const argv    = commands[i].substr( command.length + 1, commands[i].length ).split(" ");
 
           if(command){

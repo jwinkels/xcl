@@ -62,7 +62,7 @@ export class ProjectFeature extends Feature{
                                 resolve(jsonObject[i].zipball_url);
                             }
                         }
-                    }catch(err){
+                    }catch(err:any){
                         throw Error (err);
                     }
                 });

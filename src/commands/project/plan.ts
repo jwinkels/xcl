@@ -41,7 +41,7 @@ export default class ProjectPlan extends Command {
       }
 
       if ( answer === 'y' || flags.yes ){
-        ProjectManager.getInstance().apply(args.project, true);
+        ProjectManager.getInstance().apply(args.project);
       }
     }
     console.log('Needed : ' + process.uptime().toPrecision(2) + 's');
