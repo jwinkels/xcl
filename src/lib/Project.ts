@@ -309,19 +309,13 @@ export class Project {
 
     try {
       conf = fs.readFileSync(this.getPath() + "/xcl.yml").toString();
-    } catch (err:any) {
-      if (err.code === 'ENOENT') {
-        conf = yaml.stringify({xcl: {
-                                project: this.getName(),
-                                errtext: 'File not found!'
-                              }});
-        this.errorText = 'File not found!';
-      } else {
-        throw err;
-      }
-
+    } catch (err) {
+          conf = yaml.stringify({xcl: {
+                                  project: this.getName(),
+                                  errtext: 'File not found!'
+                                }});
+          this.errorText = 'File not found!';
     }
-
     return yaml.parse(conf);
   }
 
@@ -815,13 +809,8 @@ class ProjectStatus {
       }else{
         return this.statusConfig;
       }
-    } catch (err:any) {
-      if (err.code === 'ENOENT') {
-        return 'File not found!';
-      } else {
-        throw err;
-      }
-
+    } catch (err) {
+      return 'File not found!';
     }
 
     return yaml.parse(conf);

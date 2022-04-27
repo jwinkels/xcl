@@ -127,7 +127,7 @@ export class Environment{
             try{
                 env = yaml.parse(fs.readFileSync(envFileName).toString());
                 return env[variableName];
-            }catch(err:any){
+            }catch(err){
                if (write) {
                     console.log(new Error().stack);
                     throw Error("hier:" + err);

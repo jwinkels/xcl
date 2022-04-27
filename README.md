@@ -18,8 +18,8 @@ APEX commandline Utility
 $ npm install -g xcl
 $ xcl COMMAND
 running command...
-$ xcl (-v|--version|version)
-xcl/0.1.0 win32-x64 node-v13.3.0
+$ xcl (--version)
+xcl/0.1.0 win32-x64 node-v16.5.0
 $ xcl --help [COMMAND]
 USAGE
   $ xcl COMMAND
@@ -28,384 +28,447 @@ USAGE
 <!-- usagestop -->
 # Commands
 <!-- commands -->
-* [`xcl config:defaults [PROJECT] [VALUE]`](#xcl-configdefaults-project-value)
-* [`xcl config:github USER`](#xcl-configgithub-user)
-* [`xcl feature:add FEATURE VERSION [USERNAME] [PASSWORD] [PROJECT]`](#xcl-featureadd-feature-version-username-password-project)
-* [`xcl feature:deinstall FEATURE [PROJECT]`](#xcl-featuredeinstall-feature-project)
-* [`xcl feature:install FEATURE PROJECT`](#xcl-featureinstall-feature-project)
-* [`xcl feature:list [TYPE] [PROJECT]`](#xcl-featurelist-type-project)
-* [`xcl feature:remove FEATURE [PROJECT]`](#xcl-featureremove-feature-project)
-* [`xcl feature:update FEATURE VERSION [PROJECT]`](#xcl-featureupdate-feature-version-project)
-* [`xcl feature:versions FEATURE`](#xcl-featureversions-feature)
+* [`xcl autocomplete [SHELL]`](#xcl-autocomplete-shell)
+* [`xcl config defaults [VARIABLE] [VALUE] [PROJECT]`](#xcl-config-defaults-variable-value-project)
+* [`xcl config github USER`](#xcl-config-github-user)
+* [`xcl feature add FEATURE [PROJECT] [USERNAME] [PASSWORD] [VERSION]`](#xcl-feature-add-feature-project-username-password-version)
+* [`xcl feature deinstall FEATURE [PROJECT]`](#xcl-feature-deinstall-feature-project)
+* [`xcl feature install FEATURE PROJECT`](#xcl-feature-install-feature-project)
+* [`xcl feature list [TYPE] [PROJECT]`](#xcl-feature-list-type-project)
+* [`xcl feature remove FEATURE [PROJECT]`](#xcl-feature-remove-feature-project)
+* [`xcl feature update FEATURE [VERSION] [PROJECT]`](#xcl-feature-update-feature-version-project)
+* [`xcl feature versions FEATURE`](#xcl-feature-versions-feature)
 * [`xcl help [COMMAND]`](#xcl-help-command)
-* [`xcl project:apply [PROJECT]`](#xcl-projectapply-project)
-* [`xcl project:build [PROJECT] [VERSION]`](#xcl-projectbuild-project-version)
-* [`xcl project:create PROJECT`](#xcl-projectcreate-project)
-* [`xcl project:deploy [PROJECT]`](#xcl-projectdeploy-project)
-* [`xcl project:init [PROJECT]`](#xcl-projectinit-project)
-* [`xcl project:list`](#xcl-projectlist)
-* [`xcl project:plan [PROJECT]`](#xcl-projectplan-project)
-* [`xcl project:prepare [FILE]`](#xcl-projectprepare-file)
-* [`xcl project:remove PROJECT`](#xcl-projectremove-project)
+* [`xcl project apply [PROJECT]`](#xcl-project-apply-project)
+* [`xcl project build [PROJECT]`](#xcl-project-build-project)
+* [`xcl project create [PROJECT]`](#xcl-project-create-project)
+* [`xcl project deploy [PROJECT]`](#xcl-project-deploy-project)
+* [`xcl project init [PROJECT]`](#xcl-project-init-project)
+* [`xcl project list`](#xcl-project-list)
+* [`xcl project plan [PROJECT]`](#xcl-project-plan-project)
+* [`xcl project prepare [FILE]`](#xcl-project-prepare-file)
+* [`xcl project remove PROJECT`](#xcl-project-remove-project)
 
-## `xcl config:defaults [PROJECT] [VALUE]`
+## `xcl autocomplete [SHELL]`
+
+display autocomplete installation instructions
+
+```
+USAGE
+  $ xcl autocomplete [SHELL] [-r]
+
+ARGUMENTS
+  SHELL  shell type
+
+FLAGS
+  -r, --refresh-cache  Refresh cache (ignores displaying instructions)
+
+DESCRIPTION
+  display autocomplete installation instructions
+
+EXAMPLES
+  $ xcl autocomplete
+
+  $ xcl autocomplete bash
+
+  $ xcl autocomplete zsh
+
+  $ xcl autocomplete --refresh-cache
+```
+
+_See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/v1.2.0/src/commands/autocomplete/index.ts)_
+
+## `xcl config defaults [VARIABLE] [VALUE] [PROJECT]`
 
 set xcl environment variables
 
 ```
 USAGE
-  $ xcl config:defaults [PROJECT] [VALUE]
+  $ xcl config defaults [VARIABLE] [VALUE] [PROJECT]
 
-OPTIONS
-  -h, --help         show CLI help
-  -l, --list         list environment variables
-  -r, --reset=reset  resets an environment variable
-  -s, --set=set      set the value of an environment variable
-  --reset-all        resets all environment variables
-  --set-all          set all available environment variables
+ARGUMENTS
+  VARIABLE  the project in which you would like to set the variable
+  VALUE     value of the variable you chose to set
+  PROJECT   [default: all] the project in which you would like to set the variable
+
+DESCRIPTION
+  set xcl environment variables
 ```
 
-_See code: [src\commands\config\defaults.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\config\defaults.ts)_
-
-## `xcl config:github USER`
+## `xcl config github USER`
 
 Save Github credentials to avoid max API-Call Problems
 
 ```
 USAGE
-  $ xcl config:github USER
+  $ xcl config github [USER] [-h]
 
-OPTIONS
-  -h, --help  show CLI help
+FLAGS
+  -h, --help  Show CLI help.
+
+DESCRIPTION
+  Save Github credentials to avoid max API-Call Problems
 ```
 
-_See code: [src\commands\config\github.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\config\github.ts)_
-
-## `xcl feature:add FEATURE VERSION [USERNAME] [PASSWORD] [PROJECT]`
+## `xcl feature add FEATURE [PROJECT] [USERNAME] [PASSWORD] [VERSION]`
 
 add Feature to dependency list
 
 ```
 USAGE
-  $ xcl feature:add FEATURE VERSION [USERNAME] [PASSWORD] [PROJECT]
+  $ xcl feature add [FEATURE] [PROJECT] [USERNAME] [PASSWORD] [VERSION] [-h] [-i]
 
 ARGUMENTS
   FEATURE   Name of the Feature to add
-  VERSION   Version of the Feature
+  PROJECT   Name of the Project (when not in a xcl-Project path)
   USERNAME  schema name for the feature to be installed in
   PASSWORD  password for the new schema
-  PROJECT   Name of the Project (when not in a xcl-Project path)
+  VERSION   Version of the Feature
 
-OPTIONS
-  -h, --help  show CLI help
+FLAGS
+  -h, --help         Show CLI help.
+  -i, --interactive  interactive mode
+
+DESCRIPTION
+  add Feature to dependency list
 ```
 
-_See code: [src\commands\feature\add.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\add.ts)_
-
-## `xcl feature:deinstall FEATURE [PROJECT]`
+## `xcl feature deinstall FEATURE [PROJECT]`
 
 deinstall a Feature from Database
 
 ```
 USAGE
-  $ xcl feature:deinstall FEATURE [PROJECT]
+  $ xcl feature deinstall [FEATURE] [PROJECT] -c <value> -s <value> [-h] [-d]
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
   PROJECT  name of the Project (when not in a xcl-Project path)
 
-OPTIONS
-  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
-  -h, --help                   show CLI help
-  -o, --owner                  drop owner schema
-  -p, --syspw=syspw            (required) Password of SYS-User
+FLAGS
+  -c, --connection=<value>  (required) connection string HOST:PORT/SERVICE_NAME
+  -d, --drop                drop owner schema
+  -h, --help                Show CLI help.
+  -s, --syspw=<value>       (required) Password of SYS-User
+
+DESCRIPTION
+  deinstall a Feature from Database
 ```
 
-_See code: [src\commands\feature\deinstall.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\deinstall.ts)_
-
-## `xcl feature:install FEATURE PROJECT`
+## `xcl feature install FEATURE PROJECT`
 
 install a Feature to target Schema
 
 ```
 USAGE
-  $ xcl feature:install FEATURE PROJECT
+  $ xcl feature install [FEATURE] [PROJECT] [-h] [-c <value>] [-s <value>]
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
   PROJECT  name of the Project (when not in a xcl-Project path)
 
-OPTIONS
-  -c, --connection=connection  connection string HOST:PORT/SERVICE_NAME
-  -h, --help                   show CLI help
-  -p, --syspw=syspw            Password of SYS-User
+FLAGS
+  -c, --connection=<value>  connection string HOST:PORT/SERVICE_NAME
+  -h, --help                Show CLI help.
+  -s, --syspw=<value>       Password of SYS-User
+
+DESCRIPTION
+  install a Feature to target Schema
 ```
 
-_See code: [src\commands\feature\install.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\install.ts)_
-
-## `xcl feature:list [TYPE] [PROJECT]`
+## `xcl feature list [TYPE] [PROJECT]`
 
 lists all available Features
 
 ```
 USAGE
-  $ xcl feature:list [TYPE] [PROJECT]
+  $ xcl feature list [TYPE] [PROJECT] [-h] [-a]
 
 ARGUMENTS
-  TYPE     [default: ALL] Show all Features of type [DB or DEPLOY]
-  PROJECT  Show Features added to a Project (when not in a XCL-Directory it shows all Features available)
+  TYPE     [default: all] Show all Features of type [DB or DEPLOY]
+  PROJECT  [default: all] Show Features added to a Project (when not in a XCL-Directory it shows all Features available)
 
-OPTIONS
+FLAGS
   -a, --all   show all Features available
-  -h, --help  show CLI help
+  -h, --help  Show CLI help.
+
+DESCRIPTION
+  lists all available Features
 ```
 
-_See code: [src\commands\feature\list.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\list.ts)_
-
-## `xcl feature:remove FEATURE [PROJECT]`
+## `xcl feature remove FEATURE [PROJECT]`
 
 remove Feature from Project
 
 ```
 USAGE
-  $ xcl feature:remove FEATURE [PROJECT]
+  $ xcl feature remove [FEATURE] [PROJECT] [-h] [-d] [-c <value>] [-s <value>] [-o]
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
   PROJECT  Name of the Project (when not in a xcl-Project path)
 
-OPTIONS
-  -c, --connection=connection  connection to database (required when deinstall Feature) [ HOST:PORT/SERVICE_NAME ]
-  -d, --deinstall              deinstall Feature from database
-  -h, --help                   show CLI help
-  -o, --owner                  drop Feature owner schema
-  -p, --syspw=syspw            password of SYS-User
+FLAGS
+  -c, --connection=<value>  connection to database (required when deinstall Feature) [ HOST:PORT/SERVICE_NAME ]
+  -d, --deinstall           deinstall Feature from database
+  -h, --help                Show CLI help.
+  -o, --owner               drop Feature owner schema
+  -s, --syspw=<value>       password of SYS-User
+
+DESCRIPTION
+  remove Feature from Project
 ```
 
-_See code: [src\commands\feature\remove.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\remove.ts)_
-
-## `xcl feature:update FEATURE VERSION [PROJECT]`
+## `xcl feature update FEATURE [VERSION] [PROJECT]`
 
 update Project Feature version
 
 ```
 USAGE
-  $ xcl feature:update FEATURE VERSION [PROJECT]
+  $ xcl feature update [FEATURE] [VERSION] [PROJECT] -c <value> [-h] [-s <value>]
 
 ARGUMENTS
   FEATURE  Name of the Project-Feature to be installed
   VERSION  Version of the Feature
   PROJECT  name of the Project (when not in a xcl-Project path)
 
-OPTIONS
-  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
-  -h, --help                   shows this help
-  -p, --syspw=syspw            Password of SYS-User
+FLAGS
+  -c, --connection=<value>  (required) connection string HOST:PORT/SERVICE_NAME
+  -h, --help                shows this help
+  -s, --syspw=<value>       Password of SYS-User
+
+DESCRIPTION
+  update Project Feature version
 ```
 
-_See code: [src\commands\feature\update.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\update.ts)_
-
-## `xcl feature:versions FEATURE`
+## `xcl feature versions FEATURE`
 
 lists all available Releases of the Feature
 
 ```
 USAGE
-  $ xcl feature:versions FEATURE
+  $ xcl feature versions [FEATURE] [-h]
 
 ARGUMENTS
   FEATURE  name of the feature
 
-OPTIONS
-  -h, --help  show CLI help
-```
+FLAGS
+  -h, --help  Show CLI help.
 
-_See code: [src\commands\feature\versions.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\feature\versions.ts)_
+DESCRIPTION
+  lists all available Releases of the Feature
+```
 
 ## `xcl help [COMMAND]`
 
-display help for xcl
+Display help for xcl.
 
 ```
 USAGE
-  $ xcl help [COMMAND]
+  $ xcl help [COMMAND] [-n]
 
 ARGUMENTS
-  COMMAND  command to show help for
+  COMMAND  Command to show help for.
 
-OPTIONS
-  --all  see all commands in CLI
+FLAGS
+  -n, --nested-commands  Include all nested commands in the output.
+
+DESCRIPTION
+  Display help for xcl.
 ```
 
-_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v2.2.3/src\commands\help.ts)_
+_See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v5.1.12/src/commands/help.ts)_
 
-## `xcl project:apply [PROJECT]`
+## `xcl project apply [PROJECT]`
 
 apply changes to project
 
 ```
 USAGE
-  $ xcl project:apply [PROJECT]
+  $ xcl project apply [PROJECT] [-h] [--setup-only] [-m <value>] [-v <value>]
 
 ARGUMENTS
   PROJECT  name of the project that the changes should be applied to
 
-OPTIONS
-  -h, --help    show CLI help
-  --setup-only  Deploys only dependeny changes
+FLAGS
+  -h, --help             Show CLI help.
+  -m, --mode=<value>     [default: init] mode of build (init/patch)
+  -v, --version=<value>  Version to tag build
+  --setup-only           Deploys only dependeny changes
+
+DESCRIPTION
+  apply changes to project
 ```
 
-_See code: [src\commands\project\apply.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\apply.ts)_
-
-## `xcl project:build [PROJECT] [VERSION]`
+## `xcl project build [PROJECT]`
 
 create build to deploy
 
 ```
 USAGE
-  $ xcl project:build [PROJECT] [VERSION]
+  $ xcl project build [PROJECT] [-h] [-m <value>] [-v <value>] [-c <value>]
 
 ARGUMENTS
   PROJECT  name of the project that should be build
-  VERSION
 
-OPTIONS
-  -h, --help  show CLI help
+FLAGS
+  -c, --commit=<value>   commit or tag to build the deliverable
+  -h, --help             Show CLI help.
+  -m, --mode=<value>     mode of build (init/patch)
+  -v, --version=<value>  Version to tag build
+
+DESCRIPTION
+  create build to deploy
 ```
 
-_See code: [src\commands\project\build.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\build.ts)_
+## `xcl project create [PROJECT]`
 
-## `xcl project:create PROJECT`
-
-create a project
+Creates a project including a new directory and the configured folder structure
 
 ```
 USAGE
-  $ xcl project:create PROJECT
+  $ xcl project create [PROJECT] [-h] [-w <value>] [--single-schema] [-i]
 
 ARGUMENTS
   PROJECT  name of the project to create
 
-OPTIONS
-  -h, --help                 show CLI help
-  -w, --workspace=workspace  workspace name the application should be installed in
+FLAGS
+  -h, --help               Show CLI help.
+  -i, --interactive        Interactive wizard that guides you through the creation of the project
+  -w, --workspace=<value>  workspace name the application should be installed in
+  --single-schema          one schema instead of three, no deployment user
+
+DESCRIPTION
+  Creates a project including a new directory and the configured folder structure
 ```
 
-_See code: [src\commands\project\create.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\create.ts)_
-
-## `xcl project:deploy [PROJECT]`
+## `xcl project deploy [PROJECT]`
 
 deploy the project
 
 ```
 USAGE
-  $ xcl project:deploy [PROJECT]
+  $ xcl project deploy [PROJECT] -c <value> [-h] [-p <value>] [-d] [-s <value>] [--schema-only] [-m <value>] [-v
+    <value>] [-y] [--ords-url <value>] [--schema <value>] [--quiet] [--nocompile]
 
 ARGUMENTS
   PROJECT  Name of the project that should be deployed
 
-OPTIONS
-  -c, --connection=connection  (required) connection string HOST:PORT/SERVICE_NAME
-  -d, --dependencies           Deploy inclusive dependencies (you will be asked for sys-user password)
-  -h, --help                   show CLI help
-  -p, --password=password      (required) Password for Deployment User
+FLAGS
+  -c, --connection=<value>  (required) connection string HOST:PORT/SERVICE_NAME
+  -d, --dependencies        Deploy inclusive dependencies (you will be asked for sys-user password)
+  -h, --help                Show CLI help.
+  -m, --mode=<value>        [default: dev] mode of build (init/patch/dev)
+  -p, --password=<value>    Password for Deployment User
+  -s, --syspw=<value>       Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users
+                            will be overwritten!]
+  -v, --version=<value>     version to deploy
+  -y, --yes                 Automatic proceed to the next schema without asking
+  --nocompile               ignore invalid objects on deploy
+  --ords-url=<value>        [IP/SERVERNAME]:PORT
+  --quiet                   suppress output
+  --schema=<value>          to deploy a single schema type one of the following: [data, logic, app]
+  --schema-only             Deploys only schema objects
 
-  -s, --syspw=syspw            Provide sys-password for silent mode dependency installation [IMPORTANT: All existing
-                               users will be overwritten!]
-
-  --schema-only                Deploys only schema objects
+DESCRIPTION
+  deploy the project
 ```
 
-_See code: [src\commands\project\deploy.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\deploy.ts)_
+## `xcl project init [PROJECT]`
 
-## `xcl project:init [PROJECT]`
-
-initialize a project
+initializes a project
 
 ```
 USAGE
-  $ xcl project:init [PROJECT]
+  $ xcl project init [PROJECT] [-h] [-s <value>] [-c <value>] [-f] [-y] [-o] [-u]
 
 ARGUMENTS
   PROJECT  name of the project to initialze
 
-OPTIONS
-  -c, --connection=connection  Connectstring ex. localhost:1521/xepdb1
-  -f, --force                  Attention: forces dropping existing schemas
-  -h, --help                   show CLI help
-  -o, --objects                Install Basic Objects defined in setup-Directory
-  -p, --syspw=syspw            Password of user sys
-  -u, --users                  Install standard Schemas APP, LOGIC, DATA, DEPL
-  -y, --yes                    Answers force-action with yes (Use with caution)
+FLAGS
+  -c, --connection=<value>  Connectstring ex. localhost:1521/xepdb1
+  -f, --force               Attention: force will drop existing schemas
+  -h, --help                Show CLI help.
+  -o, --objects             Install basic objects defined in setup directory
+  -s, --syspw=<value>       Password of user sys
+  -u, --users               Install standard schemas APP, LOGIC, DATA, DEPL
+  -y, --yes                 Answers force-action with yes (Use with caution)
+
+DESCRIPTION
+  initializes a project
 ```
 
-_See code: [src\commands\project\init.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\init.ts)_
-
-## `xcl project:list`
+## `xcl project list`
 
 lists all known xcl projects
 
 ```
 USAGE
-  $ xcl project:list
+  $ xcl project list [-h]
 
-OPTIONS
-  -h, --help  show CLI help
+FLAGS
+  -h, --help  Show CLI help.
+
+DESCRIPTION
+  lists all known xcl projects
 ```
 
-_See code: [src\commands\project\list.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\list.ts)_
-
-## `xcl project:plan [PROJECT]`
+## `xcl project plan [PROJECT]`
 
 generate commands to bring the project up to date
 
 ```
 USAGE
-  $ xcl project:plan [PROJECT]
+  $ xcl project plan [PROJECT] [-h] [--auto-apply] [--yes]
 
 ARGUMENTS
   PROJECT  name of the project
 
-OPTIONS
-  -h, --help  show CLI help
+FLAGS
+  -h, --help    Show CLI help.
+  --auto-apply  proceed with apply after plan
+  --yes         skip all prompts with answer 'yes'
+
+DESCRIPTION
+  generate commands to bring the project up to date
 ```
 
-_See code: [src\commands\project\plan.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\plan.ts)_
-
-## `xcl project:prepare [FILE]`
+## `xcl project prepare [FILE]`
 
 describe the command here
 
 ```
 USAGE
-  $ xcl project:prepare [FILE]
+  $ xcl project prepare [FILE] [-h] [-n <value>] [-f]
 
-OPTIONS
+FLAGS
   -f, --force
-  -h, --help       show CLI help
-  -n, --name=name  name to print
+  -h, --help          Show CLI help.
+  -n, --name=<value>  name to print
+
+DESCRIPTION
+  describe the command here
 ```
 
-_See code: [src\commands\project\prepare.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\prepare.ts)_
-
-## `xcl project:remove PROJECT`
+## `xcl project remove PROJECT`
 
 removes a project
 
 ```
 USAGE
-  $ xcl project:remove PROJECT
+  $ xcl project remove [PROJECT] [-h] [-p] [-d] [-c <value>] [-s <value>]
 
 ARGUMENTS
   PROJECT  name of the project to remove
 
-OPTIONS
-  -c, --connection=connection
+FLAGS
+  -c, --connection=<value>
   -d, --database
-  -h, --help                   show CLI help
+  -h, --help                Show CLI help.
   -p, --path
-  -s, --syspw=syspw
-```
+  -s, --syspw=<value>
 
-_See code: [src\commands\project\remove.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/src\commands\project\remove.ts)_
+DESCRIPTION
+  removes a project
+```
 <!-- commandsstop -->

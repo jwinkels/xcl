@@ -171,7 +171,7 @@ export class ProjectManager {
 
       if( database ){// remove from db?
         if (connection && syspw){
-          const c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection);
+          const c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection)!;
           DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/drop_xcl_users.sql' ) + ' ' + project.getName() + '_data ' +
                                                                                project.getName() + '_logic ' +
                                                                                project.getName() + '_app ' +
@@ -251,7 +251,7 @@ export class ProjectManager {
 
     flags.syspw = flags.syspw ? flags.syspw : Environment.readConfigFrom(p.getPath() , "syspw");
 
-    const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.syspw, flags.connection);
+    const c:IConnectionProperties = DBHelper.getConnectionProps('sys', flags.syspw, flags.connection)!;
 
     let userlist:string = "";
 
