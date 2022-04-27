@@ -1,4 +1,4 @@
-import { Command, flags } from '@oclif/command'
+import { Command, Flags } from '@oclif/core'
 import { ProjectManager } from '../../lib/ProjectManager'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { Environment } from '../../lib/Environment'
@@ -10,28 +10,28 @@ export default class ProjectDeploy extends Command {
   static description = 'deploy the project'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true, default: Environment.readConfigFrom(process.cwd(),"connection", false)}),
-    password: flags.string( {char: 'p', description:'Password for Deployment User'} ),
-    dependencies: flags.boolean({char: 'd', description:'Deploy inclusive dependencies (you will be asked for sys-user password)'}),
-    syspw: flags.string({char:'s', description:'Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users will be overwritten!]'}),
-    'schema-only': flags.boolean({description:'Deploys only schema objects', default: false}),
-    mode: flags.string({char:         'm',
-                        description:  'mode of build (init/patch/dev)',
-                        default:      'dev'}),
-    version: flags.string({char:        'v',
-                           description: 'version to deploy'}),
-    yes: flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),
-    'ords-url': flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords', false)}),
-    'schema': flags.string({description: 'to deploy a single schema type one of the following: [data, logic, app]', default: Environment.readConfigFrom(process.cwd(), "schema", false)}),
-    'quiet': flags.boolean({description: 'suppress output', default: false}),
-    'nocompile': flags.boolean({description: 'ignore invalid objects on deploy', default: false})
+    help:                                                 Flags.help({char: 'h'}),
+    connection:                                           Flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true, default: Environment.readConfigFrom(process.cwd(),"connection", false)}),
+    password:                                             Flags.string( {char: 'p', description:'Password for Deployment User'} ),
+    dependencies:                                         Flags.boolean({char: 'd', description:'Deploy inclusive dependencies (you will be asked for sys-user password)'}),
+    syspw:                                                Flags.string({char:'s', description:'Provide sys-password for silent mode dependency installation [IMPORTANT: All existing users will be overwritten!]'}),
+    'schema-only':                                        Flags.boolean({description:'Deploys only schema objects', default: false}),
+    mode:                                                 Flags.string({char:         'm',
+                                                                       description:  'mode of build (init/patch/dev)',
+                                                                       default:      'dev'}),
+    version:                                              Flags.string({char:        'v',
+                                                                       description: 'version to deploy'}),
+    yes:                                                  Flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),
+    'ords-url':                                           Flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords', false)}),
+    'schema':                                             Flags.string({description: 'to deploy a single schema type one of the following: [data, logic, app]', default: Environment.readConfigFrom(process.cwd(), "schema", false)}),
+    'quiet':                                              Flags.boolean({description: 'suppress output', default: false}),
+    'nocompile':                                          Flags.boolean({description: 'ignore invalid objects on deploy', default: false})
   }
 
   static args = [{name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom( process.cwd(), "project", false) }]
 
   async run() {
-    const {args, flags} = this.parse(ProjectDeploy);
+    const {args, flags} = await this.parse(ProjectDeploy);
     if (!args.project && ProjectManager.getInstance().getProjectNameByPath(process.cwd()) === 'all'){
       console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project directory!'));
       console.log(chalk.blueBright('INFO: Try ´xcl project:list´ to get an overview of your projects!'));

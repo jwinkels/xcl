@@ -5,13 +5,13 @@
     "declaration": true,
     "importHelpers": true,
     "module": "commonjs",
-    "outDir": "lib",
+    "outDir": "build",
     "rootDir": "src",
     "strict": true,
     "target": "esnext",
-    "sourceMap": true
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "composite": true
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src/**/*"],
 }

@@ -1,4 +1,4 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { Environment } from '../../lib/Environment'
 import  chalk from 'chalk'
@@ -8,9 +8,9 @@ export default class FeatureInstall extends Command{
   static description = 'install a Feature to target Schema'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', default: Environment.readConfigFrom(process.cwd(),"connection", false)} ),
-    syspw: flags.string( {char: 's', description:'Password of SYS-User'})
+    help:       Flags.help( {char: 'h'}),
+    connection: Flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', default: Environment.readConfigFrom(process.cwd(),"connection", false)} ),
+    syspw:      Flags.string( {char: 's', description:'Password of SYS-User'})
   }
 
   static args = [
@@ -28,7 +28,7 @@ export default class FeatureInstall extends Command{
       ]
 
   async run() {
-    const {args, flags} = this.parse(FeatureInstall);
+    const {args, flags} = await this.parse(FeatureInstall);
     if (FeatureManager.getInstance().getFeatureType(args.feature) ==="DB" && (!flags.connection || flags.connection === "")){
       console.log(chalk.red("ERROR: Provide a connection string to install "+args.name));
     }else{

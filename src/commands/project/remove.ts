@@ -1,4 +1,4 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import {ProjectManager} from '../../lib/ProjectManager'
 import { cli } from 'cli-ux';
 
@@ -6,24 +6,23 @@ export default class ProjectRemove extends Command {
   static description = 'removes a project'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-        
-    path: flags.boolean({char: 'p'}),
-    database: flags.boolean({char: 'd'}),
-    connection: flags.string({char: 'c'}),
-    syspw: flags.string({char: 's'})
+    help:       Flags.help({char: 'h'}),   
+    path:       Flags.boolean({char: 'p'}),
+    database:   Flags.boolean({char: 'd'}),
+    connection: Flags.string({char: 'c'}),
+    syspw:      Flags.string({char: 's'})
   }
 
   static args = [
     {
-      name: 'project',
+      name:        'project',
       description: 'name of the project to remove',
-      required: true
+      required:    true
     }
   ]
 
   async run() {
-    const {args, flags} = this.parse(ProjectRemove)
+    const {args, flags} = await this.parse(ProjectRemove)
 
     let syspw = !flags.syspw ? "" : flags.syspw;
     let connection = !flags.connection ? "" : flags.connection;

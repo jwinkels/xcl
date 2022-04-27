@@ -8,9 +8,8 @@
   },
   "bugs": "https://github.com/MaikMichel/xcl/issues",
   "dependencies": {
-    "@oclif/command": ">=1.8.0",
-    "@oclif/config": ">=1.17.0",
-    "@oclif/plugin-help": ">=3.2.3",
+    "@oclif/core": "^1",
+    "@oclif/plugin-plugins": "^2.0.1",
     "@types/adm-zip": "^0.4.34",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.13",
@@ -34,6 +33,7 @@
     "express": "^4.17.1",
     "inquirer": "^8.2.0",
     "inversify": "^5.1.1",
+    "oclif": "^3.0.1",
     "oracledb": "^5.2.0",
     "ps-node": "^0.1.6",
     "readline-sync": "^1.4.10",
@@ -42,31 +42,31 @@
     "request-promise-native": "^1.0.9",
     "secure-random-password": "^0.2.3",
     "ts-md5": "^1.2.9",
-    "tslib": "^1.14.1",
+    "tslib": "^2.4.0",
     "yaml": "^1.10.2"
   },
   "devDependencies": {
     "@oclif/dev-cli": ">=1.26.0",
-    "@oclif/test": ">=1.2.8",
+    "@oclif/test": ">=2.1.0",
     "@oclif/tslint": ">=3.1.1",
     "@types/chai": "^4.2.22",
-    "@types/mocha": "^5.2.7",
-    "@types/node": "^10.17.60",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^16.9.4",
     "chai": "^4.3.4",
-    "globby": "^10.0.2",
+    "globby": "^11",
     "mocha": "^9.1.2",
     "nyc": "^15.1.0",
     "rimraf": "^3.0.2",
-    "ts-node": "^8.10.2",
+    "ts-node": "^10.2.1",
     "tslint": "^5.20.1",
-    "typescript": "^3.9.10"
+    "typescript": "^4.4.3"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=12.0.0"
   },
   "files": [
     "/bin",
-    "/lib",
+    "/build",
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
   ],
@@ -75,13 +75,15 @@
     "oclif"
   ],
   "license": "MIT",
-  "main": "lib/index.js",
+  "main": "build/index.js",
   "oclif": {
-    "commands": "./lib/commands",
+    "commands": "./build/commands",
     "bin": "xcl",
+    "dirname": "xcl",
     "plugins": [
       "@oclif/plugin-help"
     ],
+    "topicSeparator": " ",
     "topics": {
       "project": {
         "description": "add, manage projects"
@@ -96,12 +98,13 @@
   },
   "repository": "MaikMichel/xcl",
   "scripts": {
+    "build" : "tsc && cp -R src/lib/config build/lib/ && cp -R src/lib/scripts build/lib/",
     "postpack": "rimraf oclif.manifest.json",
-    "posttest": "tslint -p test -t stylish",
+    "posttest": "echo \"tslint -p test -t stylish\"",
     "prepack": "rimraf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
-    "test": "nyc --extension .ts mocha --forbid-only \"test/**/*.test.ts\"",
-    "version": "oclif-dev readme && git add README.md",
+    "test": "mocha --forbid-only \"test/**/*.test.ts\"",
+    "version": "oclif readme && git add README.md",
     "postinstall": "node scripts/post-install.js"
   },
-  "types": "lib/index.d.ts"
+  "types": "build/index.d.ts"
 }
