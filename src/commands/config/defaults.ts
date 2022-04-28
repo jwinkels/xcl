@@ -1,4 +1,4 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import { Project } from '../../lib/Project'
 import { ProjectManager } from '../../lib/ProjectManager'
 import cli from 'cli-ux'
@@ -10,12 +10,12 @@ export default class ConfigDefaults extends Command{
   static description = 'set xcl environment variables'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    list: flags.boolean({char: 'l', description:'list environment variables'}),
-    "set-all": flags.boolean({description:'set all available environment variables'}),
-    "set-required": flags.boolean({description:'set all required environment variables'}),
-    reset: flags.boolean({char: 'r', description: 'resets an environment variable'}),
-    "reset-all": flags.boolean({description: 'resets all environment variables'})
+    help: Flags.help({char: 'h'}),
+    list: Flags.boolean({char: 'l', description:'list environment variables'}),
+    "set-all": Flags.boolean({description:'set all available environment variables'}),
+    "set-required": Flags.boolean({description:'set all required environment variables'}),
+    reset: Flags.boolean({char: 'r', description: 'resets an environment variable'}),
+    "reset-all": Flags.boolean({description: 'resets all environment variables'})
   }
 
   static args = [{name: 'variable', description: 'the project in which you would like to set the variable'},
@@ -24,7 +24,7 @@ export default class ConfigDefaults extends Command{
                 ]
 
   async run() {
-    const {args, flags} = this.parse(ConfigDefaults)
+    const {args, flags} = await this.parse(ConfigDefaults)
     let project:any = undefined;
 
     //On a reset command there are only two arguments and we need to rewrite the value argument to the projectName argument
@@ -39,7 +39,7 @@ export default class ConfigDefaults extends Command{
       args.value = undefined;
     }
 
-    if (args.project!="all"){
+    if (args.project && args.project!="all"){
       project = ProjectManager.getInstance().getProject(args.project);
     }else{
       args.name="all";

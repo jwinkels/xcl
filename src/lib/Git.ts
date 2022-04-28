@@ -90,11 +90,12 @@ export class Git{
    }
 
    public static async getChangedTables(projectName:string, tablesPath:string, commit:string|undefined):Promise<string[]>{
-      const endings:string = `*.sql`;
-      let modifiers:string = `${endings}`
-      let project:Project = ProjectManager.getInstance().getProject(projectName);
-      let fileList:string="";
-      const newTablesCommand =`git ls-files -o -- ${tablesPath}`
+      const endings:string   = `*.sql`;
+      let modifiers:string   = `${endings}`
+      let project:Project    = ProjectManager.getInstance().getProject(projectName);
+      let fileList:string    = "";
+      const newTablesCommand = `git ls-files -o -- ${tablesPath}`;
+      
       if (commit){
          const commitA:string = commit == 'latest' ? await this.getCurrentCommitId() : await this.getCommitIdOfTag(commit!);
          const commitB:string = project.getStatus().getCommitId();

@@ -1,4 +1,4 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import { ProjectManager } from '../../lib/ProjectManager'
 import chalk from 'chalk';
 import { Environment } from '../../lib/Environment';
@@ -7,13 +7,20 @@ export default class ProjectApply extends Command {
   static description = 'apply changes to project'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    "setup-only": flags.boolean({description:'Deploys only dependeny changes', default: false}),
-    mode: flags.string({char:         'm',
-                        description:  'mode of build (init/patch)',
-                        default:      'init'}),
-    version: flags.string({char:        'v',
-                           description: 'Version to tag build'}),
+    help:         Flags.help   ({char: 'h'}),
+    "setup-only": Flags.boolean({
+                                 description:'Deploys only dependeny changes', 
+                                 default: false
+                                }),
+    mode:         Flags.string ({ 
+                                 char:         'm',
+                                 description:  'mode of build (init/patch)',
+                                 default:      'init'
+                                 }),
+    version:      Flags.string  ({ 
+                                 char:        'v',
+                                 description: 'Version to tag build'
+                                }),
   }
 
   static args = [
@@ -25,7 +32,7 @@ export default class ProjectApply extends Command {
   ]
 
   async run() {
-    const {args, flags} = this.parse(ProjectApply);
+    const {args, flags} = await this.parse(ProjectApply);
 
     if ( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ) !== 'all' ){
       ProjectManager.getInstance().apply( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ));

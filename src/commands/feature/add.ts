@@ -1,4 +1,4 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import {FeatureManager} from '../../lib/FeatureManager'
 import { ProjectManager } from '../../lib/ProjectManager';
 import { Project } from '../../lib/Project';
@@ -13,8 +13,8 @@ export default class FeatureAdd extends Command {
   static description = 'add Feature to dependency list'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    interactive: flags.boolean({char: 'i', description: 'interactive mode'})
+    help:        Flags.help({char: 'h'}),
+    interactive: Flags.boolean({char: 'i', description: 'interactive mode'})
   }
 
   static args = [{
@@ -43,7 +43,7 @@ export default class FeatureAdd extends Command {
               ];
 
   async run() {
-    const {args} = this.parse(FeatureAdd);
+    const {args, flags} = await this.parse(FeatureAdd);
 
     
     let releases:string[] = [];

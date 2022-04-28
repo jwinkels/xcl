@@ -1,17 +1,11 @@
 import {expect, test} from '@oclif/test'
 
-describe('project:list', () => {
-  test
-  .stdout()
-  .command(['project:list'])
-  .it('runs hello', ctx => {
-    expect(ctx.stdout).to.contain('hello world')
-  })
-
-  test
-  .stdout()
-  .command(['project:list', '--name', 'jeff'])
-  .it('runs hello --name jeff', ctx => {
-    expect(ctx.stdout).to.contain('hello jeff')
-  })
-})
+describe('xcl project list', () => {
+   test
+   .stdout()
+   .command(['project list'])
+   .it('list all projects', ctx => {
+      expect(ctx.stdout).not.empty;
+      expect(ctx.stdout).contains('test');
+   });
+});

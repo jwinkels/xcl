@@ -14,6 +14,7 @@ import { Logger } from "./Logger";
 import yaml from 'yaml';
 import os = require("os");
 import AdmZip = require("adm-zip");
+import chalk from 'chalk'
 
 const ps = require("ps-node");
 @injectable()
@@ -69,12 +70,16 @@ export class Orcas implements DeliveryMethod{
 
       if (version){
         if (fs.pathExistsSync(`${project.getPath()}/dist/${version}.zip`)){
-          buildZip = new AdmZip(`${project.getPath()}/dist/${version}.zip`);
-          buildZip.extractAllTo(`${project.getPath()}/dist/${version}`,true);
-          buildInfo = yaml.parse(fs.readFileSync('buildInfo.yml').toString());
           path = `${project.getPath()}/dist/${version}`;
+
+          buildZip = new AdmZip(`${path}.zip`);
+          buildZip.extractAllTo(`${path}`,true);
+          buildInfo = yaml.parse(fs.readFileSync(`${path}/buildInfo.yml`).toString());
+
         }else{
-          path = project.getPath();
+          project.getLogger().getFileLogger().log("error",'BUILD NOT FOUND');
+          console.log(chalk.red(`Build to deploy not found. Use xcl project:build to create it`));
+          process.exit();
         }
       }else{
         path = project.getPath();
@@ -104,12 +109,21 @@ export class Orcas implements DeliveryMethod{
         }
 
         if (gradleString){
+          
+          if(project.getMode()===Project.MODE_MULTI){
+            path = project.getPath() + "/db/" + project.getName() + "_" + schema;
+          }else{
+            path = project.getPath() + "/db/" + project.getName();
+          }
+
           project.getLogger().getLogger().log("info", `SCHEMA: ${schema.toUpperCase()}`);
           await this.hook(schema, "pre", projectName, connection, password, project);
-          await this.deploySchema(gradleString, project, schema);
+          await this.deploySchema(gradleString, project, path);
           await this.hook(schema, "post", projectName, connection, password, project);
-          let invalids = await DBHelper.getInvalidObjects(DBHelper.getConnectionProps(project.getUsers().get(schema.toUpperCase())?.getConnectionName(),password,connection));
+          
+          let invalids = await DBHelper.getInvalidObjects(DBHelper.getConnectionProps(project.getUsers().get(schema.toUpperCase())?.getConnectionName(),password,connection)!);
           project.getLogger().getLogger().log("info",`Number of invalid objects: ${invalids.length}`);
+          
           invalids.forEach((element: { name: string; type: string; }) => {
             project.getLogger().getLogger().log("info",`${element.name} (${element.type})`);
           });
@@ -117,6 +131,8 @@ export class Orcas implements DeliveryMethod{
           if (project.getMode() === Project.MODE_SINGLE && !schemaOnly){
             Application.installApplication(projectName, connection, password, ords);
           }
+
+          this.cleanUp(path)
         }
 
       }else{
@@ -249,14 +265,8 @@ export class Orcas implements DeliveryMethod{
       });
     }
 
-    public async deploySchema(gradleString:string, project:Project, schema:string):Promise<boolean>{
+    public async deploySchema(gradleString:string, project:Project, path:string):Promise<boolean>{
       return new Promise(async (resolve, reject)=>{
-        let path:string =""
-        if(project.getMode()===Project.MODE_MULTI){
-          path = project.getPath() + "/db/" + project.getName() + "_" + schema;
-        }else{
-          path = project.getPath() + "/db/" + project.getName();
-        }
         gradleString = await this.getChangedTables(project.getName(), path.replaceAll("\\","/") + "/tables/", gradleString);
         await ShellHelper.executeScript(gradleString, path, true, project.getLogger());
         resolve(true);
@@ -271,7 +281,7 @@ export class Orcas implements DeliveryMethod{
 
       //ProjectManager.getInstance().getProject(projectName).setVersion(version);
       let path = "";
-      let buildZip:AdmZip = await this.patch(version, project, mode, commit!);
+      let buildZip:AdmZip = await this.patch(version, project, mode, (commit ? commit : version));
       //Read apex-folder and find the correct file
       console.log('...adding apps and rest modules');
       fs.readdirSync(projectPath + "/apex/").forEach(file=>{

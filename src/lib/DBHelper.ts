@@ -28,7 +28,7 @@ export interface IConnectionProperties {
 export class DBHelper {
   public static getConnectionProps(pUserName?: string, 
                                    pPassWord?: string,
-                                   pConnUrl?: string):IConnectionProperties {
+                                   pConnUrl?: string):IConnectionProperties|undefined {
     let conn:IConnectionProperties = {
       user          : "" + (pUserName || process.env.NODE_ORACLEDB_USER ),
       password      : "" + (pPassWord || process.env.NODE_ORACLEDB_PASSWORD),
@@ -47,9 +47,10 @@ export class DBHelper {
 
       return conn;
 
-    } catch (err:any) {
-      console.error(chalk.red(err.message));
-      process.exit(1);
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error(chalk.red(err.message));
+      }
     }
   }
 
@@ -64,7 +65,7 @@ export class DBHelper {
       
       countSchemas = result.rows[0][0];
 
-    } catch (err:any) {
+    } catch (err) {
         console.error(chalk.red(err));
         process.exit(1);
     } finally {
@@ -72,7 +73,7 @@ export class DBHelper {
         try {
           // Connections should always be released when not needed
           await connection.close();
-        } catch (err:any) {
+        } catch (err) {
           console.error(chalk.red(err));
           process.exit(1);
         }

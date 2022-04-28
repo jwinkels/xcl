@@ -61,7 +61,9 @@ export class Application{
         //loop through the list of identified install scripts and execute them against the project-app-schema
         installFileList.forEach((script, path)=>{
           let conn = DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(), password, connection);
-          DBHelper.executeScriptIn(conn, script, path, project.getLogger());
+          if(conn){
+            DBHelper.executeScriptIn(conn, script, path, project.getLogger());
+          }
         });
       }
 

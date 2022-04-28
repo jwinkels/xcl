@@ -1,4 +1,4 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import { Environment } from '../../lib/Environment'
 // import {ProjectManager} from '../../lib/ProjectManager'
 import chalk from 'chalk';
@@ -11,13 +11,13 @@ export default class ProjectCreate extends Command {
   static description = 'Creates a project including a new directory and the configured folder structure'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    workspace: flags.string({char: 'w',
+    help:             Flags.help({char: 'h'}),
+    workspace:        Flags.string({char: 'w',
                              description: 'workspace name the application should be installed in',
                              default: Environment.readConfigFrom(process.cwd(),'project', false)
                             }),
-    "single-schema" : flags.boolean ({description: 'one schema instead of three, no deployment user'}),
-    interactive : flags.boolean ({char: 'i', description: 'Interactive wizard that guides you through the creation of the project'})
+    "single-schema" : Flags.boolean ({description: 'one schema instead of three, no deployment user'}),
+    interactive :     Flags.boolean ({char: 'i', description: 'Interactive wizard that guides you through the creation of the project'})
   }
 
   static args = [
@@ -29,7 +29,7 @@ export default class ProjectCreate extends Command {
                 ]
 
   async run() {
-    const {args, flags} = this.parse(ProjectCreate)
+    const {args, flags} = await this.parse(ProjectCreate)
 
     if (flags.interactive) {
       await doTheWizard(args.project)
