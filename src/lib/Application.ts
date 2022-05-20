@@ -1,5 +1,5 @@
 import { ProjectManager } from './ProjectManager';
-import * as fs from "fs-extra"
+import * as fs from "fs-extra";
 import { DBHelper } from './DBHelper';
 import { Md5 } from 'ts-md5';
 import { Utils } from './Utils';
@@ -11,24 +11,25 @@ export class Application{
     public static installApplication(projectName:string,connection:string, password:string, ords:string){
         //Initialize variables
         let installFileList:Map<string,string> = new Map();
-        const baseFolderApex                   = "/apex/";
+        const baseDirectoryApex                = "/apex/";
+        const baseDirectoryOrds                = "/rest/modules";
         const project                          = ProjectManager.getInstance().getProject(projectName);
         const projectPath                      = project.getPath();
         const schema                           = project.getMode() === Project.MODE_MULTI ? project.getName().toUpperCase()+"_APP" : project.getName();
 
-        //Read apex-folder and find the correct file
-        fs.readdirSync( projectPath + baseFolderApex).forEach(file => {
+        //Read apex-directory and find the correct file
+        fs.readdirSync( projectPath + baseDirectoryApex).forEach(file => {
             //If file is a directory
-            if(fs.statSync(projectPath + baseFolderApex + file).isDirectory()){
+            if(fs.statSync(projectPath + baseDirectoryApex + file).isDirectory()){
               //If directory contains a file named 'install.sql'  - the application export is splitted
-              if(fs.existsSync(projectPath + baseFolderApex + file + "/install.sql")){
+              if(fs.existsSync(projectPath + baseDirectoryApex + file + "/install.sql")){
                 let appId  = Application.getAppId(file);
                 //Copy PreInstall File - to this location
                 fs.copySync(__dirname+"/scripts/pre_install_application.sql",
-                            projectPath + baseFolderApex + file + "/pre_install_application.sql");
+                            projectPath + baseDirectoryApex + file + "/pre_install_application.sql");
 
                 let script = projectPath                        +           //absolute projectPath
-                             baseFolderApex                     +           //apex directory
+                             baseDirectoryApex                  +           //apex directory
                              file                               +           //directory of application export (i.e.: f100)
                              "/pre_install_application.sql "    +           //script to execute 
                              project.getWorkspace()             + " " +     //FIRST ARGUMENT:   WORKSPACE_NAME
@@ -37,7 +38,7 @@ export class Application{
                              ords                               + " " +     //FOURTH ARGUMENT:  ORDS_BASE_URL
                              projectName;                                   //FIFTH ARGUMENT:   PROJECT_NAME
 
-                installFileList.set(projectPath + baseFolderApex + file,
+                installFileList.set(projectPath + baseDirectoryApex + file,
                                       script);
               }
             }else{
@@ -46,16 +47,27 @@ export class Application{
               if (file.includes('.sql')){
                 let appId  = Application.getAppId(file);
                 let script = projectPath            +                      //absolute project path                 
-                             baseFolderApex         +                      //apex directory
+                             baseDirectoryApex      +                      //apex directory
                              file                   +                      //the apex application export       
                              project.getWorkspace() + " " +                             
                              appId                  + " " +                             
                              schema                 + " " +                             
                              ords                   + " " +                             
                              projectName;                             
-                installFileList.set(projectPath + baseFolderApex + file, script);
+                installFileList.set(projectPath + baseDirectoryApex + file, script);
               }
             }
+        });
+
+        //Read ORDS-modules directory and find sql-files
+        fs.readdirSync( projectPath + baseDirectoryOrds).forEach(file => {
+          if(fs.statSync(projectPath + baseDirectoryOrds + file).isDirectory()){
+              fs.readdirSync(projectPath + baseDirectoryOrds + file).forEach(sqlfile =>{
+                if(sqlfile.includes('.sql')){
+                  installFileList.set(projectPath + baseDirectoryOrds + file, sqlfile);
+                }
+              });
+          }
         });
 
         //loop through the list of identified install scripts and execute them against the project-app-schema
