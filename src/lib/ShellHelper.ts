@@ -39,7 +39,11 @@ export class ShellHelper{
                 });
 
                 childProcess.on('close',function(code){
-                    retObj.status = true;
+                    if(code == 0){
+                        retObj.status = true;
+                    }else{
+                        retObj.status = false;
+                    }
                     resolve(retObj);
                 });
         

@@ -210,7 +210,8 @@ export class ProjectManager {
 
     Object.keys( ProjectManager.projectsJson.projects).forEach( function(projectName) {
       const projectJSON = ProjectManager.projectsJson.projects[ projectName ];
-      projects.push( new Project( projectName, projectJSON.path, '', false ) );
+      //projects.push( new Project( projectName, projectJSON.path, '', false ) );
+      projects.push(ProjectManager.getInstance().getProject(projectName));
     });
 
     return projects;
@@ -221,6 +222,7 @@ export class ProjectManager {
       head: [
         chalk.blueBright('name'),
         chalk.blueBright('path'),
+        chalk.blueBright('mode'),
         chalk.redBright('status')
       ]
     });
@@ -229,7 +231,7 @@ export class ProjectManager {
     for (let i = 0; i < projects.length; i++) {
       const project = projects[i];
       const status  = project.getErrorText();
-      table.push( [ project.getName(), project.getPath(), status ? chalk.red(status) : chalk.green('VALID') ] );
+      table.push( [ project.getName(), project.getPath(), project.getMode(), status ? chalk.red(status) : chalk.green('VALID') ] );
     }
 
     console.log( table.toString() );
@@ -288,36 +290,14 @@ export class ProjectManager {
     }
 
     if (flags.users){
+      let randomPassword = Environment.readConfigFrom(p.getPath(), 'password');
+      
+      if(!randomPassword || randomPassword == ''){
+        console.log('generate password...')
+        randomPassword = await this.generatePassword();
+      }
+
       console.log(chalk.green(`install schemas...`));
-
-      /*let randomPassword:string = password.randomPassword({characters: password.upper, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
-                           password.randomPassword({characters: password.lower, length:   ( Math.floor( Math.random() *6 ) + 4)}) +
-                           password.randomPassword({characters: password.digits, length:  ( Math.floor( Math.random() *6 ) + 4)});
-      */
-      let randomPassword:string = password.randomPassword({characters: [password.upper, 
-                                                                        password.lower , 
-                                                                        { 
-                                                                          characters: 
-                                                                            password.digits, 
-                                                                            length: ( Math.floor( Math.random() * 4 ) + 4) 
-                                                                        }
-                                                                      ], 
-                                                            length: ( Math.floor( Math.random() * 12 ) + 4)
-                                                          });
-      //First character must not be a number                                                          
-      if (!isNaN(+randomPassword.substr(0,1))){
-        randomPassword = password.randomPassword({characters:[password.upper, password.lower]},2) + randomPassword;
-      }
-
-      let numberOfHashtags:number = Math.floor(Math.random()*randomPassword.length/2) + 2;
-
-      for(let i=0; i<numberOfHashtags; i++){
-        let position = Math.floor(Math.random()*randomPassword.length/2) + 1;
-        randomPassword = [randomPassword.slice(0, position), '#', randomPassword.slice(position)].join('');
-      }
-
-      randomPassword = randomPassword.substr(0,15);
-
       if (p.getMode() === 'multi'){
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
                                                                             randomPassword + ' ' +
@@ -380,7 +360,7 @@ export class ProjectManager {
     deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).build(projectName, version, mode, commit);
   }
 
-  public deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined, nocompile:boolean|undefined):void{
+  public async deploy(projectName: string, connection:string, password:string, schemaOnly: boolean, ords:string, silentMode:boolean, version:string, mode:string, schema:string|undefined, nocompile:boolean|undefined):Promise<void>{
     const p:Project = this.getProject(projectName);
     if (!connection){
       if (!p.getEnvironmentVariable('connection')){
@@ -393,11 +373,18 @@ export class ProjectManager {
     p.getLogger().getLogger().log("info", 'Start XCL - Deploy...\n---------------------------------------------------------------');
     if ( !p.getStatus().hasChanged() ){
       if (p.getDeployMethod()){
-        deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema , nocompile);
-        Git.getCurrentCommitId()
-          .then((commitId)=>{p.getStatus().setCommitId(commitId)})
-          .catch((reason)=>{});
-        p.getStatus().setVersion(version);
+        let statusCommitId = p.getStatus().getCommitId();
+        p.getStatus().setResetCommitId(statusCommitId); 
+        let success = await deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema, nocompile);
+        if (success && mode !== 'dev'){
+          let commitId = await Git.getCurrentCommitId();
+          p.getStatus().setCommitId(commitId);
+          p.getStatus().setVersion(version);
+        }else{
+          if(!success){
+            console.log(chalk.red('deploy failed'));
+          }
+        }
       }else{
         console.log('No Deploy-Method defined, add deploy method via xcl feature:add first.');
         console.log('To get a list of available deploy methods use xcl feature:list -a DEPLOY');
@@ -537,16 +524,6 @@ export class ProjectManager {
           console.log("\n\n\r");
           console.log( chalk.green('SUCCESS: Everything up to date!') );
           fs.removeSync( 'plan.sh' );
-          /*if( !setupOnly ){
-            console.log( 'DEPLOY APPLICATION: ' );
-            this.deploy(projectName,
-                        Environment.readConfigFrom( project.getPath(), 'connection' ),
-                        Environment.readConfigFrom( project.getPath(), 'password' ),
-                        false,
-                        Environment.readConfigFrom( project.getPath(), 'ords'),
-                        true,
-                        version, mode, Environment.readConfigFrom( project.getPath(), 'schema' ) );
-          }*/
         }else{
           console.log("\n\n\r");
           console.log( chalk.red( 'FAILURE: apply was made but there are still changes!' ) );
@@ -556,4 +533,38 @@ export class ProjectManager {
     }
   }
 
+  public async generatePassword():Promise<string>{
+    let randomPasswordLength = Math.floor( Math.random() * 18 ); 
+      
+    while( randomPasswordLength < 8 ){
+      randomPasswordLength = Math.floor( Math.random() * 18 );
+    }
+
+    let randomPassword:string = password.randomPassword({characters: [password.upper, 
+                                                                      password.lower , 
+                                                                      { 
+                                                                        characters: password.digits, 
+                                                                        exactly: 2
+                                                                      }
+                                                                    ], 
+                                                          length: randomPasswordLength
+                                                        });
+    //First character must not be a number                                                          
+    if (!isNaN(+randomPassword.substring(0,1))){
+      randomPassword = password.randomPassword({characters:[password.upper, password.lower]},2) + randomPassword;
+    }
+
+    let numberOfHashtags:number = Math.floor( Math.random() * randomPassword.length / 4 ) + 2;
+    let specialChars:string[]   = ['_','$','#']; 
+    let specIndex               = 0;
+
+    for(let i=0; i<numberOfHashtags; i++){
+      let position   = Math.floor( Math.random() * randomPassword.length / 2 ) + 1;
+      specIndex      = Math.floor( Math.random() * (specialChars.length) );
+      randomPassword = [randomPassword.slice(0, position), specialChars[specIndex], randomPassword.slice(position)].join('');
+    }
+
+    randomPassword = randomPassword.substring(0,30);
+    return randomPassword;
+  }
 }
