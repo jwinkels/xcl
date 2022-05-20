@@ -5,6 +5,18 @@ import { Utils } from "./Utils";
 import { ProjectManager } from "./ProjectManager";
 import { Project } from "./Project";
 export class Git{
+
+   //is tag or commit part of this repo
+   public static async isValidCommit(commit:string):Promise<string>{
+      let output = await ShellHelper.executeScript(`git rev-list -n 1 ${commit}`,process.cwd(), false, new Logger(process.cwd()));
+      if (output.result.includes('fatal')){
+         return '';
+      }else{
+         return output.result;
+      }
+   }
+
+
    //get local current commit id
    public static async getCurrentCommitId():Promise<string>{
      return (await ShellHelper.executeScript('git rev-parse HEAD', process.cwd(), false , new Logger(process.cwd()))).result;
@@ -119,10 +131,23 @@ export class Git{
                         false,
                         new Logger(process.cwd())
                      )).result; 
+      console.log("command: " + newTablesCommand);                        
+      console.log(newTables);                           
       
-      if (fileList){
-         return fileList.split('\n').concat(newTables.split("\n"));
-      }else{
+      //Just changes but no new tables
+      if (fileList && !newTables){
+         return fileList.split('\n');
+      }
+      //just new tables
+      else if(!fileList && newTables){
+         return newTables.split('\n');
+      }
+      //changed and new tables
+      else if(fileList && newTables){
+         return fileList.split('\n').concat(newTables.split('\n'));
+      }
+      //no tables at all
+      else{
          return [""];
       }
    }
