@@ -7,7 +7,7 @@ import { cli } from 'cli-ux';
 import inquirer = require('inquirer')
 
 export default class ProjectDeploy extends Command {
-  static description = 'deploy the project'
+  static description = 'deploy the project or build'
 
   static flags = {
     help:                                                 Flags.help({char: 'h'}),
