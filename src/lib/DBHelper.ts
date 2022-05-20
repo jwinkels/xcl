@@ -16,7 +16,11 @@ if (os.platform() === 'darwin'){
   instant_client_path = xclHome + fs.readFileSync(xclHome + "/.instantClient").toString().trimEnd();
 }
 
-fs.existsSync(instant_client_path)?oracledb.initOracleClient({libDir: instant_client_path}):console.log('No Instant Client Installed in '+instant_client_path);
+try{
+  fs.existsSync(instant_client_path)?oracledb.initOracleClient({libDir: instant_client_path}):console.log('No Instant Client Installed in '+instant_client_path);
+}catch(err){
+  console.log(err);
+}
 export interface IConnectionProperties {
   user: string,
   password: string,
@@ -153,13 +157,26 @@ export class DBHelper {
                     from user_objects
                     where status = 'INVALID'
                     order by object_type`;
+    
+    let errorQuery = `select 'Line '||line||' at position '||position||': '||text, name 
+                    from user_errors`;
+  
+      const result   = await connection.execute(query);
+      const errorSet = await connection.execute(errorQuery);
 
-      const result = await connection.execute(query);
       for (let i = 0; i<=result.rows.length-1; i++){
-        let object:{name:string, type:string}={
+        let object:{name:string, type:string, errors:string[]}={
           name: result.rows[i][1],
-          type: result.rows[i][0]
-        };
+          type: result.rows[i][0],
+          errors: []
+        };                          
+        
+        for(let j = 0; j<=errorSet.rows.length - 1; j++){
+          if(errorSet.rows[j][1] == object.name){
+            object.errors.push(errorSet.rows[j][0]);
+          }
+        }
+        
         invalid_objects.push(object);
       }
     }catch(err){
