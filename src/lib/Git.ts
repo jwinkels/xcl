@@ -131,7 +131,7 @@ export class Git{
                         false,
                         new Logger(process.cwd())
                      )).result; 
-      console.log("command: " + newTablesCommand);                        
+      //console.log("command: " + newTablesCommand);                        
       console.log(newTables);                           
       
       //Just changes but no new tables
