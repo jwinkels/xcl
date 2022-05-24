@@ -483,11 +483,11 @@ export class Orcas implements DeliveryMethod{
 
     public async getChangedTables(projectName:string, path:string, gradleString:string):Promise<string>{
       let tables = await Git.getChangedTables(projectName, path, undefined);
-      console.log("tables: "+tables);
+      
       for(let i=0; i<tables.length; i++){
         tables[i] = tables[i].replace("\.sql","").substring(tables[i].lastIndexOf("/") + 1, tables[i].length).toUpperCase();
       }
-      console.log(tables.join(","))
+
       if(tables.length>0){
         return (gradleString + "-Ptables=" + tables.join(","));
       }else{
