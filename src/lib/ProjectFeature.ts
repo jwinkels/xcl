@@ -1,30 +1,34 @@
-import { Feature } from './Feature';
+import { GithubFeature } from './GithubFeature';
 import chalk from 'chalk'
 import { Schema } from './Schema';
+import { CustomFeature } from './CustomFeature';
+import { zip } from 'lodash';
 
-export class ProjectFeature extends Feature{
-    private version:string;
-    private installed:boolean;
-    private user:Schema;
+export class ProjectFeature extends GithubFeature{
+    private version   : string;
+    private installed : boolean;
+    private user      : Schema;
 
-    constructor(args : {parent:Feature, version:string, username:string, password:string, installed:boolean}){
+    constructor(args : {parent:GithubFeature, version:string, username:string, password:string, installed:boolean}){
+            
             super( {
-                name : args.parent.getName(), 
-                owner : args.parent.getOwner(), 
-                repo : args.parent.getRepo(), 
+                name         : args.parent.getName(), 
+                owner        : args.parent.getOwner(), 
+                repo         : args.parent.getRepo(), 
                 gitAttribute : args.parent.getGitAttribute(),
-                type : args.parent.getType()
+                type         : args.parent.getType()
             });
-            this.version=args.version;
-            this.installed=args.installed;
-            this.user=new Schema({name: args.username, password: args.password, proxy:undefined});
+            
+            this.version   = args.version;
+            this.installed = args.installed;
+            this.user      = new Schema({name: args.username, password: args.password, proxy:undefined});
     }
 
-    public getReleaseInformation():string{
+    public getVersion():string{
         return this.version;
     }
 
-    public setReleaseInformation(version:string):void{
+    public setVersion(version:string):void{
         this.version=version;
     }
 
@@ -41,7 +45,7 @@ export class ProjectFeature extends Feature{
     }
 
     public setInstalled(status:boolean){
-        this.installed=status;
+        this.installed = status;
     }
 
     public getUser():Schema{

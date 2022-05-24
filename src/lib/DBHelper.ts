@@ -201,20 +201,22 @@ export class DBHelper {
   }
 
   public static executeScript(conn: IConnectionProperties, script: string,  logger:Logger){
-    
-    logger.getLogger().log("info", 'Start script: '+script);
-    
-    const childProcess = spawnSync(
-      'sql', // Sqlcl path should be in path
-      ["-S", DBHelper.getConnectionString(conn)], {
-        encoding: 'utf8',
-        input: "@" + script,
-        shell: true
-      }
-    );
-    
-    DBHelper.logResults(childProcess, logger);
-    
+    try{
+      logger.getLogger().log("info", 'Start script: '+script);
+      
+      const childProcess = spawnSync(
+        'sql', // Sqlcl path should be in path
+        ["-S", DBHelper.getConnectionString(conn)], {
+          encoding: 'utf8',
+          input: "@" + script,
+          shell: true
+        }
+      );
+      
+      DBHelper.logResults(childProcess, logger);
+    }catch(err){
+      console.log(err);
+    } 
   }
 
   public static executeScriptIn(conn: IConnectionProperties, script: string, cwd:string, logger:Logger){
@@ -241,6 +243,20 @@ export class DBHelper {
     }else{
       logger.getLogger().log("error", childProcess.stderr); 
     }
+  }
+
+  public static async schemaExists(conn: IConnectionProperties, schema:string):Promise<boolean>{
+    let connection;
+    try{
+      connection = await oracledb.getConnection(conn);
+      let query = `SELECT count(1) FROM all_users where username like '${schema.toUpperCase()}`;
+      const result = await connection.execute(query);
+      return result.rows[0][0] > 0;
+    }catch(err){
+      console.log(err);
+      return true;
+    }
+
   }
 
   

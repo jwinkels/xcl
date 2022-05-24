@@ -14,7 +14,8 @@ export default class FeatureAdd extends Command {
 
   static flags = {
     help:        Flags.help({char: 'h'}),
-    interactive: Flags.boolean({char: 'i', description: 'interactive mode'})
+    interactive: Flags.boolean({char: 'i', description: 'interactive mode'}),
+    custom:      Flags.boolean({char: 'c', description: 'add a custom feature'})
   }
 
   static args = [{
@@ -48,8 +49,10 @@ export default class FeatureAdd extends Command {
     
     let releases:string[] = [];
     let version:any;
+    let custom:any;
     let added:boolean = false;
-    if(!args.version && args.feature){
+    let customFeature:{zip:string, installScript:string} = {zip: "",installScript:""};
+    if(!args.version && args.feature && !flags.custom){
       releases= await FeatureManager.getInstance().getFeatureReleases(args.feature);
       version = await inquirer.prompt([{
           name: 'number',
@@ -58,11 +61,34 @@ export default class FeatureAdd extends Command {
           choices: releases
         }]);
 
-      args.version = version.number;
+      
         //args.version= await cli.prompt('Please enter a version number from the list above you like to add');
     }
 
-    if(FeatureManager.getInstance().getFeatureType(args.feature) === "DB" && (!args.username || !args.password)){
+    if(flags.custom){
+      version = await inquirer.prompt([{
+        name: 'number',
+        message: `insert version number: `,
+        type: 'input'
+      }]);
+
+      custom = await inquirer.prompt([{
+        name: 'zipPath',
+        message: 'insert location of zip archive: ',
+        type: 'input',
+        default: `dependencies/${args.feature}.zip`
+      },{
+        name: 'installScript',
+        message: 'insert install script name: ',
+        type: 'input'
+      }]);
+      customFeature.installScript = custom.installScript;
+      customFeature.zip           = custom.zipPath;
+    }
+
+    args.version = version.number;
+
+    if(flags.custom || (FeatureManager.getInstance().getFeatureType(args.feature, args.project) === "DB" && (!args.username || !args.password))){
       let user = await getUsername(args.project);
       args.username = user.username;
       args.password = user.password;
@@ -70,10 +96,10 @@ export default class FeatureAdd extends Command {
 
 
     if ( ProjectManager.getInstance().getProjectNameByPath(process.cwd()) !== 'all' ){
-      added = await FeatureManager.getInstance().addFeatureToProject(args.feature,args.version, ProjectManager.getInstance().getProjectNameByPath(process.cwd()), args.username, args.password); 
+      added = await FeatureManager.getInstance().addFeatureToProject(args.feature,args.version, ProjectManager.getInstance().getProjectNameByPath(process.cwd()), args.username, args.password, flags.custom, customFeature); 
     }else{
       if ( args.project ){
-        added = await FeatureManager.getInstance().addFeatureToProject(args.feature, args.version, args.project, args.username, args.password);
+        added = await FeatureManager.getInstance().addFeatureToProject(args.feature, args.version, args.project, args.username, args.password, flags.custom);
       }else{
         console.log(chalk.red('ERROR: You must specify a project or be in a project directory!'));
       }
