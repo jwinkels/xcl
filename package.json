@@ -9,8 +9,8 @@
   "bugs": "https://github.com/MaikMichel/xcl/issues",
   "dependencies": {
     "@oclif/core": "^1",
-    "@oclif/plugin-plugins": "^2.0.1",
     "@oclif/plugin-autocomplete": "^1.2.0",
+    "@oclif/plugin-plugins": "^2.0.1",
     "@types/adm-zip": "^0.4.34",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.13",
@@ -100,7 +100,7 @@
   },
   "repository": "MaikMichel/xcl",
   "scripts": {
-    "build" : "tsc && cp -R src/lib/config build/lib/ && cp -R src/lib/scripts build/lib/",
+    "build": "tsc && cp -R src/lib/config build/lib/ && cp -R src/lib/scripts build/lib/",
     "postpack": "rimraf oclif.manifest.json",
     "posttest": "echo \"tslint -p test -t stylish\"",
     "prepack": "rimraf lib && tsc -b && oclif-dev manifest && oclif-dev readme",

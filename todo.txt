@@ -99,4 +99,13 @@ TODO:
       Idee: ein Flag in der software.yml die ein skript als always execute markiert, diese skripte bei installation des features immer ausgeführt 
     
     - Unterschiedliche Versionsnummern in n Applikationen
-      
+    
+    - Individuelle Features:
+      features die z.B. inhouse entwickelt wurden oder, die nicht openSource bei github geladen werden können (Beispiel AOP),
+      möglichkeit anbieten, diese ebenfalls in das Projekt mitaufnehmen zu können
+      kleiner wizzard, wo liegt das zip-File für das feature, wie heißt das install skript
+      add feature arbeitet dann genauso wie vorher, möglich in ein seperates Schema zu installieren oder in ein "Projekt-Schema"
+
+    - Name für die Ordnerstruktur finden
+    
+    - Deploy schlägt fehl -> gradle build failed return value?

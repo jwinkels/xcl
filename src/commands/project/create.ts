@@ -8,7 +8,7 @@ import inquirer = require("inquirer");
 import { ProjectManager } from '../../lib/ProjectManager';
 
 export default class ProjectCreate extends Command {
-  static description = 'Creates a project including a new directory and the configured folder structure'
+  static description = 'creates a project including a new directory and the configured folder structure'
 
   static flags = {
     help:             Flags.help({char: 'h'}),

@@ -3,7 +3,7 @@ db:
 - .hooks:
   - pre
   - post
-- .setup
+- _setup
 - :projectName_app:
   - .hooks:
     - pre
@@ -124,8 +124,4 @@ db:
 apex:
 rest:
 static:
-  - src:
-    - f1000:
-      - js
-      - css
-      - img
+  - src

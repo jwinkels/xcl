@@ -96,7 +96,7 @@ STAGE=${responses.stage}
         }
     }
 
-    public deploy(projectName:string, connection:string, password:string, schemaOnly:boolean, ords:string, silentMode:boolean, version:string, mode:string) {
+    public async deploy(projectName:string, connection:string, password:string, schemaOnly:boolean, ords:string, silentMode:boolean, version:string, mode:string):Promise<boolean> {
         console.log("projectName", projectName);
         console.log("version", version);
         console.log("mode", mode);
@@ -109,7 +109,7 @@ STAGE=${responses.stage}
         const multiSchema = ("" + project.isMultiSchema()).toUpperCase();
 
         const proxyUserName = !project.isMultiSchema() ? appSchema : project.getUsers().get('DATA')?.getProxy()?.getName() || `${projectName}_depl`;
-        ShellHelper.executeScriptWithEnv(`bash .dbFLow/apply.sh ${mode} ${version}`,
+        await ShellHelper.executeScriptWithEnv(`bash .dbFLow/apply.sh ${mode} ${version}`,
                                          project.getPath(),
                                          {
                                            "PROJECT": project.getName(),
@@ -126,6 +126,7 @@ STAGE=${responses.stage}
                                          },
                                          true,
                                          project.getLogger());
+        return true;
 
     }
 

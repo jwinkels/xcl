@@ -3,7 +3,7 @@ import { ProjectManager } from '../../lib/ProjectManager'
 
 
 export default class ProjectList extends Command {
-  static description = 'lists all known xcl projects'
+  static description = 'lists all xcl projects'
 
   static flags = {
     help: Flags.help({char: 'h'}),
