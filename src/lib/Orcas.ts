@@ -17,6 +17,8 @@ import AdmZip = require("adm-zip");
 import chalk from 'chalk'
 import inquirer = require('inquirer');
 import { Schema } from "js-yaml";
+import { boolean } from "@oclif/core/lib/parser/flags";
+import { Utils } from "./Utils";
 
 const ps = require("ps-node");
 @injectable()
@@ -61,7 +63,7 @@ export class Orcas implements DeliveryMethod{
       feature.setInstalled(true);
     }
 
-    public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string|undefined, schema:string|undefined, nocompile:boolean|undefined):Promise<boolean>{
+    public async deploy(projectName:string, connection:string, password:string, schemaOnly: boolean, ords: string, silentMode:boolean, version:string, mode:string|undefined, schema:string|undefined, nocompile:boolean|undefined):Promise<{success: boolean, mode: string}>{
 
       let project=ProjectManager.getInstance().getProject(projectName);
       
@@ -77,7 +79,6 @@ export class Orcas implements DeliveryMethod{
           buildZip = new AdmZip(`${path}.zip`);
           buildZip.extractAllTo(`${path}`,true);
           buildInfo = yaml.parse(fs.readFileSync(`${path}/buildInfo.yml`).toString());
-
         }else{
           project.getLogger().getFileLogger().log("error",'BUILD NOT FOUND');
           console.log(chalk.red(`Build to deploy not found. Use xcl project:build to create it`));
@@ -138,12 +139,12 @@ export class Orcas implements DeliveryMethod{
             }
 
             this.cleanUp(path);
-            return true;
+            return {success: true, mode: buildInfo.type!};
           }else{
-            return false;
+            return  {success: false, mode: buildInfo.type!};
           }
         }else{
-          return false;
+          return  {success: false, mode: buildInfo.type!};
         }
 
       }else{
@@ -155,19 +156,19 @@ export class Orcas implements DeliveryMethod{
               this.cleanUp(path);
             }
             cli.action.stop('done');
-            return true;
+            return {success: true, mode: buildInfo.type!};
           }else{
             this.cleanUp(path);
             cli.action.stop('failed');
-            return false;
+            return {success: false, mode: buildInfo.type!};
           }
         }else{
           let success = await this.unsilentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly, path);
           if (success){
             this.cleanUp(path);
-            return true;
+            return  {success: true, mode: buildInfo.type!};
           }else{
-            return false;
+            return {success: false, mode: buildInfo.type!};
           }
         }
       }
@@ -216,14 +217,14 @@ export class Orcas implements DeliveryMethod{
     public async unsilentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean, executePath:string):Promise<boolean>{
       let _this = this;
       let resultData, resultLogic, resultApp:boolean;
-      return new Promise(async (resolve, reject)=>{
         
         gradleStringData = await _this.getChangedTables(project.getName(), (executePath+"/db/"+project.getName()+"_data").replaceAll("\\","/") + "/tables/", gradleStringData);
         let proceed:boolean = false;
         await _this.hook("data", "pre", projectName, connection, password, project);
         resultData = (await ShellHelper.executeScript(gradleStringData, executePath + "/db/" + project.getName() + "_data", true, project.getLogger())).status;
         await _this.hook("data", "post", projectName, connection, password, project);
-        await _this.hasInvalidObjects(project, project.getName() + "_data", password, connection);
+        await _this.hasInvalidObjects(project, "data", password, connection);
+
         proceed = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_LOGIC? (y/n)');
 
         if (proceed){
@@ -232,7 +233,7 @@ export class Orcas implements DeliveryMethod{
           await _this.hook("logic","pre",projectName, connection, password, project);
           resultLogic = (await ShellHelper.executeScript(gradleStringLogic, executePath + "/db/" + project.getName() + "_logic", true, project.getLogger())).status;
           await _this.hook("logic", "post", projectName, connection, password, project);
-          await _this.hasInvalidObjects(project, project.getName() + "_logic", password, connection);
+          await _this.hasInvalidObjects(project, "logic", password, connection);
           proceed = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_APP? (y/n)');
           
           if (proceed){
@@ -241,10 +242,10 @@ export class Orcas implements DeliveryMethod{
             await _this.hook("app", "pre", projectName, connection, password, project);
             resultApp = (await ShellHelper.executeScript(gradleStringApp, executePath + "/db/" + project.getName() + "_app", true, project.getLogger())).status;
             await _this.hook("app", "post", projectName, connection, password, project);
-            await _this.hasInvalidObjects(project, project.getName() + "_app", password, connection);
+            await _this.hasInvalidObjects(project, "app", password, connection);
             
             if (!schemaOnly){
-              Application.installApplication(projectName, connection, password, ords);
+              Application.installApplication(projectName, connection, password, ords, executePath);
             }
             
             await _this.hook("app","finally",projectName, connection, password, project);
@@ -252,17 +253,16 @@ export class Orcas implements DeliveryMethod{
             await _this.hook("data","finally",projectName, connection, password, project);
             
             project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
-            resolve(resultData && resultLogic && resultApp);
+            return(resultData && resultLogic && resultApp);
 
           }else{
             project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
-            resolve(resultData && resultLogic);
+            return(resultData && resultLogic);
           }
         }else{
           project.getLogger().getLogger().log("info", 'XCL - deploy ready\n---------------------------------------------------------------');
-          resolve(resultData);
+          return(resultData);
         }
-      });
     }
 
     public async silentDeploy(gradleStringData:string, gradleStringLogic:string, gradleStringApp:string, projectName:string, connection:string, password:string, ords:string, project:Project, schemaOnly:boolean, executePath:string):Promise<boolean>{
@@ -273,19 +273,19 @@ export class Orcas implements DeliveryMethod{
         await _this.hook("data","pre",projectName, connection, password, project);
         resultData = (await ShellHelper.executeScript(gradleStringData, executePath+"/db/"+project.getName()+"_data", false, project.getLogger())).status;
         await _this.hook("data","post",projectName, connection, password, project);
-        await _this.hasInvalidObjects(project, project.getName() + "_data", password, connection);
+        await _this.hasInvalidObjects(project, "data", password, connection, true);
         
         gradleStringLogic = await _this.getChangedTables(project.getName(), (executePath+"/db/"+project.getName()+"_logic").replaceAll("\\","/") + "/tables/", gradleStringLogic);
         await _this.hook("logic","pre",projectName, connection, password, project);
         resultLogic = (await ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", false, project.getLogger())).status;
         await _this.hook("logic","post",projectName, connection, password, project);
-        await _this.hasInvalidObjects(project, project.getName() + "_logic", password, connection);
+        await _this.hasInvalidObjects(project, "logic", password, connection, true);
 
         gradleStringApp = await _this.getChangedTables(project.getName(), (executePath+"/db/"+project.getName()+"_app").replaceAll("\\","/") + "/tables/", gradleStringApp);
         await _this.hook("app","pre",projectName, connection, password, project);
         resultApp = (await ShellHelper.executeScript(gradleStringApp, executePath+"/db/"+project.getName()+"_app", false, project.getLogger())).status;
         await _this.hook("app","post", projectName, connection, password, project);
-        await _this.hasInvalidObjects(project, project.getName() + "_app", password, connection);
+        await _this.hasInvalidObjects(project, "app", password, connection, true);
         if (!schemaOnly){
           Application.installApplication(projectName, connection, password, ords);
         }
@@ -495,20 +495,48 @@ export class Orcas implements DeliveryMethod{
       }  
     }
 
-    private async hasInvalidObjects(project:Project, schema:string, password:string, connection:string):Promise<boolean>{
+    private async hasInvalidObjects(project:Project, schema:string, password:string, connection:string, silent:boolean=false, output:boolean=true):Promise<boolean>{
       let invalids = await DBHelper.getInvalidObjects(DBHelper.getConnectionProps(project.getUsers().get(schema.toUpperCase())?.getConnectionName(),password,connection)!);
       if (invalids.length>0){
         project.getLogger().getLogger().log("info",`Number of invalid objects: ${invalids.length}`);
         
-        invalids.forEach((element: { name: string; type: string; errors:string[]}) => {
-          project.getLogger().getLogger().log("info",`${element.name} (${element.type})`);
-          element.errors.forEach((error)=>{
-            project.getLogger().getLogger().log("info",`${error}`);
-          })
-        });
+        if(output){
+          invalids.forEach((element: { name: string; type: string; errors:string[]}) => {
+            project.getLogger().getLogger().log("info",`${element.name} (${element.type})`);
+            element.errors.forEach((error)=>{
+              project.getLogger().getLogger().log("info",`${error}`);
+            })
+          });
+        }
+
+        if(!silent){
+          return await this.recompile(project, schema, password, connection);
+        }
         return true;
       }else{
         return false;
       }
+    }
+
+    private async recompile(project:Project, schema:string, password:string, connection:string):Promise<boolean>{
+      let recompile:boolean = true;
+      recompile = await cli.confirm('Recompile invalid objects? (y/n)');
+      let invalids:boolean = true; 
+      let output:boolean = false;
+      let conn:any = DBHelper.getConnectionProps(project.getUsers().get(schema.toUpperCase())?.getConnectionName(),
+                                                  password,
+                                                  connection);
+      while(invalids && recompile){
+        output    = true;
+        project.getLogger().getLogger().log('info','Trying to recompile invalid objects...');
+        project.getLogger().getLogger().log('info',`${__dirname}`);
+        await DBHelper.executeScript(conn, Utils.checkPathForSpaces( __dirname + '/scripts/schema_recompile.sql') + ` ${project.getUsers().get(schema.toUpperCase())?.getName().toUpperCase()}`, project.getLogger());
+        invalids  = await this.hasInvalidObjects(project, schema, password, connection, output, true);
+        if (invalids){
+          recompile = await cli.confirm('Recompile invalid objects? (y/n)');
+        }
+      }
+
+      return invalids;
     }
 }

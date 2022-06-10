@@ -19,8 +19,8 @@ export default class ProjectDeploy extends Command {
     mode:                                                 Flags.string({char:         'm',
                                                                        description:  'mode of build (init/patch/dev)',
                                                                        default:      'dev'}),
-    version:                                              Flags.string({char:        'v',
-                                                                       description: 'version to deploy'}),
+    build:                                                Flags.string({char:        'b',
+                                                                       description: 'build-number to deploy'}),
     yes:                                                  Flags.boolean({char:'y', description: 'Automatic proceed to the next schema without asking'}),
     'ords-url':                                           Flags.string({description: '[IP/SERVERNAME]:PORT', default: Environment.readConfigFrom(process.cwd(),'ords', false)}),
     'schema':                                             Flags.string({description: 'to deploy a single schema type one of the following: [data, logic, app]', default: Environment.readConfigFrom(process.cwd(), "schema", false)}),
@@ -28,17 +28,20 @@ export default class ProjectDeploy extends Command {
     'nocompile':                                          Flags.boolean({description: 'ignore invalid objects on deploy', default: false})
   }
 
-  static args = [{name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom( process.cwd(), "project", false) }]
+  static args = [
+                    {name: 'project', description: 'Name of the project that should be deployed', default: Environment.readConfigFrom( process.cwd(), "project", false) }
+                    //,{name: 'build', description: 'Name of the build that should be deployed'}
+                ]
 
   async run() {
     const {args, flags} = await this.parse(ProjectDeploy);
-    if (!args.project && ProjectManager.getInstance().getProjectNameByPath(process.cwd()) === 'all'){
+    if (!args.project && ProjectManager.getInstance().getProjectNameByPath( process.cwd() ) === 'all'){
       console.log(chalk.red('ERROR: You must specify a project or be in a xcl-Project directory!'));
       console.log(chalk.blueBright('INFO: Try ´xcl project:list´ to get an overview of your projects!'));
     }else{
 
       if (!args.project){
-        args.project=ProjectManager.getInstance().getProjectNameByPath(process.cwd());
+        args.project = ProjectManager.getInstance().getProjectNameByPath( process.cwd() );
       }
 
       if (!flags.password){
@@ -62,7 +65,7 @@ export default class ProjectDeploy extends Command {
           }
         }
 
-        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password!, flags["schema-only"], flags['ords-url'], flags.yes, flags.version!, flags.mode, flags.schema, flags.nocompile);
+        ProjectManager.getInstance().deploy(args.project, flags.connection, flags.password!, flags["schema-only"], flags['ords-url'], flags.yes, flags.build!, flags.mode, flags.schema, flags.nocompile);
 
       }else{
         console.log(chalk.red("ERROR: Deploy-Method undefined!"));
