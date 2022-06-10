@@ -8,14 +8,21 @@ import { Git } from './Git';
 
 export class Application{
 
-    public static installApplication(projectName:string,connection:string, password:string, ords:string){
+    public static installApplication(projectName:string, connection:string, password:string, ords:string, srcDir:string=""){
         //Initialize variables
-        let installFileList:Map<string,string> = new Map();
+        type InstallFile ={
+          path:string, 
+          file:string
+        }
+        //let installFileList:Map<string,string> = new Map();
+        let installFileList:Array<InstallFile> = new Array();
         const baseDirectoryApex                = "/apex/";
-        const baseDirectoryOrds                = "/rest/modules";
+        const baseDirectoryOrds                = "/rest/modules/";
         const project                          = ProjectManager.getInstance().getProject(projectName);
-        const projectPath                      = project.getPath();
+        const projectPath                      = srcDir ==="" ? project.getPath() : srcDir;
         const schema                           = project.getMode() === Project.MODE_MULTI ? project.getName().toUpperCase()+"_APP" : project.getName();
+
+
 
         //Read apex-directory and find the correct file
         fs.readdirSync( projectPath + baseDirectoryApex).forEach(file => {
@@ -38,8 +45,8 @@ export class Application{
                              ords                               + " " +     //FOURTH ARGUMENT:  ORDS_BASE_URL
                              projectName;                                   //FIFTH ARGUMENT:   PROJECT_NAME
 
-                installFileList.set(projectPath + baseDirectoryApex + file,
-                                      script);
+                installFileList.push({path: projectPath + baseDirectoryApex + file,
+                                      file: script});
               }
             }else{
               //TODO: test if this really works, arguments of pre_install-script are attached to the apex export script (that might be a problem)
@@ -54,27 +61,36 @@ export class Application{
                              schema                 + " " +                             
                              ords                   + " " +                             
                              projectName;                             
-                installFileList.set(projectPath + baseDirectoryApex + file, script);
+                installFileList.push({path: projectPath + baseDirectoryApex + file, 
+                                      file: script});
               }
             }
         });
 
-        //Read ORDS-modules directory and find sql-files
-        fs.readdirSync( projectPath + baseDirectoryOrds).forEach(file => {
-          if(fs.statSync(projectPath + baseDirectoryOrds + file).isDirectory()){
-              fs.readdirSync(projectPath + baseDirectoryOrds + file).forEach(sqlfile =>{
-                if(sqlfile.includes('.sql')){
-                  installFileList.set(projectPath + baseDirectoryOrds + file, sqlfile);
-                }
-              });
-          }
-        });
+        if(fs.existsSync(projectPath + baseDirectoryOrds)){
+          //Read ORDS-modules directory and find sql-files
+          fs.readdirSync( projectPath + baseDirectoryOrds).forEach(file => {
+            if(fs.statSync(projectPath + baseDirectoryOrds +  file).isDirectory()){
+                fs.readdirSync(projectPath + baseDirectoryOrds + file).forEach(sqlfile =>{
+                  if(sqlfile.includes('.sql')){
+                    installFileList.push({path: projectPath + baseDirectoryOrds + file, 
+                                          file: sqlfile});
+                  }
+                });
+            }else{
+              if(file.includes('.sql')){
+                installFileList.push({path: projectPath + baseDirectoryOrds, 
+                                      file: file});
+              }
+            }
+          });
+        }
 
         //loop through the list of identified install scripts and execute them against the project-app-schema
-        installFileList.forEach((script, path)=>{
+        installFileList.forEach(installFile=>{
           let conn = DBHelper.getConnectionProps(project.getUsers().get('APP')?.getConnectionName(), password, connection);
           if(conn){
-            DBHelper.executeScriptIn(conn, script, path, project.getLogger());
+            DBHelper.executeScriptIn(conn, installFile.file, installFile.path, project.getLogger());
           }
         });
       }
