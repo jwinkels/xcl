@@ -100,7 +100,7 @@
   },
   "repository": "MaikMichel/xcl",
   "scripts": {
-    "build": "tsc && cp -R src/lib/config build/lib/ && cp -R src/lib/scripts build/lib/",
+    "build": "build.sh",
     "postpack": "rimraf oclif.manifest.json",
     "posttest": "echo \"tslint -p test -t stylish\"",
     "prepack": "rimraf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
