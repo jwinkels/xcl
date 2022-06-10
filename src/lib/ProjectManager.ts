@@ -375,13 +375,13 @@ export class ProjectManager {
       if (p.getDeployMethod()){
         let statusCommitId = p.getStatus().getCommitId();
         p.getStatus().setResetCommitId(statusCommitId); 
-        let success = await deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema, nocompile);
-        if (success && mode !== 'dev'){
+        let result = await deliveryFactory.getNamed<DeliveryMethod>( "Method", p.getDeployMethod().toUpperCase() ).deploy( projectName, connection, password, schemaOnly, ords, silentMode, version, mode, schema, nocompile);
+        if (result.success && result.mode !== 'dev'){
           let commitId = await Git.getCurrentCommitId();
           p.getStatus().setCommitId(commitId);
           p.getStatus().setVersion(version);
         }else{
-          if(!success){
+          if(!result.success){
             console.log(chalk.red('deploy failed'));
           }
         }
