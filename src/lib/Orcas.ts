@@ -357,13 +357,12 @@ export class Orcas implements DeliveryMethod{
       buildInfo.name = version;
       buildInfo.type = mode;
       buildInfo.date = new Date().toLocaleDateString();
-
       fs.writeFileSync('buildInfo.yml',yaml.stringify(buildInfo));
-      buildZip.addLocalFile('buildInfo.yml');
 
+      buildZip.addLocalFile('buildInfo.yml');
       buildZip.writeZip(project.getPath()+ "/" + version + ".zip");
       fs.moveSync(project.getPath()+ "/" + version + ".zip",project.getPath()+ "/dist/" + version + ".zip");
-      fs.removeSync('buildInfo.yml');
+      fs.unlinkSync('buildInfo.yml');
     }
 
 
@@ -371,8 +370,8 @@ export class Orcas implements DeliveryMethod{
       
 
       let fileMap:Map<string,string> = new Map();
-      
       let fileList:string[] = await Git.getChangedFiles(mode, commit, project.getName());
+
       const basePath:string = "db";
       let buildZip = new AdmZip(); 
 
@@ -383,21 +382,25 @@ export class Orcas implements DeliveryMethod{
       
       console.log('...adding .hook directories');
       
+      
       buildZip.addLocalFolder(`${basePath}/.hooks`, `${basePath}/.hooks`);
-
-      for(const user of project.getUserNames()){
+      
+      for await(const user of project.getUserNames()){
         buildZip.addLocalFolder(`${basePath}/${user.toLowerCase()}/.hooks`, `${basePath}/${user.toLowerCase()}/.hooks`);
       }
       
       console.log('...adding _setup directory');
-      let executePath = project.getPath()+`/${basePath}/_setup`.replaceAll('\\','/');
-      let scripts:string = (await ShellHelper.executeScript(`find  -name '*.sql' -printf '%P\\n'`, executePath, false, new Logger(project.getPath()))).result;
-      let scriptList:string[] = scripts.split('\n');
-      for(let i=0; i<scriptList.length; i++){
-        fileList.push(`${basePath}/_setup/` + scriptList[i]);
+      
+      let executePath = `${project.getPath()}/${basePath}/_setup`.replaceAll('\\','/');
+      // Der find ist für das "←[?25h" verantwortlich
+      let scripts:string = (await ShellHelper.executeScript(`find -name '*.sql' -printf '%P#'`, executePath, false, project.getLogger())).result;
+      let scriptList:string[] = scripts.substring(0,scripts.lastIndexOf('#')).split('#');
+      for await(const setupScript of scriptList){  
+        fileList.push(`${basePath}/_setup/${setupScript}`);
       }
-
+      
       console.log('...adding changed files');
+      
       for await(const file of fileList){
         if(file!='' && !file.endsWith('/') && !file.substring(file.lastIndexOf('/') + 1, file.length).startsWith('.') && !fs.statSync(file).isDirectory()){
           fileMap.set(file,file);
@@ -415,8 +418,9 @@ export class Orcas implements DeliveryMethod{
           }
         }
       }
-
+      
       console.log('...adding necessities');
+      
       for await (const schema of ["data","logic","app"]) {
         for await (const file of ["build.gradle","gradlew","gradlew.bat"]) {
         if (project.getMode()===Project.MODE_MULTI){
@@ -432,7 +436,7 @@ export class Orcas implements DeliveryMethod{
         buildZip.addLocalFolder(`db/${project.getName()}_${schema}/gradle/`,`db/${project.getName()}_${schema}/gradle`);
         buildZip.addLocalFolder(`db/${project.getName()}_${schema}/buildSrc/`,`db/${project.getName()}_${schema}/buildSrc`);
       }
-
+      
       return buildZip;
     }
 
