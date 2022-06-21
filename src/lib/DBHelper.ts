@@ -201,34 +201,32 @@ export class DBHelper {
   }
 
   public static executeScript(conn: IConnectionProperties, script: string,  logger:Logger){
-    try{
-      logger.getLogger().log("info", 'Start script: '+script);
-      
-      const childProcess = spawnSync(
-        'sql', // Sqlcl path should be in path
-        ["-S", DBHelper.getConnectionString(conn)], {
-          encoding: 'utf8',
-          input: "@" + script,
-          shell: true
-        }
-      );
-      
-      DBHelper.logResults(childProcess, logger);
-    }catch(err){
-      console.log(err);
-    } 
+    
+    logger.getLogger().log("info", `Start script: ${script}`);
+    
+    const childProcess = spawnSync(
+      'sql', // Sqlcl path should be in path
+      ["-S", DBHelper.getConnectionString(conn)], {
+        encoding: 'utf8',
+        input: `@${script}`,
+        shell: true
+      }
+    );
+    
+    DBHelper.logResults(childProcess, logger);
+    
   }
 
   public static executeScriptIn(conn: IConnectionProperties, script: string, cwd:string, logger:Logger){
     
-    logger.getLogger().log("info", 'Start script: '+script);
+    logger.getLogger().log("info", `Start script: ${script}`);
 
     const childProcess = spawnSync(
       'sql', // Sqlcl path should be in path
       ["-S", DBHelper.getConnectionString(conn)], {
         encoding: 'utf8',
         cwd: cwd,
-        input: "@" + script,
+        input: `@${script}`,
         shell: true
       }
     );

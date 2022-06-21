@@ -130,9 +130,7 @@ export class Git{
                         process.cwd(),
                         false,
                         new Logger(process.cwd())
-                     )).result; 
-      console.log("command: " + newTablesCommand);                        
-      console.log(newTables);                           
+                     )).result;                          
       
       //Just changes but no new tables
       if (fileList && !newTables){

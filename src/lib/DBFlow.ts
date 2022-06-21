@@ -96,7 +96,7 @@ STAGE=${responses.stage}
         }
     }
 
-    public async deploy(projectName:string, connection:string, password:string, schemaOnly:boolean, ords:string, silentMode:boolean, version:string, mode:string):Promise<boolean> {
+    public async deploy(projectName:string, connection:string, password:string, schemaOnly:boolean, ords:string, silentMode:boolean, version:string, mode:string):Promise<{success: boolean, mode: string}> {
         console.log("projectName", projectName);
         console.log("version", version);
         console.log("mode", mode);
@@ -126,7 +126,7 @@ STAGE=${responses.stage}
                                          },
                                          true,
                                          project.getLogger());
-        return true;
+        return {success: true, mode: mode};
 
     }
 

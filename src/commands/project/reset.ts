@@ -47,7 +47,7 @@ export default class ProjectReset extends Command {
         let answer =  await inquirer.prompt([
           {
             name: 'confirm',
-            message: `Are you sure to reset local status commit to:  ${args.commit}`,
+            message: `Are you sure to reset local status commit to:  ${commitId}`,
             type: 'confirm'
           }]
         );
