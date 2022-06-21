@@ -10,14 +10,10 @@ import { ShellHelper } from "./ShellHelper";
 import { DBHelper } from './DBHelper';
 import { Application } from './Application';
 import { Git } from "./Git";
-import { Logger } from "./Logger";
 import yaml from 'yaml';
 import os = require("os");
 import AdmZip = require("adm-zip");
 import chalk from 'chalk'
-import inquirer = require('inquirer');
-import { Schema } from "js-yaml";
-import { boolean } from "@oclif/core/lib/parser/flags";
 import { Utils } from "./Utils";
 
 const ps = require("ps-node");
