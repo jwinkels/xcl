@@ -1,22 +1,23 @@
 import { injectable } from "inversify";
+import { CliUx } from "@oclif/core";
 import "reflect-metadata";
 import { DeliveryMethod } from "./DeliveryMethod";
 import { ProjectFeature } from './ProjectFeature';
 import * as fs from "fs-extra";
 import { ProjectManager } from './ProjectManager';
 import { Project } from './Project';
-import cli from 'cli-ux';
 import { ShellHelper } from "./ShellHelper";
 import { DBHelper } from './DBHelper';
 import { Application } from './Application';
 import { Git } from "./Git";
-import yaml from 'yaml';
-import os = require("os");
-import AdmZip = require("adm-zip");
+import yaml from "yaml";
+import os from "os";
+import AdmZip from "adm-zip";
 import chalk from 'chalk'
 import { Utils } from "./Utils";
 
-const ps = require("ps-node");
+import * as ps from "ps-node";
+import { Program } from "ps-node";
 @injectable()
 export class Orcas implements DeliveryMethod{
     public install(feature:ProjectFeature, projectPath:string, singleSchema:boolean){
@@ -145,17 +146,17 @@ export class Orcas implements DeliveryMethod{
 
       }else{
         if (silentMode){
-          cli.action.start('Deploy...');
+          CliUx.ux.action.start('Deploy...');
           let success = await this.silentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly, path);
           if(success){
             if(path.includes('dist')){
               this.cleanUp(path);
             }
-            cli.action.stop('done');
+            CliUx.ux.action.stop('done');
             return {success: true, mode: buildInfo.type!};
           }else{
             this.cleanUp(path);
-            cli.action.stop('failed');
+            CliUx.ux.action.stop('failed');
             return {success: false, mode: buildInfo.type!};
           }
         }else{
@@ -173,7 +174,7 @@ export class Orcas implements DeliveryMethod{
     private async hook(schema:string, type:string, projectName:string, connection:string, password:string, project:Project):Promise<void>{
 
       let conn:any;
-      cli.action.start(`${type}-${schema}-hooks: ...` );
+      CliUx.ux.action.start(`${type}-${schema}-hooks: ...` );
       project.getLogger().getFileLogger().log("info",`${type}-${schema}-hooks`);
       switch (schema.toLowerCase()){
         case 'data':
@@ -206,7 +207,7 @@ export class Orcas implements DeliveryMethod{
                                          project.getLogger()
                                         );
               });
-        cli.action.stop('done');
+        CliUx.ux.action.stop('done');
         project.getLogger().getFileLogger().log("info",`${type}-${schema}-hooks done`);
     }
 
@@ -221,7 +222,7 @@ export class Orcas implements DeliveryMethod{
         await _this.hook("data", "post", projectName, connection, password, project);
         await _this.hasInvalidObjects(project, "data", password, connection);
 
-        proceed = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_LOGIC? (y/n)');
+        proceed = await CliUx.ux.confirm('Proceed with ' + projectName.toUpperCase() + '_LOGIC? (y/n)');
 
         if (proceed){
           
@@ -230,7 +231,7 @@ export class Orcas implements DeliveryMethod{
           resultLogic = (await ShellHelper.executeScript(gradleStringLogic, executePath + "/db/" + project.getName() + "_logic", true, project.getLogger())).status;
           await _this.hook("logic", "post", projectName, connection, password, project);
           await _this.hasInvalidObjects(project, "logic", password, connection);
-          proceed = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_APP? (y/n)');
+          proceed = await CliUx.ux.confirm('Proceed with ' + projectName.toUpperCase() + '_APP? (y/n)');
           
           if (proceed){
             
@@ -439,13 +440,13 @@ export class Orcas implements DeliveryMethod{
     private cleanUp(path:string){
       if(path.includes('dist')){
         try{
-          cli.action.start('Cleaning up...');
-          ps.lookup({command: 'java', arguments: 'org.gradle.launcher.daemon.bootstrap.GradleDaemon'}, function(err:string, resultList:any ) {
+          CliUx.ux.action.start('Cleaning up...');
+          ps.lookup({command: 'java', arguments: 'org.gradle.launcher.daemon.bootstrap.GradleDaemon'}, function(err:Error, resultList:Program[] ) {
               for (const process of resultList) {
                 ps.kill(process.pid);
               }
               fs.removeSync(path);
-              cli.action.stop('done');
+              CliUx.ux.action.stop('done');
           });
         }catch(error){
           console.log(error);
@@ -520,7 +521,7 @@ export class Orcas implements DeliveryMethod{
 
     private async recompile(project:Project, schema:string, password:string, connection:string):Promise<boolean>{
       let recompile:boolean = true;
-      recompile = await cli.confirm('Recompile invalid objects? (y/n)');
+      recompile = await CliUx.ux.confirm('Recompile invalid objects? (y/n)');
       let invalids:boolean = true; 
       let output:boolean = false;
       let conn:any = DBHelper.getConnectionProps(project.getUsers().get(schema.toUpperCase())?.getConnectionName(),
@@ -533,7 +534,7 @@ export class Orcas implements DeliveryMethod{
         await DBHelper.executeScript(conn, Utils.checkPathForSpaces( __dirname + '/scripts/schema_recompile.sql') + ` ${project.getUsers().get(schema.toUpperCase())?.getName().toUpperCase()}`, project.getLogger());
         invalids  = await this.hasInvalidObjects(project, schema, password, connection, output, true);
         if (invalids){
-          recompile = await cli.confirm('Recompile invalid objects? (y/n)');
+          recompile = await CliUx.ux.confirm('Recompile invalid objects? (y/n)');
         }
       }
 

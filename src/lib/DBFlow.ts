@@ -1,4 +1,5 @@
 import { injectable } from "inversify";
+import { CliUx } from "@oclif/core";
 import "reflect-metadata";
 import { DeliveryMethod } from "./DeliveryMethod";
 import { ProjectFeature } from './ProjectFeature';
@@ -7,9 +8,8 @@ import * as path from "path";
 import { ShellHelper } from "./ShellHelper";
 import { ProjectManager } from "./ProjectManager";
 import chalk from 'chalk';
-import cli from 'cli-ux'
 import { Project } from "./Project";
-import inquirer = require("inquirer");
+import inquirer from "inquirer";
 import * as dotenv from "dotenv";
 import { Environment } from "./Environment";
 
@@ -28,7 +28,7 @@ export class DBFlow implements DeliveryMethod{
         // init git
         // TODO in git.ts implementier
         if (!fs.pathExistsSync(path.join(projectPath, '.git'))) {
-          const initGit = await cli.prompt('Project has to be a git repositoy. Do you want to git init [Y/N] ', {type: 'normal'});
+          const initGit = await CliUx.ux.prompt('Project has to be a git repositoy. Do you want to git init [Y/N] ', {type: 'normal'});
           if (initGit.toUpperCase() === "Y") {
             ShellHelper.executeScript(`git init`, projectPath, true, project.getLogger());
           }

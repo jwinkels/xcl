@@ -1,10 +1,9 @@
-import {Command, Flags} from '@oclif/core'
+import {Command, Flags, CliUx} from '@oclif/core'
 import { Project } from '../../lib/Project'
 import { ProjectManager } from '../../lib/ProjectManager'
-import cli from 'cli-ux'
 import chalk from 'chalk'
 import { Environment } from '../../lib/Environment'
-const Table = require('cli-table')
+import  Table  from 'cli-table3'
 
 export default class ConfigDefaults extends Command{
   static description = 'set xcl environment variables'
@@ -93,9 +92,9 @@ export default class ConfigDefaults extends Command{
     }
 
     if (variableName.toUpperCase()==="SYSPW"){
-      input = value ? value : await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"', {type: 'hide'});                                               
+      input = value ? value : await CliUx.ux.prompt('Insert a value for "' + variableName.toUpperCase() + '"', {type: 'hide'});                                               
     }else{
-      input = value ? value : await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"', {type: 'normal'});
+      input = value ? value : await CliUx.ux.prompt('Insert a value for "' + variableName.toUpperCase() + '"', {type: 'normal'});
     } 
 
     if (variableName.toUpperCase()==='SCHEMA' && project.getMode()===Project.MODE_SINGLE){
@@ -129,7 +128,7 @@ export default class ConfigDefaults extends Command{
 
     let projectEnv=project.getEnvironment();
     for (let key of projectEnv.keys()){
-      let input = await cli.prompt('Insert a value for "' + key.toUpperCase() + '"');
+      let input = await CliUx.ux.prompt('Insert a value for "' + key.toUpperCase() + '"');
       project.setEnvironmentVariable(key, input);
       console.log(chalk.green('\nVariable ´'+key.toUpperCase()+'´ set!'));
     }
@@ -151,7 +150,7 @@ export default class ConfigDefaults extends Command{
 
   async setGlobalVariable(variableName:string, value:string){
     let globals = Environment.initialize('all');
-    let input = value ? value : (await cli.prompt('Insert a value for "' + variableName.toUpperCase() + '"'));
+    let input = value ? value : (await CliUx.ux.prompt('Insert a value for "' + variableName.toUpperCase() + '"'));
     Environment.setVariable(variableName, input, globals);
     Environment.writeEnvironment('all', globals);
     console.log(chalk.green('OK'));
@@ -160,7 +159,7 @@ export default class ConfigDefaults extends Command{
   async setAllGlobalVariables(){
     let globals = Environment.initialize('all');
     for (let key of globals.keys()){
-      let input = await cli.prompt('Insert a value for "' + key.toUpperCase() + '"');
+      let input = await CliUx.ux.prompt('Insert a value for "' + key.toUpperCase() + '"');
       console.log(chalk.green('\nVariable ´'+key.toUpperCase()+'´ set!'));
       Environment.setVariable(key, input, globals);
     }
@@ -209,7 +208,7 @@ export default class ConfigDefaults extends Command{
     let projectEnv=project.getEnvironment();
     for (let key of projectEnv.keys()){
       if(projectEnv.get(key)?.required){
-        let input = await cli.prompt('Insert a value for "' + key.toUpperCase() + '"', {default: projectEnv.get(key)?.value});
+        let input = await CliUx.ux.prompt('Insert a value for "' + key.toUpperCase() + '"', {default: projectEnv.get(key)?.value});
         project.setEnvironmentVariable(key, input);
         console.log(chalk.green('\nVariable ´'+key.toUpperCase()+'´ set!'));
       }

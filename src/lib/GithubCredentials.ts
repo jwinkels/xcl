@@ -1,10 +1,10 @@
 import * as os from "os";
-import * as yaml from "yaml";
+import yaml from "yaml";
 import * as fs from "fs-extra";
 import * as http from 'http';
-import Oauth = require('client-oauth2');
-import Express = require('express');
-import open = require('open');
+import Oauth from 'client-oauth2';
+import Express from 'express';
+import open from 'open';
 
 export class GithubCredentials{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";

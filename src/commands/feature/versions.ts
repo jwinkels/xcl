@@ -1,6 +1,6 @@
 import {Command, Flags} from '@oclif/core'
 import {FeatureManager} from '../../lib/FeatureManager'
-const Table = require('cli-table');
+import  Table from 'cli-table3'
 import chalk from 'chalk'
 
 export default class FeatureVersions extends Command {

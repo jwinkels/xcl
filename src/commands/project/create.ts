@@ -1,10 +1,9 @@
 import {Command, Flags} from '@oclif/core'
 import { Environment } from '../../lib/Environment'
-// import {ProjectManager} from '../../lib/ProjectManager'
 import chalk from 'chalk';
 import * as fs from "fs-extra";
-import * as yaml from "yaml";
-import inquirer = require("inquirer");
+import yaml from "yaml";
+import inquirer from "inquirer";
 import { ProjectManager } from '../../lib/ProjectManager';
 
 export default class ProjectCreate extends Command {

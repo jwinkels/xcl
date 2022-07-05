@@ -1,10 +1,9 @@
-import { Command, Flags } from '@oclif/core'
+import { Command, Flags, CliUx } from '@oclif/core'
 import { ProjectManager } from '../../lib/ProjectManager'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { Environment } from '../../lib/Environment'
 import chalk from 'chalk'
-import { cli } from 'cli-ux';
-import inquirer = require('inquirer')
+import inquirer from "inquirer"
 
 export default class ProjectDeploy extends Command {
   static description = 'deploy the project or build'
@@ -57,7 +56,7 @@ export default class ProjectDeploy extends Command {
       if(ProjectManager.getInstance().getProject((args.project)).getDeployMethod()!==""){
 
         if (flags.dependencies && !flags.syspw){
-          let syspw=await cli.prompt('sys', {type: 'hide'});
+          let syspw=await CliUx.ux.prompt('sys', {type: 'hide'});
           await FeatureManager.getInstance().installAllProjectFeatures(args.project, flags.connection, syspw, false);
         }else{
           if (flags.dependencies){

@@ -3,7 +3,7 @@ import {ProjectManager} from '../../lib/ProjectManager'
 import { Environment } from '../../lib/Environment'
 import chalk from 'chalk';
 import { Git } from '../../lib/Git';
-import inquirer = require('inquirer');
+import inquirer from "inquirer";
 
 export default class ProjectBuild extends Command {
   static description = 'create build to deploy'

@@ -1,8 +1,7 @@
 //Imports
-import * as yaml from "yaml";
+import yaml from "yaml";
 import * as fs from "fs-extra";
 import * as os from "os";
-import request = require("request-promise-native");
 import chalk from 'chalk'
 import { Feature } from './Feature';
 import { ProjectManager } from './ProjectManager';
@@ -16,10 +15,11 @@ import { Environment } from './Environment';
 import { Operation } from './Operation';
 import { Utils } from './Utils';
 import { Logger } from "./Logger";
-import inquirer = require("inquirer");
+import inquirer from "inquirer";
 import { Schema } from "./Schema";
-import AdmZip = require("adm-zip");
-const Table = require('cli-table');
+import AdmZip from "adm-zip";
+import  Table  from 'cli-table3';
+import got from 'got';
 
 export class FeatureManager{
     public static softwareYMLfile: string = "software.yml";
@@ -147,11 +147,11 @@ export class FeatureManager{
           feature.getDownloadUrl()
                     .then(function(url){
                     var options = {
-                      uri: "",
+                      url: "",
                       headers: {}
                     };
                     
-                    options.uri=url;
+                    options.url=url;
 
                     if (GithubCredentials.get()){
                         options.headers= {
@@ -164,18 +164,18 @@ export class FeatureManager{
                       }
                     }
 
-              if(!fs.pathExistsSync(pManager.getProject(projectName).getPath() +'/dependencies')){
-                  fs.mkdirSync(pManager.getProject(projectName).getPath() +'/dependencies');
+              if(!fs.pathExistsSync(pManager.getProject(projectName).getPath() + '/dependencies')){
+                  fs.mkdirSync(pManager.getProject(projectName).getPath() + '/dependencies');
               }
 
-              request(options)
-                    .pipe(
-                      fs.createWriteStream(filename)
-                          .on('close', function(){
-                            resolve();
-                          })
-                      );
-                });
+              got.stream(options).pipe(
+                fs.createWriteStream(filename)
+                .on('close', function(){
+                  resolve();
+                })
+              );
+
+            });
           });
       }
 
