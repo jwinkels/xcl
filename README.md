@@ -19,7 +19,7 @@ $ npm install -g xcl
 $ xcl COMMAND
 running command...
 $ xcl (-v|--version|version)
-xcl/0.1.0 win32-x64 node-v16.5.0
+xcl/1.0.1 win32-x64 node-v16.5.0
 $ xcl --help [COMMAND]
 USAGE
   $ xcl COMMAND
@@ -73,7 +73,7 @@ EXAMPLES
   $ xcl autocomplete --refresh-cache
 ```
 
-_See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/v1.2.0/src/commands/autocomplete/index.ts)_
+_See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/v1.3.0/src/commands/autocomplete/index.ts)_
 
 ## `xcl config`
 
@@ -87,7 +87,7 @@ EXAMPLE
   $ xcl config [default|github]
 ```
 
-_See code: [build/commands/config/index.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/config/index.ts)_
+_See code: [build/commands/config/index.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/config/index.ts)_
 
 ## `xcl config:defaults [VARIABLE] [VALUE] [PROJECT]`
 
@@ -111,7 +111,7 @@ OPTIONS
   --set-required  set all required environment variables
 ```
 
-_See code: [build/commands/config/defaults.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/config/defaults.ts)_
+_See code: [build/commands/config/defaults.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/config/defaults.ts)_
 
 ## `xcl config:github USER`
 
@@ -125,7 +125,7 @@ OPTIONS
   -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/config/github.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/config/github.ts)_
+_See code: [build/commands/config/github.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/config/github.ts)_
 
 ## `xcl feature`
 
@@ -139,7 +139,7 @@ EXAMPLE
   $ xcl feature [add|deinstall|install|list|remove|update|versions] #FEATURE#
 ```
 
-_See code: [build/commands/feature/index.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/feature/index.ts)_
+_See code: [build/commands/feature/index.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/feature/index.ts)_
 
 ## `xcl feature:add FEATURE [PROJECT] [USERNAME] [PASSWORD] [VERSION]`
 
@@ -161,7 +161,7 @@ OPTIONS
   -i, --interactive  interactive mode
 ```
 
-_See code: [build/commands/feature/add.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/feature/add.ts)_
+_See code: [build/commands/feature/add.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/feature/add.ts)_
 
 ## `xcl feature:deinstall FEATURE [PROJECT]`
 
@@ -182,7 +182,7 @@ OPTIONS
   -s, --syspw=syspw            (required) Password of SYS-User
 ```
 
-_See code: [build/commands/feature/deinstall.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/feature/deinstall.ts)_
+_See code: [build/commands/feature/deinstall.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/feature/deinstall.ts)_
 
 ## `xcl feature:install FEATURE PROJECT`
 
@@ -202,7 +202,7 @@ OPTIONS
   -s, --syspw=syspw            Password of SYS-User
 ```
 
-_See code: [build/commands/feature/install.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/feature/install.ts)_
+_See code: [build/commands/feature/install.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/feature/install.ts)_
 
 ## `xcl feature:list [TYPE] [PROJECT]`
 
@@ -221,7 +221,7 @@ OPTIONS
   -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/feature/list.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/feature/list.ts)_
+_See code: [build/commands/feature/list.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/feature/list.ts)_
 
 ## `xcl feature:remove FEATURE [PROJECT]`
 
@@ -248,7 +248,7 @@ OPTIONS
   -s, --syspw=syspw            password of SYS-User
 ```
 
-_See code: [build/commands/feature/remove.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/feature/remove.ts)_
+_See code: [build/commands/feature/remove.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/feature/remove.ts)_
 
 ## `xcl feature:update FEATURE [VERSION] [PROJECT]`
 
@@ -269,7 +269,7 @@ OPTIONS
   -s, --syspw=syspw            Password of SYS-User
 ```
 
-_See code: [build/commands/feature/update.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/feature/update.ts)_
+_See code: [build/commands/feature/update.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/feature/update.ts)_
 
 ## `xcl feature:versions FEATURE`
 
@@ -286,7 +286,7 @@ OPTIONS
   -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/feature/versions.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/feature/versions.ts)_
+_See code: [build/commands/feature/versions.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/feature/versions.ts)_
 
 ## `xcl help [COMMAND]`
 
@@ -317,27 +317,24 @@ EXAMPLE
   $ xcl project [apply|build|create|deploy|list|plan|remove|reset]
 ```
 
-_See code: [build/commands/project/index.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/index.ts)_
+_See code: [build/commands/project/index.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/index.ts)_
 
 ## `xcl project:apply [PROJECT]`
 
-apply changes to project
+apply a plan to a project
 
 ```
 USAGE
   $ xcl project:apply [PROJECT]
 
 ARGUMENTS
-  PROJECT  name of the project that the changes should be applied to
+  PROJECT  name of the project that a plan should be applied to
 
 OPTIONS
-  -h, --help             Show CLI help.
-  -m, --mode=mode        [default: init] mode of build (init/patch)
-  -v, --version=version  Version to tag build
-  --setup-only           Deploys only dependeny changes
+  -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/project/apply.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/apply.ts)_
+_See code: [build/commands/project/apply.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/apply.ts)_
 
 ## `xcl project:build [PROJECT]`
 
@@ -357,7 +354,7 @@ OPTIONS
   -v, --version=version  Version to tag build
 ```
 
-_See code: [build/commands/project/build.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/build.ts)_
+_See code: [build/commands/project/build.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/build.ts)_
 
 ## `xcl project:create [PROJECT]`
 
@@ -377,7 +374,7 @@ OPTIONS
   --single-schema            one schema instead of three, no deployment user
 ```
 
-_See code: [build/commands/project/create.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/create.ts)_
+_See code: [build/commands/project/create.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/create.ts)_
 
 ## `xcl project:deploy [PROJECT]`
 
@@ -414,7 +411,7 @@ OPTIONS
   --schema-only                Deploys only schema objects
 ```
 
-_See code: [build/commands/project/deploy.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/deploy.ts)_
+_See code: [build/commands/project/deploy.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/deploy.ts)_
 
 ## `xcl project:init [PROJECT]`
 
@@ -437,7 +434,7 @@ OPTIONS
   -y, --yes                    Answers force-action with yes (Use with caution)
 ```
 
-_See code: [build/commands/project/init.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/init.ts)_
+_See code: [build/commands/project/init.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/init.ts)_
 
 ## `xcl project:list`
 
@@ -451,7 +448,7 @@ OPTIONS
   -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/project/list.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/list.ts)_
+_See code: [build/commands/project/list.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/list.ts)_
 
 ## `xcl project:plan [PROJECT]`
 
@@ -470,7 +467,7 @@ OPTIONS
   --yes         skip all prompts with answer 'yes'
 ```
 
-_See code: [build/commands/project/plan.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/plan.ts)_
+_See code: [build/commands/project/plan.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/plan.ts)_
 
 ## `xcl project:remove PROJECT`
 
@@ -491,7 +488,7 @@ OPTIONS
   -s, --syspw=syspw
 ```
 
-_See code: [build/commands/project/remove.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/remove.ts)_
+_See code: [build/commands/project/remove.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/remove.ts)_
 
 ## `xcl project:reset [COMMIT] [PROJECT]`
 
@@ -513,5 +510,5 @@ EXAMPLE
   xcl project:reset
 ```
 
-_See code: [build/commands/project/reset.ts](https://github.com/MaikMichel/xcl/blob/v0.1.0/build/commands/project/reset.ts)_
+_See code: [build/commands/project/reset.ts](https://github.com/MaikMichel/xcl/blob/v1.0.1/build/commands/project/reset.ts)_
 <!-- commandsstop -->

@@ -1,7 +1,7 @@
 {
   "name": "xcl",
   "description": "APEX commandline",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "author": "Jan und Maik",
   "bin": {
     "xcl": "./bin/run"
@@ -70,10 +70,9 @@
   "homepage": "https://github.com/MaikMichel/xcl",
   "keywords": [
     "Oracle APEX",
-    "APEX",
     "CI",
     "CD",
-    "APEX Deployment",
+    "Deployment",
     "xcl"
   ],
   "license": "MIT",
