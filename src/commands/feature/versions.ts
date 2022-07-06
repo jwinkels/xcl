@@ -25,7 +25,7 @@ export default class FeatureVersions extends Command {
     });
 
     let versions:string[] = await (await FeatureManager.getInstance().getFeatureReleases(args.feature));
-    for (let i=0; i<versions.length-1; i++){
+    for (let i=0; i<versions.length; i++){
       table.push([versions[i]]);
     }
 
