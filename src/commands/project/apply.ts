@@ -4,29 +4,16 @@ import chalk from 'chalk';
 import { Environment } from '../../lib/Environment';
 
 export default class ProjectApply extends Command {
-  static description = 'apply changes to project'
+  static description = 'apply a plan to a project'
 
   static flags = {
-    help:         Flags.help   ({char: 'h'}),
-    "setup-only": Flags.boolean({
-                                 description:'Deploys only dependeny changes', 
-                                 default: false
-                                }),
-    mode:         Flags.string ({ 
-                                 char:         'm',
-                                 description:  'mode of build (init/patch)',
-                                 default:      'init'
-                                 }),
-    version:      Flags.string  ({ 
-                                 char:        'v',
-                                 description: 'Version to tag build'
-                                }),
+    help:         Flags.help   ({char: 'h'})
   }
 
   static args = [
     {
       name: 'project',
-      description: "name of the project that the changes should be applied to",
+      description: "name of the project that a plan should be applied to",
       default: Environment.readConfigFrom( process.cwd(), "project", false )
     }
   ]
