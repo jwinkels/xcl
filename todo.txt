@@ -108,10 +108,13 @@ TODO:
       add feature arbeitet dann genauso wie vorher, möglich in ein seperates Schema zu installieren oder in ein "Projekt-Schema"
         => in Arbeit
 
-    - Name für die Ordnerstruktur finden
+    - Name für die Ordnerstruktur finden: smartfs (puzzles)
     
     - Deploy schlägt fehl -> gradle build failed return value?
         => DONE
     
     - xcl feature: min version die von xcl supported wird in die software.yml aufnehmen und dann beim anbieten der
       installierbaren versionen berücksichtigen
+    
+    - xcl project build: wenn keine Änderungen in der code-Basis ("leerer build") kurzer warn-hinweis
+    - xcl project build: bug bei herausfinden der zuletzt eingespielten commitId wenn vorher noch nie gepatcht oder ausgeliefert wurde
