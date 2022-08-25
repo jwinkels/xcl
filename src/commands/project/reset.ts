@@ -21,7 +21,8 @@ export default class ProjectReset extends Command {
   static args = [
     {
       name: 'commit',
-      description: 'commit id or tag name'
+      description: 'commit id or tag name',
+      default: (async ()=>{return ( await Git.getPreviousTagName()) ? ( await Git.getPreviousTagName()) : "" })
     },
     {
       name: 'project',
