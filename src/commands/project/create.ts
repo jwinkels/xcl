@@ -16,7 +16,7 @@ export default class ProjectCreate extends Command {
                              default: Environment.readConfigFrom(process.cwd(),'project', false)
                             }),
     "single-schema" : Flags.boolean ({description: 'one schema instead of three, no deployment user'}),
-    interactive :     Flags.boolean ({char: 'i', description: 'Interactive wizard that guides you through the creation of the project'})
+    interactive :     Flags.boolean ({char: 'i', default: true, description: 'Interactive wizard that guides you through the creation of the project'})
   }
 
   static args = [
@@ -54,13 +54,13 @@ async function doTheWizard(projectName:string | undefined) {
 
   await inquirer.prompt([{
       name: 'project',
-      message: `Please give a project name`,
+      message: `Please enter a project name`,
       type: 'input',
       default: prj.xcl.project
     },
     {
       name: 'multi',
-      message: `Would you like to have a single or multi scheme app`,
+      message: `Would you like to a single or multi scheme app`,
       type: 'list',
       choices: ['Multi', 'Single'],
       default: toInitCapProjectType(prj.xcl.mode as string)
