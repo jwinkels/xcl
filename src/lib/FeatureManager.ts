@@ -21,6 +21,7 @@ import { Schema } from "./Schema";
 import AdmZip from "adm-zip";
 import  Table  from 'cli-table3';
 import got from 'got';
+import { CustomFeature } from "./CustomFeature";
 
 export class FeatureManager{
     public static softwareYMLfile: string = "software.yml";
@@ -196,7 +197,8 @@ export class FeatureManager{
               );
 
             });
-          });
+          }
+        });
       }
 
       public listProjectFeatures(projectName:string, type:string){
