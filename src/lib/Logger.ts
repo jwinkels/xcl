@@ -1,5 +1,5 @@
 import * as path from 'path'; 
-import * as winston from "winston";
+import * as  winston from 'winston';
 
 export class Logger{
 
@@ -30,7 +30,7 @@ export class Logger{
          winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
          // Define the format of the message showing the timestamp, the level and the message
          winston.format.printf(
-           (info) => `${info.timestamp}: ${info.message}`,
+           (info: any) => `${info.timestamp}: ${info.message}`,
          ),
        );
 

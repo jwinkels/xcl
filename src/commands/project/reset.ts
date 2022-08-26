@@ -4,7 +4,7 @@ import { ProjectManager } from '../../lib/ProjectManager'
 import { Project } from '../../lib/Project'
 import { Git } from '../../lib/Git'
 import chalk from 'chalk';
-import inquirer = require('inquirer');
+import inquirer from "inquirer";
 
 export default class ProjectReset extends Command {
   static description = 'reset project to commit id or tag'
@@ -21,7 +21,8 @@ export default class ProjectReset extends Command {
   static args = [
     {
       name: 'commit',
-      description: 'commit id or tag name'
+      description: 'commit id or tag name',
+      default: (async ()=>{return ( await Git.getPreviousTagName()) ? ( await Git.getPreviousTagName()) : "" })
     },
     {
       name: 'project',

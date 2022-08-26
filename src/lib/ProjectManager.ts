@@ -1,13 +1,13 @@
 //Imports
-import * as yaml from "yaml";
+import yaml from "yaml";
 import * as fs from "fs-extra";
 import * as path from "path";
 import * as os from "os";
+import { CliUx } from "@oclif/core";
 import { Project } from "./Project";
 import { ProjectNotFoundError } from "./errors/ProjectNotFoundError";
 import chalk from 'chalk'
 import { DBHelper, IConnectionProperties } from './DBHelper';
-import cli from 'cli-ux'
 import  { deliveryFactory }  from './DeliveryFactory';
 import { DeliveryMethod } from './DeliveryMethod';
 import { ProjectFeature } from './ProjectFeature';
@@ -24,7 +24,7 @@ import { Feature, FeatureType } from "./Feature";
 const password = require('secure-random-password');
 //import FeatureInstall from "../commands/feature/install";
 
-const Table = require('cli-table')
+import Table from 'cli-table3'
 //Implementation in Singleton-Pattern because there is no need for multiple instances of the ProjectManager!
 export class ProjectManager {
   public static projectYMLfile = "projects.yml";
@@ -273,7 +273,7 @@ export class ProjectManager {
         return;
       } else {
         if ( flags.force && !flags.yes ) {
-          const confirmYN = await cli.confirm( chalk.green(`Force option detected, schema will be dropped. Continue Y/N`) );
+          const confirmYN = await CliUx.ux.confirm( chalk.green(`Force option detected, schema will be dropped. Continue Y/N`) );
 
           if ( !confirmYN ) {
             console.log( chalk.yellow(`Project initialization canceled`) );

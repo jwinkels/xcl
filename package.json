@@ -1,7 +1,7 @@
 {
   "name": "xcl",
   "description": "APEX commandline",
-  "version": "0.1.0",
+  "version": "1.0.2-beta.4",
   "author": "Jan und Maik",
   "bin": {
     "xcl": "./bin/run"
@@ -11,40 +11,34 @@
     "@oclif/core": "^1",
     "@oclif/plugin-autocomplete": "^1.2.0",
     "@oclif/plugin-plugins": "^2.0.1",
-    "@types/adm-zip": "^0.4.34",
-    "@types/dotenv": "^8.2.0",
+    "@types/adm-zip": "^0.5",
     "@types/express": "^4.17.13",
     "@types/fs-extra": "^8.1.2",
     "@types/inquirer": "^7.3.3",
     "@types/js-yaml": "^3.12.7",
     "@types/md5": "^2.3.1",
-    "@types/open": "^6.2.1",
-    "@types/oracledb": "^4.2.3",
     "@types/readline-sync": "^1.4.4",
-    "@types/request": "^2.48.7",
     "@types/request-promise-native": "^1.0.18",
-    "@types/winston": "^2.4.4",
-    "@types/yaml": "^1.9.7",
     "adm-zip": "^0.4.16",
-    "cli-table": "^0.3.6",
-    "cli-ux": ">=6.0.0",
+    "cli-table3": "^0.6.2",
     "client-oauth2": "^4.3.3",
     "dmg": "^0.1.0",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "got": "^11.8.5",
     "inquirer": "^8.2.0",
     "inversify": "^5.1.1",
     "oclif": "^3.0.1",
-    "oracledb": "^5.2.0",
+    "open": "^7.1",
+    "oracledb": "^5.4.0",
     "ps-node": "^0.1.6",
     "readline-sync": "^1.4.10",
     "reflect-metadata": "^0.1.13",
-    "request": "^2.88.2",
-    "request-promise-native": "^1.0.9",
     "secure-random-password": "^0.2.3",
     "ts-md5": "^1.2.9",
     "tslib": "^2.4.0",
-    "yaml": "^1.10.2"
+    "winston": "^3.8.1",
+    "yaml": "^2.1"
   },
   "devDependencies": {
     "@oclif/dev-cli": ">=1.26.0",
@@ -53,8 +47,9 @@
     "@types/chai": "^4.2.22",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.9.4",
+    "@types/ps-node": "^0.1.1",
     "chai": "^4.3.4",
-    "globby": "^11",
+    "globby": "^11.1.0",
     "mocha": "^9.1.2",
     "nyc": "^15.1.0",
     "rimraf": "^3.0.2",
@@ -63,20 +58,25 @@
     "typescript": "^4.4.3"
   },
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=14.16"
   },
   "files": [
     "/bin",
     "/build",
+    "/scripts",
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
   ],
   "homepage": "https://github.com/MaikMichel/xcl",
   "keywords": [
-    "oclif"
+    "Oracle APEX",
+    "CI",
+    "CD",
+    "Deployment",
+    "xcl"
   ],
   "license": "MIT",
-  "main": "build/index.js",
+  "main": "/build/index.js",
   "oclif": {
     "commands": "./build/commands",
     "bin": "xcl",
@@ -100,13 +100,15 @@
   },
   "repository": "MaikMichel/xcl",
   "scripts": {
-    "build": "build.sh",
+    "build": "tsc",
+    "postbuild": "copy.sh",
     "postpack": "rimraf oclif.manifest.json",
     "posttest": "echo \"tslint -p test -t stylish\"",
-    "prepack": "rimraf lib && tsc -b && oclif-dev manifest && oclif-dev readme",
+    "prepack": "tsc -b && oclif-dev manifest && oclif-dev readme",
     "test": "mocha --forbid-only \"test/**/*.test.ts\"",
     "version": "oclif readme && git add README.md",
-    "postinstall": "node scripts/post-install.js"
+    "postinstall": "node scripts/post-install.js",
+    "prepare": "npm run build"
   },
   "types": "build/index.d.ts"
 }

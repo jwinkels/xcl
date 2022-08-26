@@ -1,6 +1,6 @@
 import {Command, Flags} from '@oclif/core'
 import {FeatureManager} from '../../lib/FeatureManager'
-const Table = require('cli-table');
+import  Table from 'cli-table3'
 import chalk from 'chalk'
 
 export default class FeatureVersions extends Command {
@@ -25,7 +25,7 @@ export default class FeatureVersions extends Command {
     });
 
     let versions:string[] = await (await FeatureManager.getInstance().getFeatureReleases(args.feature));
-    for (let i=0; i<versions.length-1; i++){
+    for (let i=0; i<versions.length; i++){
       table.push([versions[i]]);
     }
 

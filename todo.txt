@@ -91,13 +91,14 @@ TODO:
         => Entscheidung: Setup-Array aus xcl.yml entfernen
         
     - Liquibase für XCL - Wie bringt man liquibase hooks bei?
-    => wird nicht gelöst
+    => wird nicht gelöst (siehe liquibase4xcl)
 
     - xcl features:... 
       features müssen vielleicht nur einmal installiert werden, können danach aber an mehrere schemata gegranted werden
       viele features haben dafür eigene granting skripte, die müssen ausgeführt werden auch wenn das feature bereits installiert ist
       Idee: ein Flag in der software.yml die ein skript als always execute markiert, diese skripte bei installation des features immer ausgeführt 
-    
+        => Umgesetzt aber muss noch verprobt werden 
+
     - Unterschiedliche Versionsnummern in n Applikationen
     
     - Individuelle Features:
@@ -105,7 +106,15 @@ TODO:
       möglichkeit anbieten, diese ebenfalls in das Projekt mitaufnehmen zu können
       kleiner wizzard, wo liegt das zip-File für das feature, wie heißt das install skript
       add feature arbeitet dann genauso wie vorher, möglich in ein seperates Schema zu installieren oder in ein "Projekt-Schema"
+        => in Arbeit
 
-    - Name für die Ordnerstruktur finden
+    - Name für die Ordnerstruktur finden: smartfs (puzzles)
     
     - Deploy schlägt fehl -> gradle build failed return value?
+        => DONE
+    
+    - xcl feature: min version die von xcl supported wird in die software.yml aufnehmen und dann beim anbieten der
+      installierbaren versionen berücksichtigen
+    
+    - xcl project build: wenn keine Änderungen in der code-Basis ("leerer build") kurzer warn-hinweis
+    - xcl project build: bug bei herausfinden der zuletzt eingespielten commitId wenn vorher noch nie gepatcht oder ausgeliefert wurde

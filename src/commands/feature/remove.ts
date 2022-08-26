@@ -1,9 +1,8 @@
-import {Command, Flags} from '@oclif/core'
+import {Command, Flags, CliUx} from '@oclif/core'
 import chalk from 'chalk'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { ProjectManager } from '../../lib/ProjectManager'
 import { Environment } from '../../lib/Environment'
-import { cli } from 'cli-ux'
 export default class FeatureRemove extends Command {
   static description = 'remove Feature from Project'
 
@@ -46,8 +45,8 @@ export default class FeatureRemove extends Command {
 
         if ( flags.deinstall && ( flags.connection === undefined || flags.syspw === undefined ) ){
           console.log(chalk.yellow('Please provide a connection and the SYS-User password!'));
-          flags.connection = flags.connection ? flags.connection : await cli.prompt('connection [host:port/servicename]');
-          flags.syspw      = flags.syspw      ? flags.syspw      : await cli.prompt('sys-password');
+          flags.connection = flags.connection ? flags.connection : await CliUx.ux.prompt('connection [host:port/servicename]');
+          flags.syspw      = flags.syspw      ? flags.syspw      : await CliUx.ux.prompt('sys-password');
         }
 
         if ( flags.deinstall && ( flags.connection && flags.syspw ) ){

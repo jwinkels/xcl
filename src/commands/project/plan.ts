@@ -1,8 +1,7 @@
-import {Command, Flags} from '@oclif/core'
+import {Command, Flags, CliUx} from '@oclif/core'
 import { Environment } from '../../lib/Environment'
 import { ProjectManager } from '../../lib/ProjectManager'
 import chalk from 'chalk';
-import { cli } from 'cli-ux';
 
 export default class ProjectPlan extends Command {
   static description = 'generate commands to bring the project up to date'
@@ -37,7 +36,7 @@ export default class ProjectPlan extends Command {
       let answer:string = "n";
 
       if ( !flags.yes ){
-       answer = await cli.prompt('Do you really want to proceed with the plan described above [y/n]');
+       answer = await CliUx.ux.prompt('Do you really want to proceed with the plan described above [y/n]');
       }
 
       if ( answer === 'y' || flags.yes ){

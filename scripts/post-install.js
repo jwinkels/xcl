@@ -1,33 +1,43 @@
 const fs = require('fs-extra');
 const homedir = require('os').homedir();
 const xclHome = homedir + '/AppData/Roaming/xcl';
-const request = require ("request");
+//const request = require ("request");
+const got = require('got');
 var zip = require ('adm-zip');
 var os = require ('os');
 var dmg = require ('dmg');
 
+const MAC_VERSION  = '19.8.0.0.0';
+const UNIX_VERSION = '21.6.0.0.0';
+const WIN_VERSION  = '21.6.0.0.0';
+
+const MAC_VERSION_STRING  = `macos.x64-${MAC_VERSION}dbru.dmg`;
+const UNIX_VERSION_STRING = `linux.x64-${UNIX_VERSION}dbru.zip`;
+const WIN_VERSION_STRING  = `windows.x64-${WIN_VERSION}dbru.zip`;
+
+const MAC_URL = `https://download.oracle.com/otn_software/mac/instantclient/${MAC_VERSION.replaceAll('.','')}/instantclient-basic-`;
+const WIN_URL = `https://download.oracle.com/otn_software/nt/instantclient/${WIN_VERSION.replaceAll('.','')}/instantclient-basic-`;
+const UNIX_URL = `https://download.oracle.com/otn_software/linux/instantclient/${UNIX_VERSION.replaceAll('.','')}/instantclient-basic-`;
+
 if (!fs.existsSync(xclHome)) {
   console.log('CREATING DIRECTORIES AND FILES: ');
   fs.mkdirSync(xclHome, { recursive: true });
-  console.log('...'+xclHome);
+  console.log('...' + xclHome);
 }
-
 
 fs.copySync('./scripts/artifacts/software.yml', xclHome + '/software.yml');
-if (!fs.existsSync(xclHome+'/projects.yml')) {
+if (!fs.existsSync(xclHome + '/projects.yml')) {
   fs.closeSync(fs.openSync(xclHome + '/projects.yml', 'w'));
-  console.log('...'+xclHome+'/projects.yml');
+  console.log('...' + xclHome + '/projects.yml');
 }
 
-if (!fs.existsSync(xclHome+'/local.yml')) {
+if (!fs.existsSync(xclHome + '/local.yml')) {
   fs.closeSync(fs.openSync(xclHome + '/local.yml', 'w'));
-  console.log('...'+xclHome+'/local.yml');
+  console.log('...' + xclHome + '/local.yml');
 }
 
 if (!fs.existsSync(xclHome + '/.instantClient')){
   var options = {};
-
-  var setPath = "";
 
   console.log('DOWNLOAD DEPENDENCY ORACLE INSTANT CLIENT: ');
   console.log('for: ', os.platform());
@@ -35,34 +45,33 @@ if (!fs.existsSync(xclHome + '/.instantClient')){
   var filename = "";
 
   if (os.platform() === 'win32'){
-    options.uri = "https://download.oracle.com/otn_software/nt/instantclient/19900/instantclient-basic-windows.x64-19.9.0.0.0dbru.zip";
+    options.url = `${WIN_URL}${WIN_VERSION_STRING}`;
     filename = xclHome + '/instantclient-basic.zip';
   }
 
   if (os.platform() === 'linux'){
-    options.uri = "https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-basic-linux.x64-19.9.0.0.0dbru.zip";
+    options.url = `${UNIX_URL}${UNIX_VERSION_STRING}`;
     filename = xclHome + '/instantclient-basic.zip';
   }
 
   if (os.platform() === 'darwin'){
-    options.uri = "https://download.oracle.com/otn_software/mac/instantclient/198000/instantclient-basic-macos.x64-19.8.0.0.0dbru.dmg";
+    options.url = `${MAC_URL}${MAC_VERSION_STRING}`;
     filename = xclHome + '/instantclient-basic.dmg';
   }
 
   options.headers = {};
-
-  request(options)
+  got.stream(options)
       .pipe(
         fs.createWriteStream(filename)
             .on('close', function(){
               if (os.platform()==='win32' || os.platform()==='linux'){
                 var ic = new zip(filename);
-                ic.extractAllTo(xclHome+'/');
+                ic.extractAllTo(xclHome + '/');
 
                 let path = ic.getEntries()[0].entryName;
 
                 if (path.toString().includes('/') ){
-                  path = path.toString().substr(0,path.toString().indexOf('/'));
+                  path = path.toString().substring(0, path.toString().indexOf('/'));
                 }
 
                 if (os.platform() === 'win32'){
@@ -74,11 +83,10 @@ if (!fs.existsSync(xclHome + '/.instantClient')){
               }
 
               if (os.platform()==='darwin'){
-                console.log(filename);
                 dmg.mount(filename, function(err, path){
-                  fs.mkdirSync(xclHome + '/.instantClient');
+                  fs.mkdirSync(`${xclHome}/.instantClient`);
                   fs.readdirSync(path).forEach(function(file){
-                    fs.copySync(path+'/'+file, xclHome+'/.instantClient/' + file);
+                    fs.copySync(`${path}/${file}`, `${xclHome}/.instantClient/${file}`);
                   });
 
                   dmg.unmount(path, function(err){
@@ -88,8 +96,6 @@ if (!fs.existsSync(xclHome + '/.instantClient')){
                   });
                 });
               }
-
-
 
               console.log('... ready');
               console.log('You can use XCL now: Type xcl to your commandline and happy coding!');

@@ -1,26 +1,23 @@
 import { injectable } from "inversify";
+import { CliUx } from "@oclif/core";
 import "reflect-metadata";
 import { DeliveryMethod } from "./DeliveryMethod";
 import { ProjectFeature } from './ProjectFeature';
 import * as fs from "fs-extra";
 import { ProjectManager } from './ProjectManager';
 import { Project } from './Project';
-import cli from 'cli-ux';
 import { ShellHelper } from "./ShellHelper";
 import { DBHelper } from './DBHelper';
 import { Application } from './Application';
 import { Git } from "./Git";
-import { Logger } from "./Logger";
-import yaml from 'yaml';
-import os = require("os");
-import AdmZip = require("adm-zip");
+import yaml from "yaml";
+import os from "os";
+import AdmZip from "adm-zip";
 import chalk from 'chalk'
-import inquirer = require('inquirer');
-import { Schema } from "js-yaml";
-import { boolean } from "@oclif/core/lib/parser/flags";
 import { Utils } from "./Utils";
 
-const ps = require("ps-node");
+import * as ps from "ps-node";
+import { Program } from "ps-node";
 @injectable()
 export class Orcas implements DeliveryMethod{
     public install(feature:ProjectFeature, projectPath:string, singleSchema:boolean){
@@ -149,17 +146,17 @@ export class Orcas implements DeliveryMethod{
 
       }else{
         if (silentMode){
-          cli.action.start('Deploy...');
+          CliUx.ux.action.start('Deploy...');
           let success = await this.silentDeploy(gradleStringData, gradleStringLogic, gradleStringApp, projectName, connection, password, ords, project, schemaOnly, path);
           if(success){
             if(path.includes('dist')){
               this.cleanUp(path);
             }
-            cli.action.stop('done');
+            CliUx.ux.action.stop('done');
             return {success: true, mode: buildInfo.type!};
           }else{
             this.cleanUp(path);
-            cli.action.stop('failed');
+            CliUx.ux.action.stop('failed');
             return {success: false, mode: buildInfo.type!};
           }
         }else{
@@ -177,7 +174,7 @@ export class Orcas implements DeliveryMethod{
     private async hook(schema:string, type:string, projectName:string, connection:string, password:string, project:Project):Promise<void>{
 
       let conn:any;
-      cli.action.start(`${type}-${schema}-hooks: ...` );
+      CliUx.ux.action.start(`${type}-${schema}-hooks: ...` );
       project.getLogger().getFileLogger().log("info",`${type}-${schema}-hooks`);
       switch (schema.toLowerCase()){
         case 'data':
@@ -210,7 +207,7 @@ export class Orcas implements DeliveryMethod{
                                          project.getLogger()
                                         );
               });
-        cli.action.stop('done');
+        CliUx.ux.action.stop('done');
         project.getLogger().getFileLogger().log("info",`${type}-${schema}-hooks done`);
     }
 
@@ -225,7 +222,7 @@ export class Orcas implements DeliveryMethod{
         await _this.hook("data", "post", projectName, connection, password, project);
         await _this.hasInvalidObjects(project, "data", password, connection);
 
-        proceed = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_LOGIC? (y/n)');
+        proceed = await CliUx.ux.confirm('Proceed with ' + projectName.toUpperCase() + '_LOGIC? (y/n)');
 
         if (proceed){
           
@@ -234,7 +231,7 @@ export class Orcas implements DeliveryMethod{
           resultLogic = (await ShellHelper.executeScript(gradleStringLogic, executePath + "/db/" + project.getName() + "_logic", true, project.getLogger())).status;
           await _this.hook("logic", "post", projectName, connection, password, project);
           await _this.hasInvalidObjects(project, "logic", password, connection);
-          proceed = await cli.confirm('Proceed with ' + projectName.toUpperCase() + '_APP? (y/n)');
+          proceed = await CliUx.ux.confirm('Proceed with ' + projectName.toUpperCase() + '_APP? (y/n)');
           
           if (proceed){
             
@@ -307,52 +304,10 @@ export class Orcas implements DeliveryMethod{
 
     public async build(projectName:string, version:string, mode:string, commit:string|undefined){
       let project:Project = ProjectManager.getInstance().getProject(projectName);
-      let release         = project.getVersion();
-      let projectPath     = project.getPath();
       let buildInfo       = {name: "", type:"", date: ""};
 
       //ProjectManager.getInstance().getProject(projectName).setVersion(version);
-      let path = "";
       let buildZip:AdmZip = await this.patch(version, project, mode, (commit ? commit : version));
-      //Read apex-folder and find the correct file
-      console.log('...adding apps and rest modules');
-      fs.readdirSync(projectPath + "/apex/").forEach(file=>{
-        if ( fs.statSync(projectPath + "/apex/" + file).isDirectory() ){
-          if(file.startsWith('f')){
-            //If Application was exportet with Split-Option
-            if(fs.existsSync(projectPath + "/apex/" + file + "/application/create_application.sql")){
-              path = projectPath + "/apex/" + file + "/application/create_application.sql";
-            }
-            //If Application was exportet with SplitFlat-Option
-            else if(fs.existsSync(projectPath + "/apex/" + file + "/create_application.sql")){
-              path = projectPath + "/apex/" + file + "/create_application.sql";
-            }
-
-          }
-        }else{
-          if(file.startsWith('f')){
-            path = projectPath + "/apex/" + file;
-          }
-        }
-
-        if(path != ""){
-          let createApp = fs.readFileSync(path);
-          if(createApp.toString().search("p_flow_version=>'" + release + "'") > 0){
-            let newCreateApp = createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
-            fs.writeFileSync(path, newCreateApp);
-          }else{
-            if(createApp.toString().search("p_flow_version=>'Release 1.0'") > 0){
-              let newCreateApp = createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
-              fs.writeFileSync(path, newCreateApp);
-            }else{
-              console.log("......Replacement String was not found, Version-Number could not be set automatically!");
-            }
-          }
-        }
-      });
-
-      buildZip.addLocalFolder(projectPath + "/rest", "rest");
-      buildZip.addLocalFolder(projectPath + "/apex", "apex");
 
       buildInfo.name = version;
       buildInfo.type = mode;
@@ -371,70 +326,117 @@ export class Orcas implements DeliveryMethod{
 
       let fileMap:Map<string,string> = new Map();
       let fileList:string[] = await Git.getChangedFiles(mode, commit, project.getName());
+      let appList:string[]  = await Git.getChangedApexApplications(project.getName(), commit);
+      let release           = project.getVersion();
+      let apexAppsPath      = project.getPath() + "/apex/";
+      let appPath           = "";
+      let path              = "";
 
       const basePath:string = "db";
-      let buildZip = new AdmZip(); 
+      let buildZip = new AdmZip();
 
+      if (appList.length>0 || fileList.length>0){
 
+        console.log(`Creating ${mode} - build: ${version}`);
 
-      console.log(`Creating ${mode} - build: ${version}`);
-
-      
-      console.log('...adding .hook directories');
-      
-      
-      buildZip.addLocalFolder(`${basePath}/.hooks`, `${basePath}/.hooks`);
-      
-      for await(const user of project.getUserNames()){
-        buildZip.addLocalFolder(`${basePath}/${user.toLowerCase()}/.hooks`, `${basePath}/${user.toLowerCase()}/.hooks`);
-      }
-      
-      console.log('...adding _setup directory');
-      
-      let executePath = `${project.getPath()}/${basePath}/_setup`.replaceAll('\\','/');
-      // Der find ist für das "←[?25h" verantwortlich
-      let scripts:string = (await ShellHelper.executeScript(`find -name '*.sql' -printf '%P#'`, executePath, false, project.getLogger())).result;
-      let scriptList:string[] = scripts.substring(0,scripts.lastIndexOf('#')).split('#');
-      for await(const setupScript of scriptList){  
-        fileList.push(`${basePath}/_setup/${setupScript}`);
-      }
-      
-      console.log('...adding changed files');
-      
-      for await(const file of fileList){
-        if(file!='' && !file.endsWith('/') && !file.substring(file.lastIndexOf('/') + 1, file.length).startsWith('.') && !fs.statSync(file).isDirectory()){
-          fileMap.set(file,file);
+        
+        console.log('...adding .hook directories');
+        
+        
+        buildZip.addLocalFolder(`${basePath}/.hooks`, `${basePath}/.hooks`);
+        
+        for await(const user of project.getUserNames()){
+          buildZip.addLocalFolder(`${basePath}/${user.toLowerCase()}/.hooks`, `${basePath}/${user.toLowerCase()}/.hooks`);
         }
-      }
-
-      for await (const iterator of fileMap.keys()) {
-        if(fs.pathExistsSync(iterator)){
-          try{
-            let path = iterator.substring(0, iterator.lastIndexOf('/'));
-            buildZip.addLocalFile(iterator, path);
-          }catch(err){
-            console.log(`...could not add: ${iterator} `);
-            continue;
+        
+        console.log('...adding _setup directory');
+        
+        let executePath = `${project.getPath()}/${basePath}/_setup`.replaceAll('\\','/');
+        // Der find ist für das "←[?25h" verantwortlich
+        let scripts:string = (await ShellHelper.executeScript(`find -name '*.sql' -printf '%P#'`, executePath, false, project.getLogger())).result;
+        let scriptList:string[] = scripts.substring(0,scripts.lastIndexOf('#')).split('#');
+        for await(const setupScript of scriptList){  
+          fileList.push(`${basePath}/_setup/${setupScript}`);
+        }
+        
+        console.log('...adding changed files');
+        
+        for await(const file of fileList){
+          if(file!='' && !file.endsWith('/') && !file.substring(file.lastIndexOf('/') + 1, file.length).startsWith('.') && !fs.statSync(file).isDirectory()){
+            fileMap.set(file,file);
           }
         }
-      }
-      
-      console.log('...adding necessities');
-      
-      for await (const schema of ["data","logic","app"]) {
-        for await (const file of ["build.gradle","gradlew","gradlew.bat"]) {
-        if (project.getMode()===Project.MODE_MULTI){
-            if (!fileMap.has(`db/${project.getName()}_${schema}/${file}`)){
-              buildZip.addLocalFile(`db/${project.getName()}_${schema}/${file}`, `db/${project.getName()}_${schema}/`);
+
+        for await (const iterator of fileMap.keys()) {
+          if(fs.pathExistsSync(iterator)){
+            try{
+              let path = iterator.substring(0, iterator.lastIndexOf('/'));
+              buildZip.addLocalFile(iterator, path);
+            }catch(err){
+              console.log(`...could not add: ${iterator} `);
+              continue;
             }
-        }else{
-          if (!fileMap.has(`db/${project.getName()}/${file}`)){
-            buildZip.addLocalFile(`db/${project.getName()}/${file}`, `db/${project.getName()}/`);
           }
         }
+        
+        console.log('...adding necessities');
+        
+        for await (const schema of ["data","logic","app"]) {
+          for await (const file of ["build.gradle","gradlew","gradlew.bat"]) {
+          if (project.getMode()===Project.MODE_MULTI){
+              if (!fileMap.has(`db/${project.getName()}_${schema}/${file}`)){
+                buildZip.addLocalFile(`db/${project.getName()}_${schema}/${file}`, `db/${project.getName()}_${schema}/`);
+              }
+          }else{
+            if (!fileMap.has(`db/${project.getName()}/${file}`)){
+              buildZip.addLocalFile(`db/${project.getName()}/${file}`, `db/${project.getName()}/`);
+            }
+          }
+          }
+          buildZip.addLocalFolder(`db/${project.getName()}_${schema}/gradle/`,`db/${project.getName()}_${schema}/gradle`);
+          buildZip.addLocalFolder(`db/${project.getName()}_${schema}/buildSrc/`,`db/${project.getName()}_${schema}/buildSrc`);
         }
-        buildZip.addLocalFolder(`db/${project.getName()}_${schema}/gradle/`,`db/${project.getName()}_${schema}/gradle`);
-        buildZip.addLocalFolder(`db/${project.getName()}_${schema}/buildSrc/`,`db/${project.getName()}_${schema}/buildSrc`);
+
+        //Read apex-folder and find the correct file
+        console.log('...adding apps and rest modules');
+
+        for(let i=0; i<appList.length; i++){
+          if(fs.pathExistsSync(apexAppsPath + appList[i])){
+            if(fs.statSync(apexAppsPath + appList[i]).isDirectory()){
+              if(fs.existsSync(apexAppsPath + appList[i] + "/application/create_application.sql")){
+                path = apexAppsPath + appList[i] + "/application/create_application.sql";
+              }
+              //If Application was exportet with SplitFlat-Option
+              else if(fs.existsSync(apexAppsPath + appList[i] + "/create_application.sql")){
+                path = apexAppsPath + appList[i] + "/create_application.sql";
+              }
+              appPath = apexAppsPath + appList[i];
+            }
+          }else{
+            if(fs.pathExistsSync(apexAppsPath + appList[i]+".sql")){
+              appPath = apexAppsPath + appList[i]+".sql";
+              path = apexAppsPath + appList[i]+".sql";
+            }
+          }
+
+          if(path != ""){
+            let createApp = fs.readFileSync(path);
+            if(createApp.toString().search("p_flow_version=>'" + release + "'") > 0){
+              let newCreateApp = createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
+              fs.writeFileSync(path, newCreateApp);
+            }else{
+              if(createApp.toString().search("p_flow_version=>'Release 1.0'") > 0){
+                let newCreateApp = createApp.toString().replace("p_flow_version=>'" + release + "'","p_flow_version=>'" + version + "'");
+                fs.writeFileSync(path, newCreateApp);
+              }else{
+                console.log("......Replacement String was not found, Version-Number could not be set automatically!");
+              }
+            }
+          }
+          buildZip.addLocalFolder(appPath, "apex/" + appList[i]);
+        }
+      }else{
+        console.log(chalk.yellow('WARNING: Created empty build in ' + mode + " mode! Please check your repository and commits and try again!"));
       }
       
       return buildZip;
@@ -443,13 +445,13 @@ export class Orcas implements DeliveryMethod{
     private cleanUp(path:string){
       if(path.includes('dist')){
         try{
-          cli.action.start('Cleaning up...');
-          ps.lookup({command: 'java', arguments: 'org.gradle.launcher.daemon.bootstrap.GradleDaemon'}, function(err:string, resultList:any ) {
+          CliUx.ux.action.start('Cleaning up...');
+          ps.lookup({command: 'java', arguments: 'org.gradle.launcher.daemon.bootstrap.GradleDaemon'}, function(err:Error, resultList:Program[] ) {
               for (const process of resultList) {
                 ps.kill(process.pid);
               }
               fs.removeSync(path);
-              cli.action.stop('done');
+              CliUx.ux.action.stop('done');
           });
         }catch(error){
           console.log(error);
@@ -524,7 +526,7 @@ export class Orcas implements DeliveryMethod{
 
     private async recompile(project:Project, schema:string, password:string, connection:string):Promise<boolean>{
       let recompile:boolean = true;
-      recompile = await cli.confirm('Recompile invalid objects? (y/n)');
+      recompile = await CliUx.ux.confirm('Recompile invalid objects? (y/n)');
       let invalids:boolean = true; 
       let output:boolean = false;
       let conn:any = DBHelper.getConnectionProps(project.getUsers().get(schema.toUpperCase())?.getConnectionName(),
@@ -537,7 +539,7 @@ export class Orcas implements DeliveryMethod{
         await DBHelper.executeScript(conn, Utils.checkPathForSpaces( __dirname + '/scripts/schema_recompile.sql') + ` ${project.getUsers().get(schema.toUpperCase())?.getName().toUpperCase()}`, project.getLogger());
         invalids  = await this.hasInvalidObjects(project, schema, password, connection, output, true);
         if (invalids){
-          recompile = await cli.confirm('Recompile invalid objects? (y/n)');
+          recompile = await CliUx.ux.confirm('Recompile invalid objects? (y/n)');
         }
       }
 

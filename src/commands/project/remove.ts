@@ -1,6 +1,5 @@
-import {Command, Flags} from '@oclif/core'
+import {Command, Flags, CliUx} from '@oclif/core'
 import {ProjectManager} from '../../lib/ProjectManager'
-import { cli } from 'cli-ux';
 
 export default class ProjectRemove extends Command {
   static description = 'removes a project'
@@ -28,11 +27,11 @@ export default class ProjectRemove extends Command {
     let connection = !flags.connection ? "" : flags.connection;
 
     if (flags.database && ! flags.syspw){
-      syspw=await cli.prompt('sys', {type: 'hide'});
+      syspw=await CliUx.ux.prompt('sys', {type: 'hide'});
     }
 
     if (flags.database && !flags.connection){
-      connection=await cli.prompt('JDBC Connection String',{type: 'normal'});
+      connection=await CliUx.ux.prompt('JDBC Connection String',{type: 'normal'});
     }
 
     ProjectManager.getInstance().removeProject(args.project, flags.path, flags.database, connection, syspw);

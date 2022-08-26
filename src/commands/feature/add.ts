@@ -1,13 +1,12 @@
-import {Command, Flags} from '@oclif/core'
+import {Command, Flags, CliUx} from '@oclif/core'
 import {FeatureManager} from '../../lib/FeatureManager'
 import { ProjectManager } from '../../lib/ProjectManager';
 import { Project } from '../../lib/Project';
 import chalk from 'chalk';
-import cli from 'cli-ux';
 import { Environment } from '../../lib/Environment';
 import * as fs from "fs-extra";
-import * as yaml from "yaml";
-import inquirer = require("inquirer");
+import yaml from "yaml";
+import inquirer from "inquirer";
 
 export default class FeatureAdd extends Command {
   static description = 'add Feature to dependency list'
@@ -115,9 +114,9 @@ export default class FeatureAdd extends Command {
       if (confirm.install){
         let connection:string =Environment.readConfigFrom(process.cwd(),"connection");
         if (!connection){
-          connection = await cli.prompt('Connection [host:port/servicename]');
+          connection = await CliUx.ux.prompt('Connection [host:port/servicename]');
         }
-        let syspw:string = await cli.prompt('SYS-Password',{type: 'hide'});
+        let syspw:string = await CliUx.ux.prompt('SYS-Password',{type: 'hide'});
         FeatureManager.getInstance().installProjectFeature(args.feature, connection, syspw, args.project);
       }else{
         console.log(chalk.blueBright('Feature was added! You can install it using feature:install'));

@@ -6,7 +6,8 @@ import * as fs from "fs-extra";
 import * as os from "os";
 import { Logger } from './Logger';
 
-const oracledb                 = require('oracledb');
+const oracledb = require('oracledb')
+
 const xclHome                  = os.homedir() + "/AppData/Roaming/xcl";
 let instant_client_path:string = "";
 
@@ -63,10 +64,9 @@ export class DBHelper {
     let countSchemas:number = 0;
     try {
       connection = await oracledb.getConnection(conn);
-      let query = `SELECT count(1) FROM all_users where username like '${project.getName().toUpperCase()}%'`;
+      let query = `SELECT count(1) FROM all_users where username like :username`;
   
-      const result = await connection.execute(query);
-      
+      const result = await connection.execute(query, [`${project.getName().toUpperCase()}%`], { maxRows: 1, prefetchRows:1 } );
       countSchemas = result.rows[0][0];
 
     } catch (err) {
@@ -90,7 +90,7 @@ export class DBHelper {
   //checks if a feature is installed
   public static async isFeatureInstalled(feature: ProjectFeature, conn:IConnectionProperties):Promise<boolean>{
     let connection;
-    let userCount;
+    let userCount=0;
     try{
       connection = await oracledb.getConnection(conn);
       //if the feature is supposed to be installed in a seperate schema named like the feature itself
@@ -128,7 +128,7 @@ export class DBHelper {
       
       const result = await connection.execute(query);
       
-      version = result.rows[0][0];
+      //version = result.rows[0][0];
 
     } catch (err) {
       console.error(err, "{color:red}");
@@ -163,21 +163,24 @@ export class DBHelper {
   
       const result   = await connection.execute(query);
       const errorSet = await connection.execute(errorQuery);
-
-      for (let i = 0; i<=result.rows.length-1; i++){
-        let object:{name:string, type:string, errors:string[]}={
-          name: result.rows[i][1],
-          type: result.rows[i][0],
-          errors: []
-        };                          
-        
-        for(let j = 0; j<=errorSet.rows.length - 1; j++){
-          if(errorSet.rows[j][1] == object.name){
-            object.errors.push(errorSet.rows[j][0]);
+      if(result.rows != undefined){
+        for (let i = 0; i<=result.rows.length-1; i++){
+          let object:{name:string, type:string, errors:string[]}={
+            name:  result.rows[i][1],
+            type: result.rows[i][0],
+            errors: []
+          };        
+          
+          if (errorSet != undefined){
+            for(let j = 0; j<=errorSet.rows.length - 1; j++){
+              if(errorSet.rows[j][1] == object.name){
+                object.errors.push(errorSet.rows[j][0]);
+              }
+            }
           }
+          
+          invalid_objects.push(object);
         }
-        
-        invalid_objects.push(object);
       }
     }catch(err){
       console.error(err, "{color:red}");

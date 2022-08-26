@@ -1,9 +1,10 @@
 import { ShellHelper } from "./ShellHelper";
 import { Logger } from "./Logger";
-import * as fs from "fs-extra";
+import chalk from 'chalk'
 import { Utils } from "./Utils";
 import { ProjectManager } from "./ProjectManager";
 import { Project } from "./Project";
+import { file } from "@oclif/core/lib/parser";
 export class Git{
 
    //is tag or commit part of this repo
@@ -83,7 +84,12 @@ export class Git{
       if (mode == 'patch'){
          const commitA:string = commit == 'latest' ? await this.getCurrentCommitId() : await this.getCommitIdOfTag(commit!);
          const commitB:string = project.getStatus().getCommitId();
-         command              = `git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`;
+         if(!commitB){
+            console.log(chalk.yellow('WARNING: Building a patch without necessary commitId. The resulting build will be empty!'));
+            console.log(chalk.blueBright('HINT: Use "xcl project reset" to set the commitId manually'));
+         }else{
+            command              = `git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- ${modifiers}`;
+         }
       }else if(mode == 'init'){
          command              = `git ls-files --cached -- ${modifiers}`;
       }
@@ -97,7 +103,7 @@ export class Git{
       if (fileList){
          return fileList.split('\n');
       }else{
-         return [""];
+         return [];
       }
    }
 
@@ -146,7 +152,52 @@ export class Git{
       }
       //no tables at all
       else{
-         return [""];
+         return [];
+      }
+   }
+
+   public static async getChangedApexApplications(projectName:string, commit:string|undefined):Promise<string[]>{
+      let project:Project    = ProjectManager.getInstance().getProject(projectName);
+      let commandReturn:string  =  "";
+      let regexp:RegExp =  /f\d{3,4}/gm;
+      let appMap = new Map<string,string>();
+      let appList:string[] = [];
+      let fileList:string[] = [];
+
+      if (commit){
+         const commitA:string = commit == 'latest' ? await this.getCurrentCommitId() : await this.getCommitIdOfTag(commit!);
+         const commitB:string = project.getStatus().getCommitId();
+         const command =`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- apex`;
+
+         commandReturn = ( await ShellHelper.executeScript(command,
+            process.cwd(),
+            false,
+            new Logger(process.cwd())
+           )).result;
+         
+         if (commandReturn){
+            fileList = commandReturn.split('\n');
+            for (const i in fileList){
+               if(regexp.test(fileList[i])){  
+                  let appNumbers = fileList[i].match(regexp);
+                  if(appNumbers){
+                     for(let j=0; j<appNumbers.length; j++){
+                        appMap.set(appNumbers[j], appNumbers[j]);
+                     }
+                  }
+               }
+            }
+
+            for(const app of appMap.values()){
+               appList.push(app);
+            }
+            
+            return appList;
+         }else{
+            return [];
+         }         
+      }else{
+         return [];
       }
    }
 
