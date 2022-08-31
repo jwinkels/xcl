@@ -30,7 +30,7 @@ export class DBFlow implements DeliveryMethod{
         if (!fs.pathExistsSync(path.join(projectPath, '.git'))) {
           const initGit = await cli.prompt('Project has to be a git repositoy. Do you want to git init [Y/N] ', {type: 'normal'});
           if (initGit.toUpperCase() === "Y") {
-            ShellHelper.executeScript(`git init`, projectPath, true, project.getLogger());
+            await ShellHelper.executeScript(`git init`, projectPath, true, project.getLogger());
           }
         }
 
