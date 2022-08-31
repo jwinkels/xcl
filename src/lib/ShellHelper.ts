@@ -39,12 +39,15 @@ export class ShellHelper{
                 });
 
                 childProcess.on('close',function(code){
-                    retObj.status = true;
+                    if(code == 0){
+                        retObj.status = true;
+                    }else{
+                        retObj.status = false;
+                    }
                     resolve(retObj);
                 });
         
             }catch(err){
-                console.log(executePath);
                 logger.getLogger().error(err);
                 retObj.status=false;
                 retObj.result="";
@@ -53,7 +56,7 @@ export class ShellHelper{
         });
     }
 
-    public static executeScript(script: string, executePath:string, consoleOutput:boolean=false, logger:Logger){
+    public static executeScript(script: string, executePath:string, consoleOutput:boolean=false, logger:Logger):Promise<{status: boolean, result: string}>{
         return ShellHelper.executeScriptWithEnv(script, executePath, undefined, consoleOutput, logger);
     }
 }

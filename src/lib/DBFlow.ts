@@ -1,4 +1,5 @@
 import { injectable } from "inversify";
+import { CliUx } from "@oclif/core";
 import "reflect-metadata";
 import { DeliveryMethod } from "./DeliveryMethod";
 import { ProjectFeature } from './ProjectFeature';
@@ -7,9 +8,8 @@ import * as path from "path";
 import { ShellHelper } from "./ShellHelper";
 import { ProjectManager } from "./ProjectManager";
 import chalk from 'chalk';
-import cli from 'cli-ux'
 import { Project } from "./Project";
-import inquirer = require("inquirer");
+import inquirer from "inquirer";
 import * as dotenv from "dotenv";
 import { Environment } from "./Environment";
 
@@ -28,7 +28,7 @@ export class DBFlow implements DeliveryMethod{
         // init git
         // TODO in git.ts implementier
         if (!fs.pathExistsSync(path.join(projectPath, '.git'))) {
-          const initGit = await cli.prompt('Project has to be a git repositoy. Do you want to git init [Y/N] ', {type: 'normal'});
+          const initGit = await CliUx.ux.prompt('Project has to be a git repositoy. Do you want to git init [Y/N] ', {type: 'normal'});
           if (initGit.toUpperCase() === "Y") {
             await ShellHelper.executeScript(`git init`, projectPath, true, project.getLogger());
           }
@@ -96,7 +96,7 @@ STAGE=${responses.stage}
         }
     }
 
-    public deploy(projectName:string, connection:string, password:string, schemaOnly:boolean, ords:string, silentMode:boolean, version:string, mode:string) {
+    public async deploy(projectName:string, connection:string, password:string, schemaOnly:boolean, ords:string, silentMode:boolean, version:string, mode:string):Promise<{success: boolean, mode: string}> {
         console.log("projectName", projectName);
         console.log("version", version);
         console.log("mode", mode);
@@ -109,7 +109,7 @@ STAGE=${responses.stage}
         const multiSchema = ("" + project.isMultiSchema()).toUpperCase();
 
         const proxyUserName = !project.isMultiSchema() ? appSchema : project.getUsers().get('DATA')?.getProxy()?.getName() || `${projectName}_depl`;
-        ShellHelper.executeScriptWithEnv(`bash .dbFLow/apply.sh ${mode} ${version}`,
+        await ShellHelper.executeScriptWithEnv(`bash .dbFLow/apply.sh ${mode} ${version}`,
                                          project.getPath(),
                                          {
                                            "PROJECT": project.getName(),
@@ -126,6 +126,7 @@ STAGE=${responses.stage}
                                          },
                                          true,
                                          project.getLogger());
+        return {success: true, mode: mode};
 
     }
 
@@ -157,5 +158,9 @@ STAGE=${responses.stage}
       } else {
         console.log(chalk.redBright('Error: current folder is not a git folder'));
       }
+    }
+
+    public remove(feature:ProjectFeature, projectPath:string, singleSchema:boolean)    : void{
+      console.log('Implement it!');
     }
 }

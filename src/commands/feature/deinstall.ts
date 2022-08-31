@@ -1,4 +1,4 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { Environment } from '../../lib/Environment';
 
@@ -6,10 +6,10 @@ export default class FeatureDeinstall extends Command {
   static description = 'deinstall a Feature from Database'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    connection: flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true} ),
-    syspw: flags.string( {char: 's', description:'Password of SYS-User', required: true}),
-    drop: flags.boolean ( {char: 'd', description: 'drop owner schema'} )
+    help:       Flags.help({char: 'h'}),
+    connection: Flags.string( {char: 'c', description:'connection string HOST:PORT/SERVICE_NAME', required: true} ),
+    syspw:      Flags.string( {char: 's', description:'Password of SYS-User', required: true}),
+    drop:       Flags.boolean ( {char: 'd', description: 'drop owner schema'} )
   }
 
   static args = [
@@ -27,7 +27,7 @@ export default class FeatureDeinstall extends Command {
 
       
   async run() {
-    const {args, flags} = this.parse(FeatureDeinstall)
+    const {args, flags} = await this.parse(FeatureDeinstall)
     await FeatureManager.getInstance().deinstallProjectFeature(args.feature, flags.connection, flags.syspw ,args.project);
     if (flags.drop){
       FeatureManager.getInstance().dropOwnerSchema(args.feature, flags.connection, flags.syspw ,args.project);

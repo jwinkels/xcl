@@ -40,6 +40,7 @@ software:
         scripts:
           - path: create_user.sql
             sys: true
+            xcl: true
             arguments:
               - credentials
           - path: install/oos_utils_install.sql
@@ -58,6 +59,7 @@ software:
         scripts:
           - path: create_user.sql
             sys: true
+            xcl: true
             arguments:
               - credentials
           - path: OM_TAPIGEN.pks
@@ -104,9 +106,10 @@ software:
     install:
       scripts:
         - path: create_user.sql
-            sys: true
-            arguments:
-              - credentials
+          sys: true
+          xcl: true
+          arguments:
+            - credentials
         - path: install.sql
   console:
     owner: ogobrecht

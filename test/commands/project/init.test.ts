@@ -1,17 +1,9 @@
 import {expect, test} from '@oclif/test'
-
-describe('project:init', () => {
-  test
-    .stdout()
-    .command(['project:init'])
-    .it('runs hello', ctx => {
-      expect(ctx.stdout).to.contain('hello world')
-    })
-
-  test
-    .stdout()
-    .command(['project:init', '--name', 'jeff'])
-    .it('runs hello --name jeff', ctx => {
-      expect(ctx.stdout).to.contain('hello jeff')
-    })
-})
+import { ProjectManager } from '../../../src/lib/ProjectManager';
+describe('xcl project init', () => {
+   test
+   .it('password longer then 8 chars',  async()=>{
+      let passw = await ProjectManager.getInstance().generatePassword();
+      expect(passw.length).greaterThanOrEqual(8);
+   });
+});

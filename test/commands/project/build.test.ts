@@ -1,17 +1,14 @@
 import {expect, test} from '@oclif/test'
+import { ProjectManager } from '../../../src/lib/ProjectManager';
 
-describe('project:build', () => {
-  test
-  .stdout()
-  .command(['project:build'])
-  .it('runs hello', ctx => {
-    expect(ctx.stdout).to.contain('hello world')
-  })
+describe('xcl project build', () => {
+   test
+   .it('only changed projects',  async()=>{
+      let fileList:string = `apex/f1300/application/pages/page_00210.sql`;
+      let regexp:RegExp = new RegExp("f\d{3,4}","gm");
+      let reg:RegExp = /f\d{3,4}/gm;
 
-  test
-  .stdout()
-  .command(['project:build', '--name', 'jeff'])
-  .it('runs hello --name jeff', ctx => {
-    expect(ctx.stdout).to.contain('hello jeff')
-  })
-})
+
+      expect(reg.exec(fileList)?.length).equals(1);
+   });
+});

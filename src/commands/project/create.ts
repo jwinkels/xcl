@@ -1,23 +1,22 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import { Environment } from '../../lib/Environment'
-// import {ProjectManager} from '../../lib/ProjectManager'
 import chalk from 'chalk';
 import * as fs from "fs-extra";
-import * as yaml from "yaml";
-import inquirer = require("inquirer");
+import yaml from "yaml";
+import inquirer from "inquirer";
 import { ProjectManager } from '../../lib/ProjectManager';
 
 export default class ProjectCreate extends Command {
-  static description = 'Creates a project including a new directory and the configured folder structure'
+  static description = 'creates a project including a new directory and the configured folder structure'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    workspace: flags.string({char: 'w',
+    help:             Flags.help({char: 'h'}),
+    workspace:        Flags.string({char: 'w',
                              description: 'workspace name the application should be installed in',
                              default: Environment.readConfigFrom(process.cwd(),'project', false)
                             }),
-    "single-schema" : flags.boolean ({description: 'one schema instead of three, no deployment user'}),
-    interactive : flags.boolean ({char: 'i', description: 'Interactive wizard that guides you through the creation of the project'})
+    "single-schema" : Flags.boolean ({description: 'one schema instead of three, no deployment user'}),
+    interactive :     Flags.boolean ({char: 'i', default: true, description: 'Interactive wizard that guides you through the creation of the project'})
   }
 
   static args = [
@@ -29,7 +28,7 @@ export default class ProjectCreate extends Command {
                 ]
 
   async run() {
-    const {args, flags} = this.parse(ProjectCreate)
+    const {args, flags} = await this.parse(ProjectCreate)
 
     if (flags.interactive) {
       await doTheWizard(args.project)
@@ -55,13 +54,13 @@ async function doTheWizard(projectName:string | undefined) {
 
   await inquirer.prompt([{
       name: 'project',
-      message: `Please give a project name`,
+      message: `Please enter a project name`,
       type: 'input',
       default: prj.xcl.project
     },
     {
       name: 'multi',
-      message: `Would you like to have a single or multi scheme app`,
+      message: `Would you like to a single or multi scheme app`,
       type: 'list',
       choices: ['Multi', 'Single'],
       default: toInitCapProjectType(prj.xcl.mode as string)

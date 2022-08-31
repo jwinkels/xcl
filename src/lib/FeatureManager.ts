@@ -1,14 +1,12 @@
 //Imports
-import * as yaml from "yaml";
+import yaml from "yaml";
 import * as fs from "fs-extra";
 import * as os from "os";
-import * as request from "request-promise-native";
 import chalk from 'chalk'
 import { Feature } from './Feature';
 import { ProjectManager } from './ProjectManager';
 import { ProjectFeature } from './ProjectFeature';
 import { GithubCredentials } from './GithubCredentials';
-import * as AdmZip from "adm-zip";
 import { DBHelper, IConnectionProperties } from './DBHelper';
 import  { deliveryFactory }  from './DeliveryFactory';
 import { DeliveryMethod } from './DeliveryMethod';
@@ -17,10 +15,11 @@ import { Environment } from './Environment';
 import { Operation } from './Operation';
 import { Utils } from './Utils';
 import { Logger } from "./Logger";
-import inquirer = require("inquirer");
+import inquirer from "inquirer";
 import { Schema } from "./Schema";
-import { string } from "@oclif/parser/lib/flags";
-const Table = require('cli-table');
+import AdmZip from "adm-zip";
+import  Table  from 'cli-table3';
+import got from 'got';
 
 export class FeatureManager{
     public static softwareYMLfile: string = "software.yml";
@@ -148,11 +147,11 @@ export class FeatureManager{
           feature.getDownloadUrl()
                     .then(function(url){
                     var options = {
-                      uri: "",
+                      url: "",
                       headers: {}
                     };
                     
-                    options.uri=url;
+                    options.url=url;
 
                     if (GithubCredentials.get()){
                         options.headers= {
@@ -165,18 +164,18 @@ export class FeatureManager{
                       }
                     }
 
-              if(!fs.pathExistsSync(pManager.getProject(projectName).getPath() +'/dependencies')){
-                  fs.mkdirSync(pManager.getProject(projectName).getPath() +'/dependencies');
+              if(!fs.pathExistsSync(pManager.getProject(projectName).getPath() + '/dependencies')){
+                  fs.mkdirSync(pManager.getProject(projectName).getPath() + '/dependencies');
               }
 
-              request(options)
-                    .pipe(
-                      fs.createWriteStream(filename)
-                          .on('close', function(){
-                            resolve();
-                          })
-                      );
-                });
+              got.stream(options).pipe(
+                fs.createWriteStream(filename)
+                .on('close', function(){
+                  resolve();
+                })
+              );
+
+            });
           });
       }
 
@@ -267,7 +266,7 @@ export class FeatureManager{
               let feature:ProjectFeature=project.getFeatures().get(featureName)!;
               var featurePath =projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
               if (feature.getType()==="DB"){
-                var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection);
+                var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection)!;
                 //Check if feature is already installed (this may not work properly)
                 DBHelper.isFeatureInstalled(feature,c)
                   .then((installed) => {
@@ -339,7 +338,7 @@ export class FeatureManager{
                           //when script needs to be executed as sysdba establish a connection with sysdba role
                           if (installSteps.scripts[i].sys === true){
                             connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
-                            c = DBHelper.getConnectionProps('sys',syspw,connection);
+                            c = DBHelper.getConnectionProps('sys',syspw,connection)!;
                           }else{
                             connectionWithUser = feature.getUser().getConnectionName() + "/" + feature.getUser().getPassword() + "@" + connection;
                             //if script has the executeAs flag
@@ -348,9 +347,9 @@ export class FeatureManager{
                               if(project.getUsers().has(feature.getUser().getName())){
                                 c = DBHelper.getConnectionProps(project.getUsers().get(feature.getUser().getName())?.getConnectionName(),
                                                                 Environment.readConfigFrom(project.getPath(), 'password', false),
-                                                                connection); 
+                                                                connection)!; 
                               }else{ //else use the user defined in the feature configuration
-                                c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection);
+                                c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection)!;
                               }
                             }
                           }
@@ -381,7 +380,7 @@ export class FeatureManager{
                               for (let [user, schema] of project.getUsers()){
                                 c = DBHelper.getConnectionProps(project.getUsers().get(user)?.getConnectionName(),
                                                                 Environment.readConfigFrom(project.getPath(), 'password', false),
-                                                                connection); 
+                                                                connection)!; 
                                 DBHelper.executeScript(c, executeString, project.getLogger());            
                               }
                             }else{  //if not execute the script as feature-user
@@ -469,14 +468,14 @@ export class FeatureManager{
 
                       if (deinstallSteps.scripts[i].sys === true){
                         //connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
-                        c = DBHelper.getConnectionProps('sys',syspw,connection);
+                        c = DBHelper.getConnectionProps('sys',syspw,connection)!;
                       }else{
                         //connectionWithUser=feature.getUser().getConnectionName() + "/" + feature.getUser().getPassword() + "@" + connection;
                         if (project.getUsers().get(feature.getUser().getConnectionName())){
                           let user:Schema = project.getUsers().get(feature.getUser().getConnectionName())!;
-                          c = DBHelper.getConnectionProps(user.getConnectionName(),user.getPassword() ? user.getPassword() : Environment.readConfigFrom(project.getPath(),'password', false),connection);
+                          c = DBHelper.getConnectionProps(user.getConnectionName(),user.getPassword() ? user.getPassword() : Environment.readConfigFrom(project.getPath(),'password', false),connection)!;
                         }else{
-                          c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection);
+                          c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection)!;
                         }
                       }
 
@@ -520,7 +519,7 @@ export class FeatureManager{
       public dropOwnerSchema(featureName:string, connection:string, syspw:string, projectName:string):Promise<void>{
         return new Promise((resolve,reject)=>{
             var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
-            const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection);
+            const c:IConnectionProperties = DBHelper.getConnectionProps('sys',syspw,connection)!;
             const project = ProjectManager.getInstance().getProject(projectName);
             if (!project.getUsers().get(project.getFeatures().get(featureName)?.getUser().getName()!)){
               if (project.getFeatures().has(featureName)){

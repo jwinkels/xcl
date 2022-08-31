@@ -135,8 +135,14 @@ export class Project {
     if(this.config){
       return this.config.xcl.mode ? this.config.xcl.mode : Project.MODE_MULTI ;
     }else{
-      this.config=this.readConfig();
-      return this.config.xcl.mode;
+      try{
+        this.config=this.readConfig();
+        return this.config.xcl.mode;
+      }catch(err){
+        console.log(err);
+        console.log(`Project: ${this.name}, ${this.path}`);
+        return '';
+      }
     }
   }
 
@@ -309,19 +315,13 @@ export class Project {
 
     try {
       conf = fs.readFileSync(this.getPath() + "/xcl.yml").toString();
-    } catch (err:any) {
-      if (err.code === 'ENOENT') {
-        conf = yaml.stringify({xcl: {
-                                project: this.getName(),
-                                errtext: 'File not found!'
-                              }});
-        this.errorText = 'File not found!';
-      } else {
-        throw err;
-      }
-
+    } catch (err) {
+          conf = yaml.stringify({xcl: {
+                                  project: this.getName(),
+                                  errtext: 'File not found!'
+                                }});
+          this.errorText = 'File not found!';
     }
-
     return yaml.parse(conf);
   }
 
@@ -515,8 +515,10 @@ export class Project {
       const users=this.config.xcl?.users;
       const proxy= new Schema({name: users.user_deployment, password:"", proxy:undefined});
       this.users.set('APP',new Schema({name: users.schema_app, password:"", proxy: this.getMode() === Project.MODE_MULTI ? proxy : undefined}));
-      this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
-      this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
+      if(this.isMultiSchema()){
+        this.users.set('LOGIC',new Schema({name: users.schema_logic, password:"", proxy:proxy}));
+        this.users.set('DATA',new Schema({name: users.schema_data, password:"", proxy:proxy}));
+      }
     }
 
     return this.users;
@@ -639,6 +641,9 @@ class ProjectStatus {
     let projectConfig = this.project.getConfig();
     delete projectConfig.xcl["version"];
 
+    //console.log(this.statusConfig.xcl.hash);
+    //console.log(Md5.hashStr( yaml.stringify( projectConfig ) ).toString());
+
     if( this.statusConfig.xcl.hash == Md5.hashStr( yaml.stringify( projectConfig ) ).toString()
           &&
         !this.changeList.get("SETUP") ){
@@ -718,6 +723,21 @@ class ProjectStatus {
     this.statusConfig = this.deserialize();
     if(this.statusConfig.xcl.commit){
       return this.statusConfig.xcl.commit;
+    }else{
+      return '';
+    }
+  }
+
+  public setResetCommitId(commitId:string){
+    this.statusConfig = this.deserialize();
+    this.statusConfig.xcl['resetCommit'] = commitId.replace(/[^a-zA-Z0-9]/g,'');
+    this.serialize();
+  }
+
+  public getResetCommitId():string{
+    this.statusConfig = this.deserialize();
+    if(this.statusConfig.xcl.resetCommit){
+      return this.statusConfig.xcl.resetCommit;
     }else{
       return '';
     }
@@ -812,13 +832,8 @@ class ProjectStatus {
       }else{
         return this.statusConfig;
       }
-    } catch (err:any) {
-      if (err.code === 'ENOENT') {
-        return 'File not found!';
-      } else {
-        throw err;
-      }
-
+    } catch (err) {
+      return 'File not found!';
     }
 
     return yaml.parse(conf);

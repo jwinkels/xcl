@@ -1,10 +1,10 @@
 import * as os from "os";
-import * as yaml from "yaml";
+import yaml from "yaml";
 import * as fs from "fs-extra";
-import * as http from 'http';
-import * as Oauth from 'client-oauth2';
-import * as Express from 'express';
-import * as open from 'open';
+import * as https from 'https';
+import Oauth from 'client-oauth2';
+import Express from 'express';
+import open from 'open';
 
 export class GithubCredentials{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
@@ -12,7 +12,6 @@ export class GithubCredentials{
     static writeCredentials(authString:string){
         var credentials = GithubCredentials.readCredentials();
         credentials.github=authString;
-        console.log(credentials);
         fs.writeFileSync(GithubCredentials.xclHome + "/" + "credentials.yml", yaml.stringify(credentials));     
     }
 
@@ -54,7 +53,7 @@ export class GithubCredentials{
       
       let server=app.get('/auth/github/callback', function (req, express) {
             let authToken="";
-            let httpReq=http.request('http://130.61.153.127' + req.originalUrl,(res)=>{
+            let httpReq=https.request('https://oauth.apexcommandline.org' + req.originalUrl,(res)=>{
                 res.on('data', (d) => {
                     authToken += d;
                 });
@@ -70,10 +69,6 @@ export class GithubCredentials{
                 }).on('finish',()=>{
                     express.status(200).send("Authenticated! XCL can be used now!");
                     server.close();
-                });
-            
-                httpReq.on('error', (e) => {
-                    console.error(e);
                 });
                 
                 httpReq.end();

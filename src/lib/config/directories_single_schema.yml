@@ -50,8 +50,4 @@ apex:
 rest:
   modules:
 static:
-  - f1000:
-    -src:
-      - js
-      - css
-      - img
+  - src

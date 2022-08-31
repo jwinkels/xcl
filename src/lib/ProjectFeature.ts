@@ -63,7 +63,9 @@ export class ProjectFeature extends Feature{
                             }
                         }
                     }catch(err){
-                        throw Error (err);
+                        if (err instanceof Error) {
+                            console.log(err.message);
+                        }
                     }
                 });
             });

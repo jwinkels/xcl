@@ -1,12 +1,12 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import { ProjectManager } from '../../lib/ProjectManager'
 
 
 export default class ProjectList extends Command {
-  static description = 'lists all known xcl projects'
+  static description = 'lists all xcl projects'
 
   static flags = {
-    help: flags.help({char: 'h'}),
+    help: Flags.help({char: 'h'}),
   }
 
   static args = []

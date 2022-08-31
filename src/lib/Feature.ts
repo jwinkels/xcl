@@ -4,19 +4,19 @@ import {GithubCredentials} from './GithubCredentials';
 export class Feature{
 
     private name:string;
-    private owner:String;
-    private repo:String;
-    private gitAttribute:String;
+    private owner:string;
+    private repo:string;
+    private gitAttribute:string;
     private isManagedByTag:boolean=false;
     private isManagedByRelease:boolean=false;
-    private type:String;
+    private type:string;
 
-    constructor(args: {name:string, owner:String, repo:String, gitAttribute:String, type:String }){
-        this.name=args.name;
-        this.owner=args.owner;
-        this.repo=args.repo;
-        this.gitAttribute=args.gitAttribute;
-        this.type=args.type;
+    constructor(args: {name:string, owner:string, repo:string, gitAttribute:string, type:string }){
+        this.name         = args.name;
+        this.owner        = args.owner;
+        this.repo         = args.repo;
+        this.gitAttribute = args.gitAttribute;
+        this.type         = args.type;
         
         if (args.gitAttribute == 'tag'){
             this.isManagedByTag = true;
@@ -55,7 +55,7 @@ export class Feature{
         const options={ 
             host: 'api.github.com',
             port: 443,
-            path: '/repos/'+this.owner+'/'+this.repo+'/releases',
+            path: `/repos/${this.owner}/${this.repo}/releases`,
             headers: {'User-Agent':'xcl'}
         };
 
@@ -66,33 +66,33 @@ export class Feature{
         return this.name;
     }
 
-    public getRepo():String{
+    public getRepo():string{
         return this.repo;
     }
 
-    public getOwner():String{
+    public getOwner():string{
         return this.owner;
     }
 
-    public getGitAttribute():String{
+    public getGitAttribute():string{
         return this.gitAttribute;
     }
 
-    public getType():String{
+    public getType():string{
         return this.type;
     }
 
     protected call():Promise<any>{
         return new Promise<any>((resolve,reject)=>{
-            let path:string='/repos/'+this.owner+'/'+this.repo;
-            let data ="";
+            let path:string = `/repos/${this.owner}/${this.repo}`;
+            let data        = "";
             var options:https.RequestOptions;
             
             if(this.isManagedByRelease){
-                path+='/releases';
+                path += '/releases';
             }else{
                 if(this.isManagedByTag){
-                    path+='/tags';
+                    path += '/tags';
                 }
             }
         
@@ -103,7 +103,7 @@ export class Feature{
                     path: path,
                     headers: {
                         'User-Agent':'xcl',
-                        'Authorization': 'token '+GithubCredentials.get()
+                        'Authorization': 'token ' + GithubCredentials.get()
                     }
                 };
             }else{
@@ -117,9 +117,9 @@ export class Feature{
                 };
             }
             
-            const req=https.request(options,(res)=>{
+            const req = https.request(options,(res)=>{
             res.on('data', (d) => {
-                data+=d;
+                data += d;
             });
         
             res.on('end',()=>{

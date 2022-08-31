@@ -1,16 +1,15 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags, CliUx} from '@oclif/core'
 import { Environment } from '../../lib/Environment'
 import { ProjectManager } from '../../lib/ProjectManager'
 import chalk from 'chalk';
-import { cli } from 'cli-ux';
 
 export default class ProjectPlan extends Command {
   static description = 'generate commands to bring the project up to date'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    "auto-apply": flags.boolean({description: "proceed with apply after plan", default: false}),
-    "yes": flags.boolean({description: "skip all prompts with answer 'yes'", default: false}),
+    help:         Flags.help({char: 'h'}),
+    "auto-apply": Flags.boolean({description: "proceed with apply after plan", default: false}),
+    "yes":        Flags.boolean({description: "skip all prompts with answer 'yes'", default: false}),
   }
 
   static args = [
@@ -22,7 +21,7 @@ export default class ProjectPlan extends Command {
     ]
 
   async run() {
-    const {args, flags} = this.parse(ProjectPlan);
+    const {args, flags} = await this.parse(ProjectPlan);
     if ( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ) !== 'all' ){
       await ProjectManager.getInstance().plan( ProjectManager.getInstance().getProjectNameByPath( process.cwd() ));
     }else{
@@ -37,11 +36,11 @@ export default class ProjectPlan extends Command {
       let answer:string = "n";
 
       if ( !flags.yes ){
-       answer = await cli.prompt('Do you really want to proceed with the plan described above [y/n]');
+       answer = await CliUx.ux.prompt('Do you really want to proceed with the plan described above [y/n]');
       }
 
       if ( answer === 'y' || flags.yes ){
-        ProjectManager.getInstance().apply(args.project, true);
+        ProjectManager.getInstance().apply(args.project);
       }
     }
     console.log('Needed : ' + process.uptime().toPrecision(2) + 's');

@@ -1,4 +1,4 @@
-import {Command, flags} from '@oclif/command'
+import {Command, Flags} from '@oclif/core'
 import {FeatureManager} from '../../lib/FeatureManager'
 import { Environment } from '../../lib/Environment'
 
@@ -6,8 +6,8 @@ export default class FeatureList extends Command {
   static description = 'lists all available Features'
 
   static flags = {
-    help: flags.help({char: 'h'}),
-    all: flags.boolean({char: 'a', description: 'show all Features available'}),
+    help: Flags.help({char: 'h'}),
+    all:  Flags.boolean({char: 'a', description: 'show all Features available'}),
   }
 
   static args = [ 
@@ -25,7 +25,7 @@ export default class FeatureList extends Command {
    ]
 
   async run() {
-    const {args, flags} = this.parse(FeatureList);
+    const {args, flags} = await this.parse(FeatureList);
     if (args.project!=='all' && !flags.all){
       FeatureManager.getInstance().listProjectFeatures(args.project, args.type);
     }else{
