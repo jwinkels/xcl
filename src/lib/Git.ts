@@ -75,7 +75,7 @@ export class Git{
       if(mode == 'patch'){
          modifiers = modifiers + ` ${excludePatch}`;
       }else if(mode == 'init'){
-            modifiers = modifiers + ` ${excludeInit}`;
+         modifiers = modifiers + ` ${excludeInit}`;
       }
 
       let fileList:string  =  "";
@@ -156,46 +156,55 @@ export class Git{
       }
    }
 
-   public static async getChangedApexApplications(projectName:string, commit:string|undefined):Promise<string[]>{
+   public static async getChangedApexApplications(projectName:string, commit:string|undefined, mode:string):Promise<string[]>{
       let project:Project    = ProjectManager.getInstance().getProject(projectName);
       let commandReturn:string  =  "";
       let regexp:RegExp =  /f\d{3,4}/gm;
       let appMap = new Map<string,string>();
       let appList:string[] = [];
       let fileList:string[] = [];
-
-      if (commit){
-         const commitA:string = commit == 'latest' ? await this.getCurrentCommitId() : await this.getCommitIdOfTag(commit!);
-         const commitB:string = project.getStatus().getCommitId();
-         const command =`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- apex`;
-
+      
+      if(mode === 'patch'){
+         if (commit){
+            const commitA:string = commit == 'latest' ? await this.getCurrentCommitId() : await this.getCommitIdOfTag(commit!);
+            const commitB:string = project.getStatus().getCommitId();
+            const command =`git diff --name-only --diff-filter=ACMRTUBX ${commitB} ${commitA} -- apex`;
+   
+            commandReturn = ( await ShellHelper.executeScript(command,
+               process.cwd(),
+               false,
+               new Logger(process.cwd())
+              )).result;         
+         }else{
+            return [];
+         }
+      }else{
+         const command  = `git ls-files --cached -- apex`;
          commandReturn = ( await ShellHelper.executeScript(command,
             process.cwd(),
             false,
             new Logger(process.cwd())
            )).result;
-         
-         if (commandReturn){
-            fileList = commandReturn.split('\n');
-            for (const i in fileList){
-               if(regexp.test(fileList[i])){  
-                  let appNumbers = fileList[i].match(regexp);
-                  if(appNumbers){
-                     for(let j=0; j<appNumbers.length; j++){
-                        appMap.set(appNumbers[j], appNumbers[j]);
-                     }
+      }
+
+      if (commandReturn){
+         fileList = commandReturn.split('\n');
+         for (const i in fileList){
+            if(regexp.test(fileList[i])){  
+               let appNumbers = fileList[i].match(regexp);
+               if(appNumbers){
+                  for(let j=0; j<appNumbers.length; j++){
+                     appMap.set(appNumbers[j], appNumbers[j]);
                   }
                }
             }
+         }
 
-            for(const app of appMap.values()){
-               appList.push(app);
-            }
-            
-            return appList;
-         }else{
-            return [];
-         }         
+         for(const app of appMap.values()){
+            appList.push(app);
+         }
+         
+         return appList;
       }else{
          return [];
       }

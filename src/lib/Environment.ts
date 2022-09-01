@@ -128,12 +128,10 @@ export class Environment{
                 env = yaml.parse(fs.readFileSync(envFileName).toString());
                 return env[variableName];
             }catch(err){
-               if (write) {
-                    console.log(new Error().stack);
-                    throw Error("hier:" + err);
-               } else {
-                   return "";
-               }
+                if(!fs.pathExistsSync(envFileName)){
+                    Environment.initialize('all');
+                }
+                return "";
             }
         }
     }
