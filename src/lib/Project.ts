@@ -6,7 +6,7 @@ import { FeatureManager } from './FeatureManager';
 import { Schema } from './Schema';
 import  * as os from 'os';
 import { Environment } from './Environment';
-import { Md5 } from 'ts-md5/dist/md5';
+import { Md5 } from 'ts-md5';
 import {Operation} from './Operation';
 import { Logger } from "./Logger";
 import { Git } from "./Git";
