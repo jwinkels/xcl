@@ -64,6 +64,7 @@ export class Orcas implements DeliveryMethod{
 
       let project=ProjectManager.getInstance().getProject(projectName);
       
+      let unix = os.platform() === "win32" ? false : true;
       let prefix = os.platform() === "win32" ? "" : "./"; 
       let path:string = "";
       let buildZip:AdmZip;
@@ -75,6 +76,9 @@ export class Orcas implements DeliveryMethod{
 
           buildZip = new AdmZip(`${path}.zip`);
           buildZip.extractAllTo(`${path}`,true);
+          if(unix){
+            (await ShellHelper.executeScript('chmod -R +x *', 'dist/', false, project.getLogger()));
+          }
           buildInfo = yaml.parse(fs.readFileSync(`${path}/buildInfo.yml`).toString());
         }else{
           project.getLogger().getFileLogger().log("error",'BUILD NOT FOUND');
@@ -85,9 +89,16 @@ export class Orcas implements DeliveryMethod{
         path = project.getPath();
       }
 
-      let gradleStringData  = prefix + "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName()  + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + buildInfo.type + " ";
-      let gradleStringLogic = prefix + "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + buildInfo.type + " ";
-      let gradleStringApp   = prefix + "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName()   + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + buildInfo.type + " ";
+      let gradleAttributes = "";
+      if(unix){
+        gradleAttributes = ` -Ppassword='${password}' -Pnocompile=${nocompile} -Pmode=${buildInfo.type} `;
+      }else{
+        gradleAttributes = ` -Ppassword=${password} -Pnocompile=${nocompile} -Pmode=${buildInfo.type} `;
+      } 
+      
+      let gradleStringData  = `${prefix}gradlew deploy -Ptarget=${connection} -Pusername=${project.getUsers().get('DATA')?.getConnectionName()} ${gradleAttributes}`;
+      let gradleStringLogic = `${prefix}gradlew deploy -Ptarget=${connection} -Pusername=${project.getUsers().get('LOGIC')?.getConnectionName()} ${gradleAttributes}`;
+      let gradleStringApp   = `${prefix}gradlew deploy -Ptarget=${connection} -Pusername=${project.getUsers().get('APP')?.getConnectionName()} ${gradleAttributes}`;
       
       project.getLogger().getLogger().log("info", `Starting deployment in ${buildInfo.type} - mode...`);
 
@@ -326,7 +337,7 @@ export class Orcas implements DeliveryMethod{
 
       let fileMap:Map<string,string> = new Map();
       let fileList:string[] = await Git.getChangedFiles(mode, commit, project.getName());
-      let appList:string[]  = await Git.getChangedApexApplications(project.getName(), commit);
+      let appList:string[]  = await Git.getChangedApexApplications(project.getName(), commit, mode);
       let release           = project.getVersion();
       let apexAppsPath      = project.getPath() + "/apex/";
       let appPath           = "";
