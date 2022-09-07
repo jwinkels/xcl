@@ -1,7 +1,7 @@
 {
   "name": "xcl",
   "description": "APEX commandline",
-  "version": "1.0.2-beta.5",
+  "version": "1.0.2-beta.15",
   "author": "Jan und Maik",
   "bin": {
     "xcl": "./bin/run"

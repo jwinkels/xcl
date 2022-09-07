@@ -3,77 +3,87 @@ software:
     owner: utPLSQL
     repo: utPLSQL
     call: release
+    minPublishDate: "2017-05-17"
     install:
-        parameters:
-            username: utplsql
-            password: utplsql
-            tablespace: USERS
-        scripts:
-          - path: source/create_utplsql_owner.sql
-            sys: true
-            arguments:
-                - credentials
-                - tablespace
-          - path: source/install.sql
-            sys: true
-            arguments:
-                - username
-          - path: source/create_synonyms_and_grants_for_public.sql
-            sys: true
-            arguments:
-                - username
+      parameters:
+        username: utplsql
+        password: utplsql
+        tablespace: USERS
+      scripts:
+        - path: source/create_utplsql_owner.sql
+          sys: true
+          arguments:
+            - credentials
+            - tablespace
+        - path: source/install.sql
+          sys: true
+          arguments:
+            - username
+        - path: source/create_synonyms_and_grants_for_public.sql
+          sys: true
+          arguments:
+            - username
     uninstall:
-        parameters:
-            username: utplsql
-        scripts:
-            - path: source/uninstall.sql
-              sys: true
-              arguments:
-                - username
+      parameters:
+        username: utplsql
+      scripts:
+        - path: source/uninstall.sql
+          sys: true
+          arguments:
+            - username
   oos-utils:
     owner: OraOpenSource
     repo: oos-utils
     call: tag
     install:
-        parameters:
-            grantee: PUBLIC
-        scripts:
-          - path: create_user.sql
-            sys: true
-            xcl: true
-            arguments:
-              - credentials
-          - path: install/oos_utils_install.sql
-          - path: install/grant_to_oos_utils.sql
-            arguments:
-                - grantee
+      parameters:
+        grantee: PUBLIC
+      scripts:
+        - path: create_user.sql
+          sys: true
+          xcl: true
+          arguments:
+            - credentials
+        - path: install/oos_utils_install.sql
+        - path: install/grant_to_oos_utils.sql
+          arguments:
+            - grantee
     uninstall:
-        scripts:
-            - path: install/oos_utils_uninstall.sql
-              arguments:
+      scripts:
+        - path: install/oos_utils_uninstall.sql
+          arguments:
   table-api-generator:
     owner: OraMUC
     repo: table-api-generator
     call: release
+    minPublishDate: "2020-12-20"
+    creates:
+      - om_tapigen
     install:
-        scripts:
-          - path: create_user.sql
-            sys: true
-            xcl: true
-            arguments:
-              - credentials
-          - path: OM_TAPIGEN.pks
-          - path: OM_TAPIGEN.pkb
-          - path: OM_TAPIGEN_ODDGEN_WRAPPER.pks
-          - path: OM_TAPIGEN_ODDGEN_WRAPPER.pkb
+      parameters:
+        object: om_tapigen
+      scripts:
+        - path: create_user.sql
+          sys: true
+          xcl: true
+          arguments:
+            - credentials
+        - path: om_tapigen_install.sql
+        - path: create_public_synonym.sql
+          xcl: true
+          arguments:
+            - object
     uninstall:
-        scripts:
-          - path: uninstall.sql
-            arguments:
+      scripts:
+        - path: om_tapigen_uninstall.sql
+          arguments:
   logger:
     owner: OraOpenSource
     repo: Logger
     call: release
+    creates:
+      - logger_logs_5_min
+      - logger_logs_60_min
     install:
       installzip:
         - path: releases/
@@ -103,6 +113,9 @@ software:
     owner: osalvador
     repo: tePLSQL
     call: release
+    creates:
+      - teplsql
+      - te_templates_api
     install:
       scripts:
         - path: create_user.sql
@@ -117,7 +130,7 @@ software:
     call: tag
     install:
       scripts:
-        - path: install/create_console_objects.sql   
+        - path: install/create_console_objects.sql
   orcas:
     owner: jwinkels
     repo: orcas4xcl
@@ -126,5 +139,10 @@ software:
   dbflow:
     owner: MaikMichel
     repo: dbFlow
+    call: release
+    deploy: true
+  liquibase:
+    owner: jwinkels
+    repo: lq4xcl
     call: release
     deploy: true

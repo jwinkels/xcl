@@ -13,7 +13,9 @@ export class ProjectFeature extends Feature{
                 owner : args.parent.getOwner(), 
                 repo : args.parent.getRepo(), 
                 gitAttribute : args.parent.getGitAttribute(),
-                type : args.parent.getType()
+                type : args.parent.getType(),
+                minPublishDate: args.parent.getMinPublishDate(),
+                creates: args.parent.getCreates()
             });
             this.version=args.version;
             this.installed=args.installed;

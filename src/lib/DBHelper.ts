@@ -94,13 +94,18 @@ export class DBHelper {
     try{
       connection = await oracledb.getConnection(conn);
       //if the feature is supposed to be installed in a seperate schema named like the feature itself
-      if (feature.getName() === feature.getUser().getName()){
-        const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${feature.getUser().getConnectionName().toUpperCase()}'`);
+      if(feature.getCreates().length > 0){
+        const result = await connection.execute(`select count(1) FROM all_objects where owner like '${feature.getUser().getConnectionName().toUpperCase()}' and object_name in ('${feature.getCreates().join("', '").toUpperCase()}')`);
         userCount = result.rows[0][0];
       }else{
-        //check if the schema which is supposed to hold the installation of the feature contains an object called like the feature
-        const result = await connection.execute(`SELECT count(1) FROM all_procedures where owner like '${feature.getUser().getConnectionName().toUpperCase()}' and object_name like '%${feature.getName()}%'`);
-        userCount = result.rows[0][0];
+        if (feature.getName() === feature.getUser().getName()){
+          const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${feature.getUser().getConnectionName().toUpperCase()}'`);
+          userCount = result.rows[0][0];
+        }else{
+          //check if the schema which is supposed to hold the installation of the feature contains an object called like the feature
+          const result = await connection.execute(`SELECT count(1) FROM all_procedures where owner like '${feature.getUser().getConnectionName().toUpperCase()}' and object_name like '%${feature.getName()}%'`);
+          userCount = result.rows[0][0];
+        }
       }
     }catch(err){
       console.error(err,"{color:red}");

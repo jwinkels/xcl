@@ -54,7 +54,9 @@ export class FeatureManager{
                                                                   owner: softwareJSON.owner, 
                                                                   repo: softwareJSON.repo, 
                                                                   gitAttribute: softwareJSON.call,
-                                                                  type: featureType
+                                                                  type: featureType,
+                                                                  minPublishDate: softwareJSON.minPublishDate ? new Date(softwareJSON.minPublishDate) : new Date("2000-01-01"),
+                                                                  creates: softwareJSON.creates
                                                                 })
                                                               );
         });
@@ -104,7 +106,13 @@ export class FeatureManager{
           for(feature of FeatureManager.features.values()){
             if (feature.getType()===type || type==="all"){
               if(p.getFeatures().has(feature.getName())){
-                table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'added ',  p.getFeatures().get(feature.getName())?.getStatus()]);
+                let status:any;
+                if (feature.getType() === 'DEPLOY'){
+                  status = p.getFeatures().get(feature.getName())?.getStatus();
+                }else{
+                  status = p.getStatus().getDependencyStatus(p.getFeatures().get(feature.getName())!) ? chalk.green("installed") : chalk.red("uninstalled");
+                }
+                table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'added ', status]);
               }else{
                 table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'not added','' ]);
               }
@@ -264,7 +272,7 @@ export class FeatureManager{
             
             if (project.getFeatures().has(featureName)){
               let feature:ProjectFeature=project.getFeatures().get(featureName)!;
-              var featurePath =projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
+              var featurePath = projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
               if (feature.getType()==="DB"){
                 var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection)!;
                 //Check if feature is already installed (this may not work properly)
@@ -400,11 +408,17 @@ export class FeatureManager{
                       }
                     });
                   })
-                  .finally( function(){
-                      feature.setInstalled(true);
-                      //ProjectManager.getInstance().getProject(projectName).updateFeature(feature);
-                      project.getStatus().updateDependencyStatus(feature);
-                      resolve();
+                  .finally( async function(){
+                      if (await DBHelper.isFeatureInstalled(feature,c)){
+                        feature.setInstalled(true);
+                        project.getStatus().updateDependencyStatus(feature);
+                        resolve();
+                      }else{
+                        project.getLogger().getLogger().log('error','Error when installing ', feature.getName(), '! Please check xcl.log for details');
+                        reject();                       
+                      }
+                      
+                      //project.updateFeature(feature);
                     }
                   );
               }else{
