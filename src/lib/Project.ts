@@ -225,7 +225,9 @@ export class Project {
         files.forEach((file)=>{
           if (move){
             if(file !== '.gitkeep'){
-              fs.moveSync(src + '/' + file, target +'/' + file);
+              if(!fs.existsSync(`${target}/${file}`)){
+                fs.moveSync(src + '/' + file, target +'/' + file);
+              }
             }
           }else{
             fs.copySync(src + '/' + file, target +'/' + file); 
