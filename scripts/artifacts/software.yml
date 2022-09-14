@@ -4,6 +4,11 @@ software:
     repo: utPLSQL
     call: release
     minPublishDate: "2017-05-17"
+    creates:
+      - UT_UTILS
+      - UT_METADATA
+      - UT_EVENT_MANAGER
+      - UT_TEST
     install:
       parameters:
         username: utplsql

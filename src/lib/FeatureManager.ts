@@ -276,7 +276,7 @@ export class FeatureManager{
               if (feature.getType()==="DB"){
                 var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection)!;
                 //Check if feature is already installed (this may not work properly)
-                DBHelper.isFeatureInstalled(feature,c)
+                DBHelper.isFeatureInstalled(feature, project,c)
                   .then((installed) => {
                     /*
                       if feature installed check is negative and 
@@ -409,12 +409,12 @@ export class FeatureManager{
                     });
                   })
                   .finally( async function(){
-                      if (await DBHelper.isFeatureInstalled(feature,c)){
+                      if (await DBHelper.isFeatureInstalled(feature, project,c)){
                         feature.setInstalled(true);
                         project.getStatus().updateDependencyStatus(feature);
                         resolve();
                       }else{
-                        project.getLogger().getLogger().log('error','Error when installing ', feature.getName(), '! Please check xcl.log for details');
+                        project.getLogger().getLogger().log('error',`Error when installing  ${feature.getName()}! Please check xcl.log for details`);
                         reject();                       
                       }
                       
@@ -543,7 +543,8 @@ export class FeatureManager{
                 reject();
               }
             }else{
-              console.log(chalk.red('ERROR: You can not drop a project schema'));
+              console.log(chalk.blueBright('You can not drop a project schema'));
+              resolve();
             }
         });
       }

@@ -145,6 +145,10 @@ export class ProjectManager {
     // Project define in GlobalJson
     this.addProjectToGlobalConfig( project );
 
+    if(projectConfigFromWizard.sqlClient === 'sqlcl'){
+      projectConfigFromWizard.sqlClient = 'sql';
+    }
+
 
     Application.generateCreateWorkspaceFile( projectConfigFromWizard.project, projectConfigFromWizard.workspace );
 
@@ -239,6 +243,7 @@ export class ProjectManager {
 
   public getProjectPath(projectName:string):string{
     const projects:Project[] = ProjectManager.getInstance().getProjects();
+
     for ( let i = 0; i < projects.length; i++ ) {
       const project = projects[i];
       if ( project.getName() === projectName ){
@@ -250,6 +255,8 @@ export class ProjectManager {
 
   public async initializeProject(projectName: string, flags: { help: void; syspw: string | undefined; connection: string | undefined; force: boolean; yes: boolean; objects: boolean; users:boolean;}):Promise<void> {
     const p:Project = this.getProject(projectName);
+    let unix = os.platform() === "win32" ? false : true;
+    let quotedPassword:string = "";
 
     flags.syspw = flags.syspw ? flags.syspw : Environment.readConfigFrom(p.getPath() , "syspw");
 
@@ -297,17 +304,23 @@ export class ProjectManager {
         randomPassword = await this.generatePassword();
       }
 
+      if (unix){
+        quotedPassword = `'${randomPassword}'`;
+      }else{
+        quotedPassword = `"${randomPassword}"`;
+      }
+
       console.log(chalk.green(`install schemas...`));
       if (p.getMode() === 'multi'){
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_xcl_users.sql') + ' ' + p.getName() + '_depl ' +
-                                                                            randomPassword + ' ' +
+                                                                            quotedPassword + ' ' +
                                                                             p.getName() + '_data ' +
                                                                             p.getName() + '_logic ' +
                                                                             p.getName() + '_app',
                                                                             p.getLogger());
       }else{
         await DBHelper.executeScript(c, Utils.checkPathForSpaces( __dirname + '/scripts/create_user.sql') + ' ' + p.getName() + ' ' +
-                                                                            randomPassword,
+                                                                            quotedPassword,
                                                                             p.getLogger()
                                                                             );
       }
@@ -322,6 +335,9 @@ export class ProjectManager {
         }
         p.setEnvironmentVariable('password', randomPassword);
         p.getStatus().updateUserStatus();
+      }else{
+        console.log(chalk.red('Users have not been installed!'));
+        process.exit(1);
       }
     }
 

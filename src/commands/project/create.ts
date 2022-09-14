@@ -86,6 +86,12 @@ async function doTheWizard(projectName:string | undefined) {
       name: 'adminpass',
       message: `Enter password for admin user. Leave blank and you will be prompted when needed`,
       type: 'password'
+    },
+    {
+      name: 'sqlClient',
+      message: "choose between sqlcl and sqlplus",
+      type: "list",
+      choices: ['sqlcl','sqlplus']
     }
     ],
   ).then((answer) => {
@@ -106,4 +112,5 @@ export interface ProjectWizardConfiguration {
   adminpass:  string;
   features:   string[];
   deployment: string;
+  sqlClient:  string;
 }
