@@ -355,6 +355,23 @@ export class ProjectManager {
           }
         });
       }
+
+      let app:Schema|undefined = p.getUsers().get('APP');
+      if (app){
+        if(p.getMode() === Project.MODE_MULTI){
+            const appCon = DBHelper.getConnectionProps(app.getConnectionName(), Environment.readConfigFrom(p.getPath(),'password',false), flags.connection);
+            if(appCon){
+              let workspaceId = await DBHelper.getWorkspaceId(appCon, p.getWorkspace());
+              p.setWorkspaceId(workspaceId);
+            }
+        }else{
+          const appCon = DBHelper.getConnectionProps(app.getName(), Environment.readConfigFrom(p.getPath(),'password',false), flags.connection);
+          if(appCon){
+            let workspaceId = await DBHelper.getWorkspaceId(appCon, p.getWorkspace());
+            p.setWorkspaceId(workspaceId);
+          }
+        }
+      }
     }
     // TODO: Abfrage nach syspwd?
 
@@ -417,6 +434,7 @@ export class ProjectManager {
     let commandCount=1;
 
     if( p.getStatus().hasChanged() ){
+      Application.generateCreateWorkspaceFile(projectName, p.getWorkspace(), true);
 
       if( !p.getStatus().checkUsers() ){
         if (p.getMode() === Project.MODE_MULTI){

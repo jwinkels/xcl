@@ -360,7 +360,13 @@ export class Orcas implements DeliveryMethod{
         }
       }
 
+      if(mode === "init"){
+        const checkoutCommand =`git checkout tags/${commit} -B xcl${commit}`;
+        await ShellHelper.executeScript(checkoutCommand, process.cwd(), false, project.getLogger());
+      }
+
       let fileMap:Map<string,string> = new Map();
+      
       let fileList:string[] = await Git.getChangedFiles(mode, commit, project.getName());
       let appList:string[]  = await Git.getChangedApexApplications(project.getName(), commit, mode);
       let release           = project.getVersion();

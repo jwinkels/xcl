@@ -97,21 +97,23 @@ export class Application{
       }
 
     //this function generates a script to create the workspace for the APEX application 
-    public static generateCreateWorkspaceFile(projectName:string, workspace:string){
-        let path     = ProjectManager.getInstance().getProject(projectName).getPath()+`/db/${Project.SETUP_DIR}/workspaces`;
-        let filename = path+'/create_'+workspace+'.sql'
+    public static generateCreateWorkspaceFile(projectName:string, workspace:string, overwrite:boolean=false){
+        let project:Project = ProjectManager.getInstance().getProject(projectName);
+        let path            = project.getPath()+`/db/${Project.SETUP_DIR}/workspaces`;
+        let filename        = path+'/create_'+workspace+'.sql'
 
-        if (! fs.existsSync(filename) ){
+        if (! fs.existsSync(filename) || overwrite){
           //check if the directory structure already exists and create it if not
           if(!fs.pathExistsSync(path)){
               fs.mkdirSync(path);
           }
 
           //content of the generate workspace script
-          let script = "@.env.sql" + "\n" +
-                      '@'+Utils.enwrapInQuotes('&XCLBIN/scripts/create_workspace.sql')+' '+
+          let script:string = "@.env.sql" + "\n" +
+                      "@" + Utils.enwrapInQuotes('&XCLBIN/scripts/create_workspace.sql')+" "+
                       workspace + " "+
-                      ProjectManager.getInstance().getProject(projectName).getUsers().get('APP')?.getName();
+                      project.getUsers().get('APP')?.getName() + " " +
+                      (project.getWorkspaceId() ? project.getWorkspaceId() : "null");
 
           //write content to script-file if not exist   
           fs.writeFileSync(filename,script);
@@ -122,7 +124,9 @@ export class Application{
       //initialize variables
       const project:Project = ProjectManager.getInstance().getProject(projectName);
       const path            = `${project.getPath()}/db/${Project.SETUP_DIR}/workspaces`;
-      const filename        = path + '/.env.sql';
+      const envFileName     = '.env.sql';
+      const filename        = `${path}/${envFileName}`;
+      const relFilename     = `db/${Project.SETUP_DIR}/workspaces/${envFileName}`;
 
       if(!fs.pathExistsSync(path)){
         fs.mkdirSync(path);
@@ -139,7 +143,7 @@ export class Application{
       }
 
       //add file to gitignore
-      Git.addToGitignore(project.getPath(), filename);
+      Git.addToGitignore(project.getPath(), relFilename);
     }
 
     public static removeSQLEnvironmentFile(projectName:string){

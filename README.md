@@ -19,7 +19,7 @@ $ npm install -g xcl
 $ xcl COMMAND
 running command...
 $ xcl (-v|--version|version)
-xcl/1.0.2-beta.4 win32-x64 node-v16.16.0
+xcl/1.0.2-beta.25 win32-x64 node-v16.17.0
 $ xcl --help [COMMAND]
 USAGE
   $ xcl COMMAND
@@ -87,7 +87,7 @@ EXAMPLE
   $ xcl config [default|github]
 ```
 
-_See code: [build/commands/config/index.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/config/index.ts)_
+_See code: [build/commands/config/index.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/config/index.ts)_
 
 ## `xcl config:defaults [VARIABLE] [VALUE] [PROJECT]`
 
@@ -111,7 +111,7 @@ OPTIONS
   --set-required  set all required environment variables
 ```
 
-_See code: [build/commands/config/defaults.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/config/defaults.ts)_
+_See code: [build/commands/config/defaults.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/config/defaults.ts)_
 
 ## `xcl config:github USER`
 
@@ -125,7 +125,7 @@ OPTIONS
   -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/config/github.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/config/github.ts)_
+_See code: [build/commands/config/github.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/config/github.ts)_
 
 ## `xcl feature`
 
@@ -139,7 +139,7 @@ EXAMPLE
   $ xcl feature [add|deinstall|install|list|remove|update|versions] #FEATURE#
 ```
 
-_See code: [build/commands/feature/index.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/feature/index.ts)_
+_See code: [build/commands/feature/index.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/feature/index.ts)_
 
 ## `xcl feature:add FEATURE [PROJECT] [USERNAME] [PASSWORD] [VERSION]`
 
@@ -161,7 +161,7 @@ OPTIONS
   -i, --interactive  interactive mode
 ```
 
-_See code: [build/commands/feature/add.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/feature/add.ts)_
+_See code: [build/commands/feature/add.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/feature/add.ts)_
 
 ## `xcl feature:deinstall FEATURE [PROJECT]`
 
@@ -182,7 +182,7 @@ OPTIONS
   -s, --syspw=syspw            (required) Password of SYS-User
 ```
 
-_See code: [build/commands/feature/deinstall.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/feature/deinstall.ts)_
+_See code: [build/commands/feature/deinstall.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/feature/deinstall.ts)_
 
 ## `xcl feature:install FEATURE PROJECT`
 
@@ -197,12 +197,12 @@ ARGUMENTS
   PROJECT  name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  [default: 116.1.1.21:1521/WILMA] connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  [default: unset] connection string HOST:PORT/SERVICE_NAME
   -h, --help                   Show CLI help.
   -s, --syspw=syspw            Password of SYS-User
 ```
 
-_See code: [build/commands/feature/install.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/feature/install.ts)_
+_See code: [build/commands/feature/install.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/feature/install.ts)_
 
 ## `xcl feature:list [TYPE] [PROJECT]`
 
@@ -221,7 +221,7 @@ OPTIONS
   -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/feature/list.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/feature/list.ts)_
+_See code: [build/commands/feature/list.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/feature/list.ts)_
 
 ## `xcl feature:remove FEATURE [PROJECT]`
 
@@ -236,8 +236,8 @@ ARGUMENTS
   PROJECT  Name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  [default: 116.1.1.21:1521/WILMA] connection to database (required when deinstall Feature)
-                               [ HOST:PORT/SERVICE_NAME ]
+  -c, --connection=connection  [default: unset] connection to database (required when deinstall Feature) [
+                               HOST:PORT/SERVICE_NAME ]
 
   -d, --deinstall              deinstall Feature from database
 
@@ -248,7 +248,7 @@ OPTIONS
   -s, --syspw=syspw            password of SYS-User
 ```
 
-_See code: [build/commands/feature/remove.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/feature/remove.ts)_
+_See code: [build/commands/feature/remove.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/feature/remove.ts)_
 
 ## `xcl feature:update FEATURE [VERSION] [PROJECT]`
 
@@ -264,12 +264,12 @@ ARGUMENTS
   PROJECT  name of the Project (when not in a xcl-Project path)
 
 OPTIONS
-  -c, --connection=connection  (required) [default: 116.1.1.21:1521/WILMA] connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  (required) [default: unset] connection string HOST:PORT/SERVICE_NAME
   -h, --help                   shows this help
   -s, --syspw=syspw            Password of SYS-User
 ```
 
-_See code: [build/commands/feature/update.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/feature/update.ts)_
+_See code: [build/commands/feature/update.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/feature/update.ts)_
 
 ## `xcl feature:versions FEATURE`
 
@@ -286,7 +286,7 @@ OPTIONS
   -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/feature/versions.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/feature/versions.ts)_
+_See code: [build/commands/feature/versions.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/feature/versions.ts)_
 
 ## `xcl help [COMMAND]`
 
@@ -317,7 +317,7 @@ EXAMPLE
   $ xcl project [apply|build|create|deploy|list|plan|remove|reset]
 ```
 
-_See code: [build/commands/project/index.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/index.ts)_
+_See code: [build/commands/project/index.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/index.ts)_
 
 ## `xcl project:apply [PROJECT]`
 
@@ -334,7 +334,7 @@ OPTIONS
   -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/project/apply.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/apply.ts)_
+_See code: [build/commands/project/apply.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/apply.ts)_
 
 ## `xcl project:build [PROJECT]`
 
@@ -354,7 +354,7 @@ OPTIONS
   -v, --version=version  Version to tag build
 ```
 
-_See code: [build/commands/project/build.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/build.ts)_
+_See code: [build/commands/project/build.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/build.ts)_
 
 ## `xcl project:create [PROJECT]`
 
@@ -374,7 +374,7 @@ OPTIONS
   --single-schema            one schema instead of three, no deployment user
 ```
 
-_See code: [build/commands/project/create.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/create.ts)_
+_See code: [build/commands/project/create.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/create.ts)_
 
 ## `xcl project:deploy [PROJECT]`
 
@@ -389,7 +389,7 @@ ARGUMENTS
 
 OPTIONS
   -b, --build=build            build-number to deploy
-  -c, --connection=connection  (required) [default: 116.1.1.21:1521/WILMA] connection string HOST:PORT/SERVICE_NAME
+  -c, --connection=connection  (required) [default: unset] connection string HOST:PORT/SERVICE_NAME
   -d, --dependencies           Deploy inclusive dependencies (you will be asked for sys-user password)
   -h, --help                   Show CLI help.
   -m, --mode=mode              [default: dev] mode of build (init/patch/dev)
@@ -411,7 +411,7 @@ OPTIONS
   --schema-only                Deploys only schema objects
 ```
 
-_See code: [build/commands/project/deploy.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/deploy.ts)_
+_See code: [build/commands/project/deploy.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/deploy.ts)_
 
 ## `xcl project:init [PROJECT]`
 
@@ -425,7 +425,7 @@ ARGUMENTS
   PROJECT  name of the project to initialze
 
 OPTIONS
-  -c, --connection=connection  [default: 116.1.1.21:1521/WILMA] Connectstring ex. localhost:1521/xepdb1
+  -c, --connection=connection  [default: unset] Connectstring ex. localhost:1521/xepdb1
   -f, --force                  Attention: force will drop existing schemas
   -h, --help                   Show CLI help.
   -o, --objects                Install basic objects defined in setup directory
@@ -434,7 +434,7 @@ OPTIONS
   -y, --yes                    Answers force-action with yes (Use with caution)
 ```
 
-_See code: [build/commands/project/init.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/init.ts)_
+_See code: [build/commands/project/init.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/init.ts)_
 
 ## `xcl project:list`
 
@@ -448,7 +448,7 @@ OPTIONS
   -h, --help  Show CLI help.
 ```
 
-_See code: [build/commands/project/list.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/list.ts)_
+_See code: [build/commands/project/list.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/list.ts)_
 
 ## `xcl project:plan [PROJECT]`
 
@@ -467,7 +467,7 @@ OPTIONS
   --yes         skip all prompts with answer 'yes'
 ```
 
-_See code: [build/commands/project/plan.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/plan.ts)_
+_See code: [build/commands/project/plan.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/plan.ts)_
 
 ## `xcl project:remove PROJECT`
 
@@ -488,7 +488,7 @@ OPTIONS
   -s, --syspw=syspw
 ```
 
-_See code: [build/commands/project/remove.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/remove.ts)_
+_See code: [build/commands/project/remove.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/remove.ts)_
 
 ## `xcl project:reset [COMMIT] [PROJECT]`
 
@@ -510,5 +510,5 @@ EXAMPLE
   xcl project:reset
 ```
 
-_See code: [build/commands/project/reset.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.4/build/commands/project/reset.ts)_
+_See code: [build/commands/project/reset.ts](https://github.com/MaikMichel/xcl/blob/v1.0.2-beta.25/build/commands/project/reset.ts)_
 <!-- commandsstop -->
