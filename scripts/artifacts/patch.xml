@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+	xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+		http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+		http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
+	
+   <includeAll path=".hooks/pre/ddl/patch/pre"          relativeToChangelogFile="true"/>
+   <includeAll path="ddl/patch/pre"                     relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/ddl/patch/pre"         relativeToChangelogFile="true"/>
+
+   <includeAll path=".hooks/pre/dml/patch/pre"          relativeToChangelogFile="true"/>
+   <includeAll path="dml/patch/pre"                     relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/dml/patch/pre"         relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/sequences"              relativeToChangelogFile="true"/>
+   <includeAll path="sequences"                         relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/sequences"             relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/tables"                 relativeToChangelogFile="true"/>
+   <includeAll path="tables"                            relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/tables"                relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/tables/tables_ddl"      relativeToChangelogFile="true"/>
+   <includeAll path="tables/tables_ddl"                 relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/tables/tables_ddl"     relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/indexes/primaries"      relativeToChangelogFile="true"/>
+   <includeAll path="indexes/primaries"                 relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/indexes/primaries"     relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/indexes/uniques"        relativeToChangelogFile="true"/>
+   <includeAll path="indexes/uniques"                   relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/indexes/uniques"       relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/indexes/defaults"       relativeToChangelogFile="true"/>
+   <includeAll path="indexes/defaults"                  relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/indexes/defaults"      relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/constraints/primaries"  relativeToChangelogFile="true"/>
+   <includeAll path="constraints/primaries"             relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/constraints/primaries" relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/constraints/foreigns"   relativeToChangelogFile="true"/>
+   <includeAll path="constraints/foreigns"              relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/constraints/foreigns"  relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/constraints/checks"     relativeToChangelogFile="true"/>
+   <includeAll path="constraints/checks"                relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/constraints/checks"    relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/constraints/uniques"    relativeToChangelogFile="true"/>
+   <includeAll path="constraints/uniques"               relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/constraints/uniques"   relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/context"                relativeToChangelogFile="true"/>
+   <includeAll path="context"                           relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/context"               relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/policies"               relativeToChangelogFile="true"/>
+   <includeAll path="policies"                          relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/policies"              relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/views"                  relativeToChangelogFile="true"/>
+   <includeAll path="views"                             relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/views"                 relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/sources/functions"      relativeToChangelogFile="true"/>
+   <includeAll path="sources/functions"                 relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/sources/functions"     relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/sources/procedures"     relativeToChangelogFile="true"/>
+   <includeAll path="sources/procedures"                relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/sources/procedures"    relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/sources/objects"        relativeToChangelogFile="true"/>
+   <includeAll path="sources/objects"                   relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/sources/objects"       relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/sources/packages"       relativeToChangelogFile="true"/>
+   <includeAll path="sources/packages"                  relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/sources/packages"      relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/sources/trigger"        relativeToChangelogFile="true"/>
+   <includeAll path="sources/trigger"                   relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/sources/trigger"       relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/ddl/patch/post"         relativeToChangelogFile="true"/>
+   <includeAll path="ddl/patch/post"                    relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/ddl/patch/post"        relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/dml/patch/post"         relativeToChangelogFile="true"/>
+   <includeAll path="dml/patch/post"                    relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/dml/patch/post"        relativeToChangelogFile="true"/>
+   
+   <includeAll path=".hooks/pre/dml/base"               relativeToChangelogFile="true"/>
+   <includeAll path="dml/base"                          relativeToChangelogFile="true"/>
+   <includeAll path=".hooks/post/dml/base"              relativeToChangelogFile="true"/>
+</databaseChangeLog>

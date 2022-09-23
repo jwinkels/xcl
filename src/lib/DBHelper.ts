@@ -215,7 +215,7 @@ export class DBHelper {
     logger.getLogger().log("info", `Start script: ${script}`);
 
     let sqlCommand:string|undefined = Environment.readConfigFrom('all','client',false);
-    if(!sqlCommand){
+    if(!sqlCommand || (sqlCommand !== 'sql' && sqlCommand !== 'sqlplus')){
       sqlCommand = this.getSqlClient(logger);
     }
     if(sqlCommand){
@@ -248,7 +248,6 @@ export class DBHelper {
     let sqlCommand:string|undefined = Environment.readConfigFrom('all','client',false);
     if(!sqlCommand){
       sqlCommand = this.getSqlClient(logger);
-      console.log('DEDUCED SQLCLIENT: ', sqlCommand);
     }
 
     if(sqlCommand){
