@@ -123,6 +123,19 @@ export class DBHelper {
     }
   }
 
+  public static async getWorkspaceId(conn:IConnectionProperties, workspaceName:string):Promise<string>{
+    let connection;
+    try{
+      connection = await oracledb.getConnection(conn);
+      let query = `select workspace_id from apex_workspaces where workspace=upper('${workspaceName}')`;
+      const result = await connection.execute(query);
+      return result.rows[0][0];
+    }catch(err){
+      console.log(`ERROR: Could not find workspace id for workspace named '${workspaceName}' (${err})`);
+      process.exit(1);
+    }
+  }
+
 
   public static async getOraVersion(conn:IConnectionProperties):Promise<number> {
     let connection;
@@ -135,7 +148,7 @@ export class DBHelper {
       
       const result = await connection.execute(query);
       
-      //version = result.rows[0][0];
+      version = result.rows[0][0];
 
     } catch (err) {
       console.error(err, "{color:red}");

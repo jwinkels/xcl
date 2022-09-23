@@ -122,6 +122,32 @@ export class Project {
     this.writeConfig();
   }
 
+  public getWorkspaceId():string{
+    if(this.config){
+      if(this.config.xcl.workspaceId){
+        return this.config.xcl.workspaceId;
+      }else{
+        return "";
+      }
+    }else{
+      this.config = this.readConfig();
+      if(this.config.xcl.workspaceId){
+        return this.config.xcl.workspaceId;
+      }else{
+        return "";
+      }
+    }
+  }
+
+  public setWorkspaceId(workspaceId:string):void{
+    if(!this.config.xcl.workspaceId){
+      this.config=this.readConfig();
+    }
+
+    this.config.xcl.workspaceId = workspaceId;
+    this.writeConfig();
+  }
+
   public setMode(mode:string):void{
     if(!this.config.xcl.mode){
       this.config = this.readConfig();

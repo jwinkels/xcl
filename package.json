@@ -1,7 +1,7 @@
 {
   "name": "xcl",
   "description": "APEX commandline",
-  "version": "1.0.2-beta.20",
+  "version": "1.0.2-beta.25",
   "author": "Jan und Maik",
   "bin": {
     "xcl": "./bin/run"
@@ -38,6 +38,7 @@
     "ts-md5": "^1.2.9",
     "tslib": "^2.4.0",
     "winston": "^3.8.1",
+    "xcl": "^1.0.2-beta.22",
     "yaml": "^2.1"
   },
   "devDependencies": {
