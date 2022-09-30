@@ -1,6 +1,7 @@
 import {Command, Flags, CliUx} from '@oclif/core'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { Environment } from '../../lib/Environment'
+import inquirer from 'inquirer'
 
 export default class FeatureUpdate extends Command {
   static description = 'update Project Feature version'
@@ -32,9 +33,16 @@ export default class FeatureUpdate extends Command {
   async run() {
     const {args, flags} = await this.parse(FeatureUpdate)
     if(!args.version && args.feature){
-      await FeatureManager.getInstance().getFeatureReleases(args.feature).then(async (success)=>{
-        args.version= await CliUx.ux.prompt('Please enter a version number from the list above you like to add');
-      });
+          let releases= await FeatureManager.getInstance().getFeatureReleases(args.feature);
+          let version = await inquirer.prompt([{
+              name: 'number',
+              message: `choose a version: `,
+              type: 'list',
+              choices: releases
+            }]);
+    
+          args.version = version.number;
+            //args.version= await cli.prompt('Please enter a version number from the list above you like to add');
     }
 
     if (!flags.syspw){

@@ -55,7 +55,9 @@ export class FeatureManager{
                                                                   owner: softwareJSON.owner, 
                                                                   repo: softwareJSON.repo, 
                                                                   gitAttribute: softwareJSON.call,
-                                                                  type: featureType
+                                                                  type: featureType,
+                                                                  minPublishDate: softwareJSON.minPublishDate ? new Date(softwareJSON.minPublishDate) : new Date("2000-01-01"),
+                                                                  creates: softwareJSON.creates
                                                                 })
                                                               );
         });
@@ -108,7 +110,14 @@ export class FeatureManager{
             if(feature instanceof ProjectFeature){  
               if (feature.getType()===type || type==="all"){
                 if(p.getFeatures().has(feature.getName())){
-                    table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'added ',  (p.getFeatures().get(feature.getName()) as ProjectFeature).getStatus()]);
+                  let status:any;
+                  if (feature.getType() === 'DEPLOY'){
+
+                    status = (p.getFeatures().get(feature.getName()) as ProjectFeature)?.getStatus();
+                  }else{
+                    status = p.getStatus().getDependencyStatus(p.getFeatures().get(feature.getName())!) ? chalk.green("installed") : chalk.red("uninstalled");
+                  }
+                  table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'added ', status]);
                 }else{
                   table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'not added','' ]);
                 }
@@ -316,7 +325,7 @@ export class FeatureManager{
                     var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection)!;
 
                     //Check if feature is already installed (this may not work properly)
-                    DBHelper.isFeatureInstalled(projectFeature,c)
+                    DBHelper.isFeatureInstalled(projectFeature, project, c)
                       .then((installed) => {
                         /*
                           if feature installed check is negative and 
@@ -598,7 +607,8 @@ export class FeatureManager{
                 reject();
               }
             }else{
-              console.log(chalk.red('ERROR: You can not drop a project schema'));
+              console.log(chalk.blueBright('You can not drop a project schema'));
+              resolve();
             }
         });
       }

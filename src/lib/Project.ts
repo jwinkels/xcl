@@ -6,7 +6,7 @@ import { FeatureManager } from './FeatureManager';
 import { Schema } from './Schema';
 import  * as os from 'os';
 import { Environment } from './Environment';
-import { Md5 } from 'ts-md5/dist/md5';
+import { Md5 } from 'ts-md5';
 import {Operation} from './Operation';
 import { Logger } from "./Logger";
 import { Git } from "./Git";
@@ -125,6 +125,32 @@ export class Project {
     this.writeConfig();
   }
 
+  public getWorkspaceId():string{
+    if(this.config){
+      if(this.config.xcl.workspaceId){
+        return this.config.xcl.workspaceId;
+      }else{
+        return "";
+      }
+    }else{
+      this.config = this.readConfig();
+      if(this.config.xcl.workspaceId){
+        return this.config.xcl.workspaceId;
+      }else{
+        return "";
+      }
+    }
+  }
+
+  public setWorkspaceId(workspaceId:string):void{
+    if(!this.config.xcl.workspaceId){
+      this.config=this.readConfig();
+    }
+
+    this.config.xcl.workspaceId = workspaceId;
+    this.writeConfig();
+  }
+
   public setMode(mode:string):void{
     if(!this.config.xcl.mode){
       this.config = this.readConfig();
@@ -228,7 +254,9 @@ export class Project {
         files.forEach((file)=>{
           if (move){
             if(file !== '.gitkeep'){
-              fs.moveSync(src + '/' + file, target +'/' + file);
+              if(!fs.existsSync(`${target}/${file}`)){
+                fs.moveSync(src + '/' + file, target +'/' + file);
+              }
             }
           }else{
             fs.copySync(src + '/' + file, target +'/' + file); 

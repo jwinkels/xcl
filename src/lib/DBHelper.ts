@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import * as fs from "fs-extra";
 import * as os from "os";
 import { Logger } from './Logger';
+import { Environment } from './Environment';
 
 const oracledb = require('oracledb')
 
@@ -88,19 +89,25 @@ export class DBHelper {
   };
 
   //checks if a feature is installed
-  public static async isFeatureInstalled(feature: ProjectFeature, conn:IConnectionProperties):Promise<boolean>{
+  public static async isFeatureInstalled(feature: ProjectFeature, project:Project, conn:IConnectionProperties):Promise<boolean>{
     let connection;
     let userCount=0;
     try{
       connection = await oracledb.getConnection(conn);
+      const USER:string = project.getUsers().has(feature.getUser().getConnectionName()) ? project.getUsers().get(feature.getUser().getConnectionName())?.getName()! : feature.getUser().getConnectionName();
       //if the feature is supposed to be installed in a seperate schema named like the feature itself
-      if (feature.getName() === feature.getUser().getName()){
-        const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${feature.getUser().getConnectionName().toUpperCase()}'`);
+      if(feature.getCreates().length > 0){
+        const result = await connection.execute(`select count(1) FROM all_objects where owner like '${USER.toUpperCase()}' and object_name in ('${feature.getCreates().join("', '").toUpperCase()}')`);
         userCount = result.rows[0][0];
       }else{
-        //check if the schema which is supposed to hold the installation of the feature contains an object called like the feature
-        const result = await connection.execute(`SELECT count(1) FROM all_procedures where owner like '${feature.getUser().getConnectionName().toUpperCase()}' and object_name like '%${feature.getName()}%'`);
-        userCount = result.rows[0][0];
+        if (feature.getName() === feature.getUser().getName()){
+          const result = await connection.execute(`SELECT count(1) FROM all_users where username like '${USER.toUpperCase()}'`);
+          userCount = result.rows[0][0];
+        }else{
+          //check if the schema which is supposed to hold the installation of the feature contains an object called like the feature
+          const result = await connection.execute(`SELECT count(1) FROM all_procedures where owner like '${USER.toUpperCase()}' and object_name like '%${feature.getName()}%'`);
+          userCount = result.rows[0][0];
+        }
       }
     }catch(err){
       console.error(err,"{color:red}");
@@ -116,6 +123,19 @@ export class DBHelper {
     }
   }
 
+  public static async getWorkspaceId(conn:IConnectionProperties, workspaceName:string):Promise<string>{
+    let connection;
+    try{
+      connection = await oracledb.getConnection(conn);
+      let query = `select workspace_id from apex_workspaces where workspace=upper('${workspaceName}')`;
+      const result = await connection.execute(query);
+      return result.rows[0][0];
+    }catch(err){
+      console.log(`ERROR: Could not find workspace id for workspace named '${workspaceName}' (${err})`);
+      process.exit(1);
+    }
+  }
+
 
   public static async getOraVersion(conn:IConnectionProperties):Promise<number> {
     let connection;
@@ -128,7 +148,7 @@ export class DBHelper {
       
       const result = await connection.execute(query);
       
-      //version = result.rows[0][0];
+      version = result.rows[0][0];
 
     } catch (err) {
       console.error(err, "{color:red}");
@@ -206,17 +226,32 @@ export class DBHelper {
   public static executeScript(conn: IConnectionProperties, script: string,  logger:Logger){
     
     logger.getLogger().log("info", `Start script: ${script}`);
-    
+
+    let sqlCommand:string|undefined = Environment.readConfigFrom('all','client',false);
+    if(!sqlCommand || (sqlCommand !== 'sql' && sqlCommand !== 'sqlplus')){
+      sqlCommand = this.getSqlClient(logger);
+      
+    }
+    if(sqlCommand){
     const childProcess = spawnSync(
-      'sql', // Sqlcl path should be in path
-      ["-S", DBHelper.getConnectionString(conn)], {
-        encoding: 'utf8',
-        input: `@${script}`,
-        shell: true
+      sqlCommand, // Sqlcl or sqlplus path should be in path
+        ["-S", DBHelper.getConnectionString(conn)], {
+          encoding: 'utf8',
+          input: `@${script}`,
+          shell: true
+        }
+      );
+
+      if(childProcess.stderr!==''){
+        DBHelper.logResults(`ERROR: Execution failed with the following error: ${childProcess.stderr}`, logger);
+        process.exit(1);
+      }else{
+        DBHelper.logResults(childProcess, logger);
       }
-    );
-    
-    DBHelper.logResults(childProcess, logger);
+    }else{
+      DBHelper.logResults(`ERROR: Please define a SQL-Client like sqlcl or sqlplus`, logger);
+      process.exit(1);
+    }
     
   }
 
@@ -224,18 +259,32 @@ export class DBHelper {
     
     logger.getLogger().log("info", `Start script: ${script}`);
 
-    const childProcess = spawnSync(
-      'sql', // Sqlcl path should be in path
-      ["-S", DBHelper.getConnectionString(conn)], {
-        encoding: 'utf8',
-        cwd: cwd,
-        input: `@${script}`,
-        shell: true
-      }
-    );
-    
-    DBHelper.logResults(childProcess, logger);
+    let sqlCommand:string|undefined = Environment.readConfigFrom('all','client',false);
+    if(!sqlCommand){
+      sqlCommand = this.getSqlClient(logger);
+    }
 
+    if(sqlCommand){
+      const childProcess = spawnSync(
+        sqlCommand, // Sqlcl or sqlplus path should be in path
+        ["-S", DBHelper.getConnectionString(conn)], {
+          encoding: 'utf8',
+          cwd: cwd,
+          input: `@${script}`,
+          shell: true
+        }
+      );
+  
+      if(childProcess.stderr!==''){
+        DBHelper.logResults(`ERROR: Execution failed with the following error: ${childProcess.stderr}`, logger);
+        process.exit(1);
+      }else{
+        DBHelper.logResults(childProcess, logger);
+      }
+    }else{
+      DBHelper.logResults(`ERROR: Please define a SQL-Client`, logger);
+      process.exit(1);
+    }
   }
 
   private static logResults(childProcess:any, logger:Logger):void{
@@ -258,6 +307,28 @@ export class DBHelper {
       return true;
     }
 
+  }
+
+  private static getSqlClient(logger:Logger):string|undefined{
+    try{
+      let result = spawnSync('sql');
+      let client = "";
+      if(result.stderr.toString()!==''){
+        result = spawnSync('sqlplus');
+        if(result.stderr.toString()!==''){
+          return undefined;
+        }else{
+          client = 'sqlplus';
+        }
+      }else{
+        client = 'sql';
+      }
+
+      return client;
+    
+    }catch(err){
+      DBHelper.logResults(err, logger);
+    }
   }
 
   

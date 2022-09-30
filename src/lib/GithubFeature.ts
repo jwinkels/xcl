@@ -13,13 +13,17 @@ export class GithubFeature implements Feature{
     private isManagedByRelease:boolean=false;
     type: FeatureType;
     name: string;
+    private minPublishDate:Date;
+    private creates:string[];
 
-    constructor(args: {name:string, owner:string, repo:string, gitAttribute:string, type:FeatureType }){
+    constructor(args: {name:string, owner:string, repo:string, gitAttribute:string, type:FeatureType, minPublishDate:Date, creates:string[]}){
         this.name         = args.name;
         this.owner        = args.owner;
         this.repo         = args.repo;
         this.gitAttribute = args.gitAttribute;
         this.type         = args.type;
+        this.minPublishDate = args.minPublishDate;
+        this.creates        = args.creates;
 
         if (args.gitAttribute == 'tag'){
             this.isManagedByTag = true;
@@ -40,17 +44,20 @@ export class GithubFeature implements Feature{
     }
 
     public getReleaseInformation():any{
+        let _this = this;
         return new Promise<string[]>((resolve, reject)=>{
             let releases:string[]=[];
             this.call().then(function(featureData){
                 let featureJSON = JSON.parse(featureData);
                 try{
                     for(let i=0; i<featureJSON.length; i++){
-                        if(featureJSON[i].tag_name){
+                        let releaseDate:Date = new Date(featureJSON[i].published_at ? featureJSON[i].published_at : new Date());
+                        if(featureJSON[i].tag_name && ( releaseDate > _this.getMinPublishDate())){
                             releases.push(featureJSON[i].tag_name);
-                        }else if(featureJSON[i].name){
+                        }else if(featureJSON[i].name && (releaseDate > _this.getMinPublishDate())){
                             releases.push(featureJSON[i].name);
                         }
+                        
                     }
                 }catch(err){
                    reject(err); 
@@ -89,6 +96,14 @@ export class GithubFeature implements Feature{
 
     public getType():FeatureType{
         return this.type;
+    }
+
+    public getMinPublishDate():Date{
+        return this.minPublishDate ? this.minPublishDate : new Date("01.01.1999");
+    }
+
+    public getCreates():string[]{
+        return this.creates ? this.creates : [];
     }
 
     protected call():Promise<any>{

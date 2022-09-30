@@ -12,7 +12,7 @@ begin
   select workspace_id
     into v_workspace_id
     from apex_workspaces
-   where upper(workspace) = upper('^1');
+   where upper(workspace) = trunc(upper('^1'));
 
   apex_application_install.set_workspace_id(v_workspace_id);    
   apex_application_install.set_application_id(^2);

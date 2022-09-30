@@ -18,6 +18,7 @@ grant create procedure to ^1;
 grant create sequence to ^1;
 grant create session to ^1;
 grant create synonym to ^1;
+grant create public synonym to ^1;
 grant create table to ^1;
 grant create trigger to ^1;
 grant create type to ^1;

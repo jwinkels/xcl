@@ -35,7 +35,10 @@ export default class FeatureInstall extends Command{
          && (!flags.connection || flags.connection === "")){
       console.log(chalk.red("ERROR: Provide a connection string to install "+args.name));
     }else{
-      FeatureManager.getInstance().installProjectFeature(args.feature, flags.connection, flags.syspw!,args.project);
+      FeatureManager.getInstance().installProjectFeature(args.feature, flags.connection, flags.syspw!,args.project)
+              .catch(()=>{
+                  process.exit(1)
+                });
     }
   }
 }

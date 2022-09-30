@@ -19,10 +19,10 @@ export class Environment{
         // Decide which environment variables context should be loaded
         if(projectName.toLocaleLowerCase() !== "all" && project){
             // environment variable of project
-            envFileName = project.getPath() + "/.xcl/" + projectVariables;
+            envFileName = `${project.getPath()}/.xcl/${projectVariables}`;
         }else{
             // globals
-            envFileName = this.xclHome + globals;
+            envFileName = `${this.xclHome}/${globals}`;
         }
 
         // Check if environment variable file exists if not, write skelleton to file
@@ -49,7 +49,6 @@ export class Environment{
         
         let env:any = {}; 
         env         = yaml.parse(fs.readFileSync(envFileName).toString());
-
         variables.forEach((variable: {value:string, required:boolean}, key)=>{
             this.setVariable(key, env[key], variables);
         });
@@ -67,6 +66,7 @@ export class Environment{
         variables.set('password',{value:'', required: false});
         variables.set('ords',{value:"", required: false});
         variables.set('schema', {value: schema, required: false});
+        variables.set('client',{value: "", required: true});
         return variables;
     }
 
@@ -128,26 +128,26 @@ export class Environment{
                 env = yaml.parse(fs.readFileSync(envFileName).toString());
                 return env[variableName];
             }catch(err){
-               if (write) {
-                    console.log(new Error().stack);
-                    throw Error("hier:" + err);
-               } else {
-                   return "";
-               }
+                if(!fs.pathExistsSync(envFileName)){
+                    Environment.initialize('all');
+                }
+                return "";
             }
         }
     }
 
     public static setVarsFromWizard(config:ProjectWizardConfiguration, project:Project):Map<string,{value:string, required:boolean}> {
-      const localEnv = Environment.initialize(config.project, project);
-
+      const localEnv  =  Environment.initialize(config.project, project);
+      const globalEnv =  Environment.initialize('all');
       //variable 'schema' is not to be set by end-user
       Environment.setVariable("connection", config.connection, localEnv);
       Environment.setVariable("project",    config.project,    localEnv);
       Environment.setVariable("password",   config.password,   localEnv);
       Environment.setVariable("syspw",      config.adminpass,  localEnv);
+      Environment.setVariable("client",     config.sqlClient,  globalEnv);
       
       Environment.writeEnvironment(config.project, localEnv);
+      Environment.writeEnvironment(config.project, globalEnv);
 
       return localEnv;
     }

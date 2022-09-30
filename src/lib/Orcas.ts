@@ -64,6 +64,7 @@ export class Orcas implements DeliveryMethod{
 
       let project=ProjectManager.getInstance().getProject(projectName);
       
+      let unix = os.platform() === "win32" ? false : true;
       let prefix = os.platform() === "win32" ? "" : "./"; 
       let path:string = "";
       let buildZip:AdmZip;
@@ -75,6 +76,9 @@ export class Orcas implements DeliveryMethod{
 
           buildZip = new AdmZip(`${path}.zip`);
           buildZip.extractAllTo(`${path}`,true);
+          if(unix){
+            (await ShellHelper.executeScript('chmod -R +x *', 'dist/', false, project.getLogger()));
+          }
           buildInfo = yaml.parse(fs.readFileSync(`${path}/buildInfo.yml`).toString());
         }else{
           project.getLogger().getFileLogger().log("error",'BUILD NOT FOUND');
@@ -85,9 +89,16 @@ export class Orcas implements DeliveryMethod{
         path = project.getPath();
       }
 
-      let gradleStringData  = prefix + "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('DATA')?.getConnectionName()  + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + buildInfo.type + " ";
-      let gradleStringLogic = prefix + "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('LOGIC')?.getConnectionName() + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + buildInfo.type + " ";
-      let gradleStringApp   = prefix + "gradlew deploy -Ptarget="   + connection + " -Pusername=" + project.getUsers().get('APP')?.getConnectionName()   + " -Ppassword=" + password + " -Pnocompile="+ nocompile +" -Pmode=" + buildInfo.type + " ";
+      let gradleAttributes = "";
+      if(unix){
+        gradleAttributes = ` -Ppassword='${password}' -Pnocompile=${nocompile} -Pmode=${buildInfo.type} `;
+      }else{
+        gradleAttributes = ` -Ppassword="${password}" -Pnocompile=${nocompile} -Pmode=${buildInfo.type} `;
+      } 
+      
+      let gradleStringData  = `${prefix}gradlew deploy -Ptarget=${connection} -Pusername=${project.getUsers().get('DATA')?.getConnectionName()} ${gradleAttributes}`;
+      let gradleStringLogic = `${prefix}gradlew deploy -Ptarget=${connection} -Pusername=${project.getUsers().get('LOGIC')?.getConnectionName()} ${gradleAttributes}`;
+      let gradleStringApp   = `${prefix}gradlew deploy -Ptarget=${connection} -Pusername=${project.getUsers().get('APP')?.getConnectionName()} ${gradleAttributes}`;
       
       project.getLogger().getLogger().log("info", `Starting deployment in ${buildInfo.type} - mode...`);
 
@@ -219,6 +230,9 @@ export class Orcas implements DeliveryMethod{
         let proceed:boolean = false;
         await _this.hook("data", "pre", projectName, connection, password, project);
         resultData = (await ShellHelper.executeScript(gradleStringData, executePath + "/db/" + project.getName() + "_data", true, project.getLogger())).status;
+        if(!resultData){
+          process.exit(1);
+        }
         await _this.hook("data", "post", projectName, connection, password, project);
         await _this.hasInvalidObjects(project, "data", password, connection);
 
@@ -229,6 +243,9 @@ export class Orcas implements DeliveryMethod{
           gradleStringLogic = await _this.getChangedTables(project.getName(), (executePath+"/db/"+project.getName()+"_logic").replaceAll("\\","/") + "/tables/", gradleStringLogic);
           await _this.hook("logic","pre",projectName, connection, password, project);
           resultLogic = (await ShellHelper.executeScript(gradleStringLogic, executePath + "/db/" + project.getName() + "_logic", true, project.getLogger())).status;
+          if(!resultLogic){
+            process.exit(1);
+          }
           await _this.hook("logic", "post", projectName, connection, password, project);
           await _this.hasInvalidObjects(project, "logic", password, connection);
           proceed = await CliUx.ux.confirm('Proceed with ' + projectName.toUpperCase() + '_APP? (y/n)');
@@ -238,6 +255,9 @@ export class Orcas implements DeliveryMethod{
             gradleStringApp = await _this.getChangedTables(project.getName(), (executePath+"/db/"+project.getName()+"_app").replaceAll("\\","/") + "/tables/", gradleStringApp);
             await _this.hook("app", "pre", projectName, connection, password, project);
             resultApp = (await ShellHelper.executeScript(gradleStringApp, executePath + "/db/" + project.getName() + "_app", true, project.getLogger())).status;
+            if(!resultApp){
+              process.exit(1);
+            }
             await _this.hook("app", "post", projectName, connection, password, project);
             await _this.hasInvalidObjects(project, "app", password, connection);
             
@@ -269,18 +289,27 @@ export class Orcas implements DeliveryMethod{
         gradleStringData = await _this.getChangedTables(project.getName(), (executePath+"/db/"+project.getName()+"_data").replaceAll("\\","/") + "/tables/", gradleStringData);
         await _this.hook("data","pre",projectName, connection, password, project);
         resultData = (await ShellHelper.executeScript(gradleStringData, executePath+"/db/"+project.getName()+"_data", false, project.getLogger())).status;
+        if(!resultData){
+          process.exit(1);
+        }
         await _this.hook("data","post",projectName, connection, password, project);
         await _this.hasInvalidObjects(project, "data", password, connection, true);
         
         gradleStringLogic = await _this.getChangedTables(project.getName(), (executePath+"/db/"+project.getName()+"_logic").replaceAll("\\","/") + "/tables/", gradleStringLogic);
         await _this.hook("logic","pre",projectName, connection, password, project);
         resultLogic = (await ShellHelper.executeScript(gradleStringLogic, executePath+"/db/"+project.getName()+"_logic", false, project.getLogger())).status;
+        if(!resultLogic){
+          process.exit(1);
+        }
         await _this.hook("logic","post",projectName, connection, password, project);
         await _this.hasInvalidObjects(project, "logic", password, connection, true);
 
         gradleStringApp = await _this.getChangedTables(project.getName(), (executePath+"/db/"+project.getName()+"_app").replaceAll("\\","/") + "/tables/", gradleStringApp);
         await _this.hook("app","pre",projectName, connection, password, project);
         resultApp = (await ShellHelper.executeScript(gradleStringApp, executePath+"/db/"+project.getName()+"_app", false, project.getLogger())).status;
+        if(!resultApp){
+          process.exit(1);
+        }
         await _this.hook("app","post", projectName, connection, password, project);
         await _this.hasInvalidObjects(project, "app", password, connection, true);
         if (!schemaOnly){
@@ -323,10 +352,23 @@ export class Orcas implements DeliveryMethod{
 
     async patch(version:string, project:Project, mode:string, commit:string):Promise<AdmZip>{
       
+      if(!mode){
+        if(!project.getStatus().getCommitId()){
+          mode = "init";
+        }else{
+          mode = "patch";
+        }
+      }
+
+      if(mode === "init"){
+        const checkoutCommand =`git checkout tags/${commit} -B xcl${commit}`;
+        await ShellHelper.executeScript(checkoutCommand, process.cwd(), false, project.getLogger());
+      }
 
       let fileMap:Map<string,string> = new Map();
+      
       let fileList:string[] = await Git.getChangedFiles(mode, commit, project.getName());
-      let appList:string[]  = await Git.getChangedApexApplications(project.getName(), commit);
+      let appList:string[]  = await Git.getChangedApexApplications(project.getName(), commit, mode);
       let release           = project.getVersion();
       let apexAppsPath      = project.getPath() + "/apex/";
       let appPath           = "";
