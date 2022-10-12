@@ -50,7 +50,7 @@ export default class FeatureAdd extends Command {
     let version:any;
     let custom:any;
     let added:boolean = false;
-    let customFeature:{zip:string, installScript:string} = {zip: "",installScript:""};
+    let customFeature:{zip:string, installScript:string, creates:string} = {zip: "",installScript:"", creates:""};
     if(!args.version && args.feature && !flags.custom){
       releases= await FeatureManager.getInstance().getFeatureReleases(args.feature);
       version = await inquirer.prompt([{
@@ -80,9 +80,21 @@ export default class FeatureAdd extends Command {
         name: 'installScript',
         message: 'insert install script name: ',
         type: 'input'
+      },{
+        name: 'creates',
+        message: 'enter one or more object created by the install script ("," seperated): ',
+        type: 'input'
       }]);
+
       customFeature.installScript = custom.installScript;
       customFeature.zip           = custom.zipPath;
+      if(!(custom.creates as string).includes(',')){
+        console.log(chalk.blueBright("INFO: You did not specify any objects created by the custom feature. XCL will use the target schema to check if feature is installed!"));
+        customFeature.creates       = "";
+      }else{
+        customFeature.creates       = custom.creates;
+      }
+        
     }
 
     args.version = version.number;

@@ -10,13 +10,21 @@ export class CustomFeature implements Feature{
    private installScript : string;
    private version       : string;
    private user          : Schema;
+   private creates       : string[];
+   private installed     : boolean;
 
-   constructor(args : {name:string, version:string, username:string, password:string, installed:boolean, zipLocation:string, installScript:string}){
+   constructor(args : {name:string, version:string, username:string, password:string, installed:boolean, zipLocation:string, installScript:string, creates:string[]}){
       this.name          = args.name;
       this.version       = args.version;
       this.zipLocation   = args.zipLocation;
       this.installScript = args.installScript;
+      this.installed     = args.installed;
       this.user          = new Schema({name: args.username, password: args.password, proxy:undefined});
+      this.creates       = args.creates;
+   }
+
+   getCreates(): string[] {
+      return this.creates;
    }
 
    public getType():FeatureType{
@@ -37,6 +45,14 @@ export class CustomFeature implements Feature{
 
    public getUser():Schema{
       return this.user;
+   }
+
+   public setInstalled(status:boolean){
+      this.installed = status;
+   }
+
+   public getInstalled():boolean{
+      return this.installed;
    }
 
    public isValid():boolean{

@@ -86,18 +86,7 @@
       "@oclif/plugin-help",
       "@oclif/plugin-autocomplete"
     ],
-    "topicSeparator": " ",
-    "topics": {
-      "project": {
-        "description": "add, manage projects"
-      },
-      "feature": {
-        "description": "add, manage features"
-      },
-      "config": {
-        "description": "configure xcl defaults, connection to Github or dockerhub"
-      }
-    }
+    "topicSeparator": " "
   },
   "repository": "MaikMichel/xcl",
   "scripts": {

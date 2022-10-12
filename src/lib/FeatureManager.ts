@@ -145,7 +145,7 @@ export class FeatureManager{
         });
       }
 
-      public addFeatureToProject(featureName:string, version:string, projectName:string, username: string, password: string, custom:boolean=false, customFeature:{zip:string, installScript: string}|undefined = undefined):Promise<boolean>{
+      public addFeatureToProject(featureName:string, version:string, projectName:string, username: string, password: string, custom:boolean=false, customFeature:{zip:string, installScript: string, creates:string}|undefined = undefined):Promise<boolean>{
         return new Promise((resolve,reject)=>{
           let pManager:ProjectManager = ProjectManager.getInstance();
           let project:Project         = pManager.getProject(projectName);
@@ -160,7 +160,7 @@ export class FeatureManager{
             }
           }else{
             if (customFeature){
-              added = project.addFeature(new CustomFeature({name: featureName, version: version, username: username, password: password, installed: false, zipLocation: customFeature.zip, installScript: customFeature.installScript}));
+              added = project.addFeature(new CustomFeature({name: featureName, version: version, username: username, password: password, installed: false, zipLocation: customFeature.zip, installScript: customFeature.installScript, creates: customFeature.creates.replace(/\s/g, "").split(',')}));
             }
           }
           
@@ -276,11 +276,12 @@ export class FeatureManager{
         return feature;
       }
 
-      public getCustomProjectFeature(featureName:string, version:string, username:string, password:string, customFeature:{zip: string, installScript: string}, installed:boolean=false):CustomFeature{
+      public getCustomProjectFeature(featureName:string, version:string, username:string, password:string, customFeature:{zip: string, installScript: string, creates:string[]}, installed:boolean=false):CustomFeature{
         let feature:CustomFeature = new CustomFeature({
                                           name          : featureName, 
                                           version       : version, 
                                           installScript : customFeature.installScript, 
+                                          creates       : customFeature.creates,
                                           zipLocation   : customFeature.zip, 
                                           username      : username, 
                                           password      : password, 
@@ -489,9 +490,16 @@ export class FeatureManager{
                     c = DBHelper.getConnectionProps(customFeature.getUser().getConnectionName(),customFeature.getUser().getPassword(),connection)!;
                   }
                   
-                  FeatureManager.unzipFeature(undefined, project.getDependenciesPath(), customFeature).then(()=>{
+                  FeatureManager.unzipFeature(undefined, project.getDependenciesPath(), customFeature).then(async ()=>{
                     DBHelper.executeScript(c, `${featurePath}/${customFeature.getInstallScript()}`, project.getLogger());
-                    resolve();
+                    if(await DBHelper.isFeatureInstalled(customFeature, project, c)){
+                      customFeature.setInstalled(true);
+                      project.getStatus().updateDependencyStatus(customFeature);
+                      resolve();
+                    }else{
+                      reject();
+                    }
+                    
                   });
                 });
               }

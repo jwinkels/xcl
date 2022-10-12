@@ -387,6 +387,7 @@ export class Project {
               installed: false,
               type: feature.getType(),
               installScript: feature.getInstallScript(),
+              creates: feature.getCreates(),
               user:{
                 name: feature.getUser().getConnectionName(),
                 pwd: feature.getUser().getPassword()
@@ -539,7 +540,7 @@ export class Project {
             break;
           }
           case FeatureType.CUSTOM: {
-            features.set(element.name, (featureManager.getCustomProjectFeature(element.name, element.version, element.user.name, element.user.pwd,{zip: "",installScript: element.installScript})!));
+            features.set(element.name, (featureManager.getCustomProjectFeature(element.name, element.version, element.user.name, element.user.pwd,{zip: "",installScript: element.installScript, creates: [""]})!));
             break;
           }
           default:{
@@ -561,7 +562,7 @@ export class Project {
     this.config=this.readConfig();
 
     if (this.config.xcl?.customDependencies){
-      this.config.xcl.dependencies.forEach((customFeature: {name: string; version: string; installed: boolean;  user:any, zip:string, installScript:string})=>{
+      this.config.xcl.dependencies.forEach((customFeature: {name: string; version: string; installed: boolean;  user:any, zip:string, installScript:string, creates:string[]})=>{
         features.set(customFeature.name, 
                       featureManager.getCustomProjectFeature(
                                           customFeature.name, 
@@ -570,7 +571,8 @@ export class Project {
                                           customFeature.user.pwd, 
                                           { 
                                             zip           : customFeature.zip, 
-                                            installScript : customFeature.installScript
+                                            installScript : customFeature.installScript,
+                                            creates       : customFeature.creates
                                           }, 
                                           customFeature.installed
                                         )
@@ -597,17 +599,23 @@ export class Project {
     return features;
   }
 
-  public updateFeature(feature:ProjectFeature):void{
+  public updateFeature(feature:Feature):void{
     if (this.features.has(feature.getName())){
 
       this.config=this.readConfig();
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean}) => {
 
         if(element.name===feature.getName()){
-          element.version=feature.getReleaseInformation();
+          if(feature instanceof ProjectFeature){
+            element.version=feature.getReleaseInformation();
 
-          if(feature.getType() === 'DEPLOY'){
-            element.installed = true;
+            if(feature.getType() === FeatureType.DEPLOY){
+              element.installed = true;
+            }
+          }else{
+            if(feature instanceof CustomFeature){
+              element.version = feature.getVersion();
+            }
           }
 
         }
@@ -791,14 +799,26 @@ class ProjectStatus {
     return this.changeList;
   }
 
-  public updateDependencyStatus(feature:ProjectFeature, removed:boolean=false){
+  public updateDependencyStatus(feature:Feature, removed:boolean=false){
     if (!removed){
-      if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
-        this.statusConfig.xcl.dependencies[feature.getName()]={};
-        this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
-        this.statusConfig.xcl.dependencies[feature.getName()].owner = feature.getOwner();
-      }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
-        this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+      if(feature instanceof ProjectFeature){
+        if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
+          this.statusConfig.xcl.dependencies[feature.getName()]={};
+          this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+          this.statusConfig.xcl.dependencies[feature.getName()].owner = feature.getOwner();
+        }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
+          this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+        }
+      }else{
+        if(feature instanceof CustomFeature){
+          if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
+            this.statusConfig.xcl.dependencies[feature.getName()]={};
+            this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getVersion();
+            this.statusConfig.xcl.dependencies[feature.getName()].owner = feature.getUser();
+          }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
+            this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getVersion();
+          }
+        }
       }
     }else{
       delete this.statusConfig.xcl.dependencies[feature.getName()];

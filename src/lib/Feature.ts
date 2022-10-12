@@ -14,5 +14,6 @@ export interface Feature{
    getName():string;
    getVersion():string;
    getUser():Schema;
+   getCreates():string[];
 }
 
