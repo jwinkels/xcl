@@ -228,8 +228,9 @@ export class DBHelper {
     logger.getLogger().log("info", `Start script: ${script}`);
 
     let sqlCommand:string|undefined = Environment.readConfigFrom('all','client',false);
-    if(!sqlCommand){
+    if(!sqlCommand || (sqlCommand !== 'sql' && sqlCommand !== 'sqlplus')){
       sqlCommand = this.getSqlClient(logger);
+      
     }
     if(sqlCommand){
     const childProcess = spawnSync(
@@ -261,7 +262,6 @@ export class DBHelper {
     let sqlCommand:string|undefined = Environment.readConfigFrom('all','client',false);
     if(!sqlCommand){
       sqlCommand = this.getSqlClient(logger);
-      console.log('DEDUCED SQLCLIENT: ', sqlCommand);
     }
 
     if(sqlCommand){
@@ -298,16 +298,20 @@ export class DBHelper {
   private static getSqlClient(logger:Logger):string|undefined{
     try{
       let result = spawnSync('sql');
+      let client = "";
       if(result.stderr.toString()!==''){
         result = spawnSync('sqlplus');
         if(result.stderr.toString()!==''){
           return undefined;
         }else{
-          return 'sqlplus';
+          client = 'sqlplus';
         }
       }else{
-        return 'sql';
+        client = 'sql';
       }
+
+      return client;
+    
     }catch(err){
       DBHelper.logResults(err, logger);
     }
