@@ -67,6 +67,7 @@ export class Environment{
         variables.set('ords',{value:"", required: false});
         variables.set('schema', {value: schema, required: false});
         variables.set('client',{value: "", required: true});
+        variables.set('defaultBranch',{value:"", required: false});
         return variables;
     }
 

@@ -18,6 +18,7 @@ import { Utils } from "./Utils";
 
 import * as ps from "ps-node";
 import { Program } from "ps-node";
+import { Environment } from "./Environment";
 @injectable()
 export class Orcas implements DeliveryMethod{
     public install(feature:ProjectFeature, projectPath:string, singleSchema:boolean){
@@ -479,6 +480,25 @@ export class Orcas implements DeliveryMethod{
         }
       }else{
         console.log(chalk.yellow('WARNING: Created empty build in ' + mode + " mode! Please check your repository and commits and try again!"));
+      }
+
+      if(mode === "init"){
+        let defaultBranch:string = Environment.readConfigFrom(project.getPath(), 'defaultBranch', false);
+        if(!defaultBranch){
+          const reset =`git reset --hard`;
+          await ShellHelper.executeScript(reset, process.cwd(), false, project.getLogger());
+          defaultBranch = await Git.checkoutDefaultBranch();
+          let variables:Map<string,{value:string, required:boolean}> = Environment.initialize(project.getName(), project);
+          Environment.setVariable('defaultBranch', defaultBranch, variables);
+          Environment.writeEnvironment(project.getName(),variables);
+        }else{
+          const reset =`git reset --hard`;
+          await ShellHelper.executeScript(reset, process.cwd(), false, project.getLogger());
+        }
+        
+        await Git.checkoutDefaultBranch(defaultBranch);
+        const removeCommand =`git branch -D xcl${commit}`;
+        await ShellHelper.executeScript(removeCommand, process.cwd(), false, project.getLogger());
       }
       
       return buildZip;

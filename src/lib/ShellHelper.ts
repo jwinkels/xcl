@@ -6,9 +6,10 @@ import { Logger } from './Logger';
 
 export class ShellHelper{
     
-    public static executeScriptWithEnv(script: string, executePath:string, envObject:any, consoleOutput:boolean=false, logger:Logger):Promise<{status: boolean, result: string}>{
+    public static executeScriptWithEnv(script: string, executePath:string, envObject:any, consoleOutput:boolean=false, logger:Logger, debug:boolean=false):Promise<{status: boolean, result: string}>{
     return new Promise((resolve, reject)=>{
             let retObj:any = {}
+            let errorString:string="";
             try{
                 const childProcess = spawn(
                     script, 
@@ -21,6 +22,10 @@ export class ShellHelper{
                 );
 
                 childProcess.stdout.on('data',function(data){
+                    if(debug){
+                        console.log(data.toString().trim());
+                    }
+
                     if (consoleOutput){
                         if(data.toString().trim()!==""){
                             logger.getLogger().log("info", data.toString().trim());
@@ -31,10 +36,11 @@ export class ShellHelper{
                 });
 
                 childProcess.stderr.on('data',function(data){
+                    
                     if(data.toString().trim()!==""){
                         retObj.status=false;
                         retObj.result="";
-                        logger.getLogger().log("info", data.toString().trim());
+                        errorString = errorString + data.toString().trim();
                     }
                 });
 
@@ -43,6 +49,8 @@ export class ShellHelper{
                         retObj.status = true;
                     }else{
                         retObj.status = false;
+                        logger.getLogger().log("error", errorString);
+                        
                     }
                     resolve(retObj);
                 });

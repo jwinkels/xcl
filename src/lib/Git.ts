@@ -264,4 +264,28 @@ export class Git{
 
       Utils.addLine(gitignore, filePath);
    }
+
+   public static async checkoutDefaultBranch(defaultBranch:string|undefined=undefined):Promise<string>{
+      if (defaultBranch){
+         const command = `git checkout ${defaultBranch}`;
+         await ShellHelper.executeScript(command, process.cwd(), false, new Logger(process.cwd()));
+         return defaultBranch;
+      }else{
+         const commandA = `git checkout main`;
+         let branch = await ShellHelper.executeScript(commandA, process.cwd(), false, new Logger(process.cwd()));
+         if (branch.status){
+            return 'main';
+         }else{
+            const commandB  = `git checkout master`;
+            branch = await ShellHelper.executeScript(commandB, process.cwd(), false, new Logger(process.cwd()));
+            if(branch.status){
+               return 'master';
+            }else{
+               console.log('Coud not detect default branch! Please set it manually using xcl config defaults');
+               return "";
+            }
+            
+         }
+      }
+   }
 }
