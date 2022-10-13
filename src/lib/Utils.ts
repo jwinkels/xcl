@@ -18,6 +18,14 @@ export class Utils{
         }
     }
 
+    static replaceWindwosSlash(path:string):string{
+        if(path.includes('\\')){
+            return path.replaceAll('\\','/');
+        }else{
+            return path;
+        }
+    }
+
     // read .env file & convert to array
     static getLinesFromFile = (file:string) => {
         if (existsSync(file)) {

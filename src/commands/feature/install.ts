@@ -2,6 +2,7 @@ import {Command, Flags} from '@oclif/core'
 import { FeatureManager } from '../../lib/FeatureManager'
 import { Environment } from '../../lib/Environment'
 import  chalk from 'chalk'
+import { FeatureType } from '../../lib/Feature'
 
 export default class FeatureInstall extends Command{
 
@@ -29,7 +30,9 @@ export default class FeatureInstall extends Command{
 
   async run() {
     const {args, flags} = await this.parse(FeatureInstall);
-    if (FeatureManager.getInstance().getFeatureType(args.feature) ==="DB" && (!flags.connection || flags.connection === "")){
+    if ((FeatureManager.getInstance().getFeatureType(args.feature, args.project) === FeatureType.DB ||
+         FeatureManager.getInstance().getFeatureType(args.feature, args.project) === FeatureType.CUSTOM ) 
+         && (!flags.connection || flags.connection === "")){
       console.log(chalk.red("ERROR: Provide a connection string to install "+args.name));
     }else{
       FeatureManager.getInstance().installProjectFeature(args.feature, flags.connection, flags.syspw!,args.project)

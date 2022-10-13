@@ -20,6 +20,7 @@ import { Application } from './Application';
 import { Utils } from './Utils';
 import { Git } from "./Git";
 import { ProjectWizardConfiguration } from "../commands/project/create";
+import { Feature, FeatureType } from "./Feature";
 const password = require('secure-random-password');
 //import FeatureInstall from "../commands/feature/install";
 
@@ -454,15 +455,21 @@ export class ProjectManager {
         }
       }
 
-      p.getFeatures().forEach( ( feature:ProjectFeature ) =>{
-        if( feature.getType()==="DB" ){
-          if ( FeatureManager.priviledgedInstall( feature.getName() ) && !commands[0] ){
-              commands[0] = 'xcl config:defaults syspw $PASSWORD ' + projectName;
-          }else{
-            console.log( "SYS not needed for feature : " + feature.getName() );
-          }
-
+      p.getFeatures().forEach( ( feature:Feature ) =>{
+        
+        if( feature.getType()=== FeatureType.DB || feature.getType() === FeatureType.CUSTOM){
           const operation = p.getStatus().checkDependency( feature );
+
+         /* if ( ( operation === Operation.INSTALL || operation === Operation.UPDATE ) &&
+               ((!commands[0] &&
+               feature.getType() !== FeatureType.CUSTOM && 
+               FeatureManager.priviledgedInstall( feature.getName() )) || 
+               !p.getUsers().has(feature.getUser().getName().toUpperCase())
+               )
+              ){
+              commands[0] = 'xcl config:defaults syspw $PASSWORD ' + projectName;
+          }*/
+
           if( operation === Operation.INSTALL ){
             console.log( chalk.green('+') + ' install ' + feature.getName() );
             console.log( chalk.green('+++') + ' xcl feature:install ' + feature.getName() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" ) );
@@ -470,7 +477,7 @@ export class ProjectManager {
           }else if( operation === Operation.UPDATE ){
             console.log( chalk.yellow('*') + ' update ' + feature.getName() );
             console.log( chalk.yellow('***') + ' xcl feature:update ' + feature.getName() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" ) );
-            commands[commandCount]= 'xcl feature:update ' + feature.getName() + ' ' + feature.getReleaseInformation() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" );
+            commands[commandCount]= 'xcl feature:update ' + feature.getName() + ' ' + feature.getVersion() + ' ' + projectName + ' --connection=' + Environment.readConfigFrom( path, "connection" );
           }
 
           //WE DONT DO THAT HERE!
@@ -486,7 +493,8 @@ export class ProjectManager {
       });
 
       p.getStatus().getRemovedDependencies();
-
+      
+      //Check if there are changes in the SETUP-directory
       if( p.getStatus().getChanges().get('SETUP') ){
 
         console.log( chalk.green('+') + ' SETUP ');
@@ -500,15 +508,14 @@ export class ProjectManager {
         }
       }
 
-      //commands[commandCount] ='xcl project:deploy '+ projectName + ' --connection=' + Environment.readConfigFrom(path, "connection") + ' --password=' + Environment.readConfigFrom(path, "password");
-      console.log( chalk.green('+') + ' deploy application' );
-      //console.log(chalk.green('+++ ')+commands[commandCount]);
+      //If administrative password is needed, reset it at the end
       if ( commands[0] ){
         commandCount = commandCount + 1;
         console.log( chalk.green('+') + ' xcl config:defaults --reset syspw ' + projectName);
         commands[commandCount] = 'xcl config:defaults --reset syspw ' + projectName;
       }
 
+      //Write plan.sh script and make it executeable
       let fileName = path;
 
       fileName = fileName + '/plan.sh';
@@ -523,7 +530,7 @@ export class ProjectManager {
 
       fs.chmodSync(fileName, '777');
     }else{
-      console.log( chalk.yellow('INFO: No changes in Project dependencies!') );
+      console.log( chalk.yellow('INFO: No changes in project dependencies!') );
     }
   }
 

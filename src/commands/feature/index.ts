@@ -1,4 +1,4 @@
-import {Command} from '@oclif/core'
+import {Command, Flags} from '@oclif/core'
 
 export default class FeatureDefault extends Command {
   static description = 'add, remove or update a feature'

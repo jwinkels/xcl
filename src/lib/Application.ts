@@ -99,8 +99,8 @@ export class Application{
     //this function generates a script to create the workspace for the APEX application 
     public static generateCreateWorkspaceFile(projectName:string, workspace:string, overwrite:boolean=false){
         let project:Project = ProjectManager.getInstance().getProject(projectName);
-        let path            = project.getPath()+`/db/${Project.SETUP_DIR}/workspaces`;
-        let filename        = path+'/create_'+workspace+'.sql'
+        let path:string     = `${project.getPath()}/db/${Project.SETUP_DIR}/workspaces`;
+        let filename:string = `${path}/create_${workspace}.sql`;
 
         if (! fs.existsSync(filename) || overwrite){
           //check if the directory structure already exists and create it if not
@@ -109,11 +109,11 @@ export class Application{
           }
 
           //content of the generate workspace script
-          let script:string = "@.env.sql" + "\n" +
-                      "@" + Utils.enwrapInQuotes('&XCLBIN/scripts/create_workspace.sql')+" "+
-                      workspace + " "+
-                      project.getUsers().get('APP')?.getName() + " " +
-                      (project.getWorkspaceId() ? project.getWorkspaceId() : "null");
+          const appSchema:string   = project.getUsers().get('APP')?.getName()!;
+          const workspaceId:string = (project.getWorkspaceId() ? project.getWorkspaceId() : "null");
+          const createWS:string    = Utils.enwrapInQuotes('&XCLBIN/scripts/create_workspace.sql');
+
+          const script:string = `@.env.sql\n@${createWS} ${workspace} ${appSchema} ${workspaceId}`;
 
           //write content to script-file if not exist   
           fs.writeFileSync(filename,script);
@@ -133,7 +133,7 @@ export class Application{
       }
 
       //content of '.env.sql'
-      let script  = `define XCLBIN = ${xclHomePath}`;
+      const script  = `define XCLBIN = ${xclHomePath}`;
 
       //if file not exists or script content differs
       if(!fs.existsSync(filename) ||
@@ -157,6 +157,7 @@ export class Application{
 
     //read app id from path
     private static getAppId(filename:string):string{
+      //APEX Application ID can be extracted from path matches a leading f and minimum 3 numbers
       let result = filename.match("f[0-9]{3,}");
       if(result && result?.length == 1){
         return result[0].substring(1,result[0].length);

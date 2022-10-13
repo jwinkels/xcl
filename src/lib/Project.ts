@@ -10,24 +10,27 @@ import { Md5 } from 'ts-md5';
 import {Operation} from './Operation';
 import { Logger } from "./Logger";
 import { Git } from "./Git";
+import { CustomFeature } from "./CustomFeature";
+import { Feature, FeatureType } from "./Feature";
+import { Utils } from "./Utils";
 
 
 export class Project {
-  static MODE_SINGLE: string = "single";
-  static MODE_MULTI:  string = "multi";
-  static SETUP_DIR: string   = "_setup";
+  static MODE_SINGLE     : string = "single";
+  static MODE_MULTI      : string = "multi";
+  static SETUP_DIR       : string = "_setup";
 
-  private name: string;                           //Project-Name
-  private path: string; 	                        //Project-Home
-  private errorText = '';                        //Individual Error-Messages
-  private config: any;                            //YAML-Structure that contains all project-configuration
-  private features: Map<string, ProjectFeature>;  //Map to save the added features
-  private users: Map<string, Schema>;              //Map for Project User-List
-  private status: ProjectStatus;
-  private environment:Map<string, {value:string, required:boolean}>;
-  private logger:Logger;
-  private directories:string;
-  private _depot_path: string = '';                            // if something is deployed, that is the path
+  private name           : string;                       //Project-Name
+  private path           : string; 	                     //Project-Home
+  private errorText      = '';                           //Individual Error-Messages
+  private config         : any;                          //YAML-Structure that contains all project-configuration
+  private features       : Map<string, Feature>;  //Map to save the added features
+  private users          : Map<string, Schema>;          //Map for Project User-List
+  private status         : ProjectStatus;
+  private environment    : Map<string, {value:string, required:boolean}>;
+  private logger         : Logger;
+  private directories    : string;
+  private _depot_path    : string = '';                  // if something is deployed, that is the path
 
 
 
@@ -37,12 +40,12 @@ export class Project {
     this.logger = new Logger(path);
 
     if (create) {
-      this.config = this.initialzeConfig(workspaceName, singleSchema);
+      this.config         = this.initialzeConfig(workspaceName, singleSchema);
       this.writeConfig();
-      this.features = new Map();
-      this.users = new Map();
-      this.status = new ProjectStatus(this);
-      this.directories = this.status.getDirectoryHash();
+      this.features       = new Map();
+      this.users          = new Map();
+      this.status         = new ProjectStatus(this);
+      this.directories    = this.status.getDirectoryHash();
       this.createDirectoryStructure(singleSchema);
       Git.addToGitignore(this.getPath(),'.xcl');
       
@@ -50,15 +53,15 @@ export class Project {
       this.status.serialize()
       this.environment = Environment.initialize(this.name, this, singleSchema ? 'app' : '');
     } else {
-      this.config = this.readConfig();
-      this.status = new ProjectStatus(this);
-      this.directories = this.status.getDirectoryHash();
-      this.createDirectoryStructure(this.getMode()=== Project.MODE_MULTI ? false : true);
-      this.name   = this.config.xcl.project;
-      this.features = this.getFeatures();
-      this.users = this.getUsers();
-      this.environment = Environment.initialize(this.name, this, singleSchema ? 'app' : '');
-      this.depotPath = this.config.xcl.depot_path;
+      this.config         = this.readConfig();
+      this.status         = new ProjectStatus(this);
+      this.directories    = this.status.getDirectoryHash();
+      this.createDirectoryStructure( this.getMode() === Project.MODE_MULTI ? false : true );
+      this.name           = this.config.xcl.project;
+      this.features       = this.getFeatures();
+      this.users          = this.getUsers();
+      this.environment    = Environment.initialize(this.name, this, singleSchema ? 'app' : '');
+      this.depotPath      = this.config.xcl.depot_path;
       process.chdir(this.getPath());
     }
 
@@ -354,19 +357,64 @@ export class Project {
   }
 
   //
-  public addFeature(feature:ProjectFeature):any{
+  public addFeature(feature:Feature):any{
     let dependencyConf:any = "";
     //Do not add the Feature if it is already in dependency list or if deployment method has already been configured
-    if ( ! this.features.has(feature.getName()) && !(feature.getType()==="DEPLOY" && this.hasDeployMethod())){
+    if ( ! this.features.has(feature.getName()) && !(feature.getType()===FeatureType.DEPLOY && this.hasDeployMethod())){
       this.config=this.readConfig();
       this.features.set(feature.getName(),feature);
+      
       if(!this.config.xcl.dependencies){
         this.config.xcl.dependencies=[];
         //this.status.updateStatus();
       }
 
-      //DEPLOY-Feature using the existing users to connect to the database and deploy the objects
-      if(feature.getType()==="DEPLOY"){
+      switch (feature.getType()){
+        //DEPLOY-Feature using the existing users to connect to the database and deploy the objects
+        case FeatureType.DEPLOY:
+          dependencyConf = {
+            name: feature.getName(),
+            version: feature.getVersion(),
+            installed: false,
+            type: feature.getType()
+          };
+          break;
+        case FeatureType.CUSTOM:
+          if(feature instanceof CustomFeature && feature.isValid()){
+            dependencyConf = {
+              name: feature.getName(),
+              version: feature.getVersion(),
+              installed: false,
+              type: feature.getType(),
+              installScript: feature.getInstallScript(),
+              creates: feature.getCreates(),
+              user:{
+                name: feature.getUser().getConnectionName(),
+                pwd: feature.getUser().getPassword()
+                }
+            };
+          }else{
+            throw Error(`Cannot add invalid custom Feature, could not find ${feature.getName()}.zip in ${this.getDependenciesPath()}`);
+          }
+          break;
+
+        case FeatureType.DB:
+          dependencyConf = {
+            name: feature.getName(),
+            version: feature.getVersion(),
+            //installed: feature.getInstalled(),
+            type: feature.getType(),
+            user:{
+                name: feature.getUser().getConnectionName(),
+                pwd: feature.getUser().getPassword()
+                }
+            };
+          break;
+        default:
+          throw Error('CRITICAL: Unkown Feature Type');
+      }
+
+     /* if(feature.getType() === FeatureType.DEPLOY){
         dependencyConf = {
               name: feature.getName(),
               version: feature.getReleaseInformation(),
@@ -385,7 +433,7 @@ export class Project {
                     pwd: feature.getUser().getPassword()
                     }
                 };
-      }
+      }*/
       this.config.xcl.dependencies.push(dependencyConf);
       this.writeConfig();
       return true;
@@ -399,6 +447,10 @@ export class Project {
         console.log(chalk.red('ERROR: deployment already configured! Remove the feature before adding a new deployment configuration!'));
       }
     }
+  }
+
+  public addCustomFeature(){
+
   }
 
   public addSetupStep(file:string, path:string, hash:string):void{
@@ -471,20 +523,24 @@ export class Project {
   }
 
   //INFO: Read all Features from configuration and write it to feature-Map < String, ProjectFeature >
-  public getFeatures():Map<string,ProjectFeature>{
-    const features: Map<string, ProjectFeature> = new Map<string, ProjectFeature>();
+  public getFeatures():Map<string,Feature>{
+    const features: Map<string, Feature> = new Map<string, Feature>();
     const featureManager = FeatureManager.getInstance();
     this.config=this.readConfig();
 
     if (this.config.xcl?.dependencies){
-      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean; type:string; user:any}) => {
+      this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean; type:string; user:any, installScript:string}) => {
         switch(element.type){
-          case "DB": {
+          case FeatureType.DB: {
             features.set(element.name,(featureManager.getProjectFeature(element.name,element.version, element.user.name, element.user.pwd, element.installed) ! ));
             break;
           }
-          case "DEPLOY": {
+          case FeatureType.DEPLOY: {
             features.set(element.name,(featureManager.getProjectFeature(element.name,element.version, "", "", element.installed) ! ));
+            break;
+          }
+          case FeatureType.CUSTOM: {
+            features.set(element.name, (featureManager.getCustomProjectFeature(element.name, element.version, element.user.name, element.user.pwd,{zip: "",installScript: element.installScript, creates: [""]})!));
             break;
           }
           default:{
@@ -494,6 +550,34 @@ export class Project {
         }
 
       });
+    }else{
+      return features;
+    }
+    return features;
+  }
+
+  public getCustomFeatures():Map<string, CustomFeature>{
+    const features:Map<string, CustomFeature> = new Map<string, CustomFeature>();
+    const featureManager                      = FeatureManager.getInstance();
+    this.config=this.readConfig();
+
+    if (this.config.xcl?.customDependencies){
+      this.config.xcl.dependencies.forEach((customFeature: {name: string; version: string; installed: boolean;  user:any, zip:string, installScript:string, creates:string[]})=>{
+        features.set(customFeature.name, 
+                      featureManager.getCustomProjectFeature(
+                                          customFeature.name, 
+                                          customFeature.version, 
+                                          customFeature.user.name, 
+                                          customFeature.user.pwd, 
+                                          { 
+                                            zip           : customFeature.zip, 
+                                            installScript : customFeature.installScript,
+                                            creates       : customFeature.creates
+                                          }, 
+                                          customFeature.installed
+                                        )
+                    );
+      });  
     }else{
       return features;
     }
@@ -515,17 +599,23 @@ export class Project {
     return features;
   }
 
-  public updateFeature(feature:ProjectFeature):void{
+  public updateFeature(feature:Feature):void{
     if (this.features.has(feature.getName())){
 
       this.config=this.readConfig();
       this.config.xcl.dependencies.forEach((element: { name: string; version: string; installed: boolean}) => {
 
         if(element.name===feature.getName()){
-          element.version=feature.getReleaseInformation();
+          if(feature instanceof ProjectFeature){
+            element.version=feature.getReleaseInformation();
 
-          if(feature.getType() === 'DEPLOY'){
-            element.installed = true;
+            if(feature.getType() === FeatureType.DEPLOY){
+              element.installed = true;
+            }
+          }else{
+            if(feature instanceof CustomFeature){
+              element.version = feature.getVersion();
+            }
           }
 
         }
@@ -607,6 +697,11 @@ export class Project {
     }else{
         console.error(chalk.red('ERROR: Unkown variable ´'+key+'´'));
     }
+  }
+
+  public getDependenciesPath():string{
+    
+    return Utils.replaceWindwosSlash(`${this.path}/dependencies`);
   }
 }
 
@@ -704,14 +799,26 @@ class ProjectStatus {
     return this.changeList;
   }
 
-  public updateDependencyStatus(feature:ProjectFeature, removed:boolean=false){
+  public updateDependencyStatus(feature:Feature, removed:boolean=false){
     if (!removed){
-      if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
-        this.statusConfig.xcl.dependencies[feature.getName()]={};
-        this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
-        this.statusConfig.xcl.dependencies[feature.getName()].owner = feature.getOwner();
-      }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
-        this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+      if(feature instanceof ProjectFeature){
+        if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
+          this.statusConfig.xcl.dependencies[feature.getName()]={};
+          this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+          this.statusConfig.xcl.dependencies[feature.getName()].owner = feature.getOwner();
+        }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
+          this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getReleaseInformation();
+        }
+      }else{
+        if(feature instanceof CustomFeature){
+          if(!this.statusConfig.xcl.dependencies || !this.statusConfig.xcl.dependencies[feature.getName()]){
+            this.statusConfig.xcl.dependencies[feature.getName()]={};
+            this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getVersion();
+            this.statusConfig.xcl.dependencies[feature.getName()].owner = feature.getUser();
+          }else if(this.statusConfig.xcl.dependencies[feature.getName()]){
+            this.statusConfig.xcl.dependencies[feature.getName()].version=feature.getVersion();
+          }
+        }
       }
     }else{
       delete this.statusConfig.xcl.dependencies[feature.getName()];
@@ -787,12 +894,12 @@ class ProjectStatus {
   }
 
   //Checks wether the dependency is already installed in the correct version
-  public checkDependency(feature: ProjectFeature):Operation{
+  public checkDependency(feature: Feature):Operation{
 
     this.statusConfig=this.deserialize();
     if (this.statusConfig.xcl.dependencies &&
         this.statusConfig.xcl.dependencies[feature.getName()] &&
-        this.statusConfig.xcl.dependencies[feature.getName()].version == feature.getReleaseInformation()){
+        this.statusConfig.xcl.dependencies[feature.getName()].version == feature.getVersion()){
 
               return Operation.NONE;
 
@@ -804,7 +911,7 @@ class ProjectStatus {
 
     }else if(this.statusConfig.xcl.dependencies &&
             this.statusConfig.xcl.dependencies[feature.getName()] &&
-            this.statusConfig.xcl.dependencies[feature.getName()].version != feature.getReleaseInformation()){
+            this.statusConfig.xcl.dependencies[feature.getName()].version != feature.getVersion()){
 
               this.addToChanges('FEATURE');
               return Operation.UPDATE;
@@ -814,7 +921,7 @@ class ProjectStatus {
   }
 
   public getRemovedDependencies(){
-    let features:Map<string,ProjectFeature> = new Map();
+    let features:Map<string,Feature> = new Map();
     this.statusConfig=this.deserialize();
     features = this.project.getFeatures();
       Object.keys(this.statusConfig.xcl.dependencies).forEach(key=>{
@@ -867,10 +974,10 @@ class ProjectStatus {
     return yaml.parse(conf);
   }
 
-  public getDependencyStatus(feature: ProjectFeature):boolean{
+  public getDependencyStatus(feature: Feature):boolean{
     if(this.statusConfig.xcl.dependencies &&
        this.statusConfig.xcl.dependencies[feature.getName()] &&
-       this.statusConfig.xcl.dependencies[feature.getName()].version === feature.getReleaseInformation()
+       this.statusConfig.xcl.dependencies[feature.getName()].version === feature.getVersion()
        ){
       return true;
     }else{

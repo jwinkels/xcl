@@ -3,7 +3,8 @@ import yaml from "yaml";
 import * as fs from "fs-extra";
 import * as os from "os";
 import chalk from 'chalk'
-import { Feature } from './Feature';
+import { GithubFeature } from './GithubFeature';
+import { Feature, FeatureType } from './Feature';
 import { ProjectManager } from './ProjectManager';
 import { ProjectFeature } from './ProjectFeature';
 import { GithubCredentials } from './GithubCredentials';
@@ -20,6 +21,7 @@ import { Schema } from "./Schema";
 import AdmZip from "adm-zip";
 import  Table  from 'cli-table3';
 import got from 'got';
+import { CustomFeature } from "./CustomFeature";
 
 export class FeatureManager{
     public static softwareYMLfile: string = "software.yml";
@@ -28,8 +30,7 @@ export class FeatureManager{
     private static xclHome = os.homedir + "/AppData/Roaming/xcl";
     private static softwareYaml: yaml.Document;
     private static softwareJson: any;
-    private static features: Map<string, Feature>;
- 
+    private static features: Map<string, GithubFeature|CustomFeature>;
 
     private constructor(){
         FeatureManager.softwareYaml = yaml.parseDocument(fs.readFileSync(FeatureManager.xclHome + "/" 
@@ -42,15 +43,15 @@ export class FeatureManager{
 
         Object.keys(FeatureManager.softwareJson.software).forEach(function(softwareName){
           let softwareJSON = FeatureManager.softwareJson.software[softwareName];
-          let featureType="";
+          let featureType:FeatureType;
          
           if (softwareJSON.deploy){
-            featureType="DEPLOY";
+            featureType = FeatureType.DEPLOY;
           }else{
-            featureType="DB";
+            featureType = FeatureType.DB;
           }
             
-          FeatureManager.features.set(softwareName, new Feature({ name: softwareName, 
+          FeatureManager.features.set(softwareName, new GithubFeature({ name: softwareName, 
                                                                   owner: softwareJSON.owner, 
                                                                   repo: softwareJSON.repo, 
                                                                   gitAttribute: softwareJSON.call,
@@ -83,8 +84,10 @@ export class FeatureManager{
           let feature:Feature;
 
           for(feature of FeatureManager.features.values()){
-            if (feature.getType()===type || type==="all"){
-              table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType() ]);
+            if( feature instanceof GithubFeature){
+              if (feature.getType()===type || type==="all"){
+                table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType() ]);
+              }
             }
           }
           console.log(table.toString());
@@ -104,17 +107,24 @@ export class FeatureManager{
           let feature:Feature;
 
           for(feature of FeatureManager.features.values()){
-            if (feature.getType()===type || type==="all"){
-              if(p.getFeatures().has(feature.getName())){
-                let status:any;
-                if (feature.getType() === 'DEPLOY'){
-                  status = p.getFeatures().get(feature.getName())?.getStatus();
+            if(feature instanceof ProjectFeature){  
+              if (feature.getType()===type || type==="all"){
+                if(p.getFeatures().has(feature.getName())){
+                  let status:any;
+                  if (feature.getType() === 'DEPLOY'){
+
+                    status = (p.getFeatures().get(feature.getName()) as ProjectFeature)?.getStatus();
+                  }else{
+                    status = p.getStatus().getDependencyStatus(p.getFeatures().get(feature.getName())!) ? chalk.green("installed") : chalk.red("uninstalled");
+                  }
+                  table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'added ', status]);
                 }else{
-                  status = p.getStatus().getDependencyStatus(p.getFeatures().get(feature.getName())!) ? chalk.green("installed") : chalk.red("uninstalled");
+                  table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'not added','' ]);
                 }
-                table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'added ', status]);
-              }else{
-                table.push([ feature.getName(), feature.getRepo(), feature.getOwner(), feature.getType(),'not added','' ]);
+              }
+            }else if (feature instanceof CustomFeature){
+              if (feature.getType()===type || type==="all"){
+                table.push([ feature.getName(), '', '', feature.getType(),'added ',  (p.getFeatures().get(feature.getName()) as ProjectFeature).getStatus()]);
               }
             }
           }
@@ -128,49 +138,61 @@ export class FeatureManager{
         
         return new Promise((resolve, reject)=>{          
           if(FeatureManager.features.has(name.toLowerCase())){
-              resolve((FeatureManager.features.get(name.toLowerCase()) ! ).getReleaseInformation());
+              resolve((FeatureManager.features.get(name.toLowerCase()) ! as GithubFeature).getReleaseInformation());
           }else{
             throw Error('Unknown Feature: '+name+' Try: xcl feature:list');
           }
         });
       }
 
-      public addFeatureToProject(featureName:string, version:string, projectName:string, username: string, password: string):Promise<boolean>{
+      public addFeatureToProject(featureName:string, version:string, projectName:string, username: string, password: string, custom:boolean=false, customFeature:{zip:string, installScript: string, creates:string}|undefined = undefined):Promise<boolean>{
         return new Promise((resolve,reject)=>{
-          let pManager:ProjectManager=ProjectManager.getInstance();
-          let added = pManager.getProject(projectName).addFeature( (this.getProjectFeature(featureName, version, username, password) ! ));
-          if (added){
-            this.downloadFeature(pManager.getProject(projectName).getFeatures().get(featureName)!, projectName).then(()=>resolve(true));
+          let pManager:ProjectManager = ProjectManager.getInstance();
+          let project:Project         = pManager.getProject(projectName);
+          let added:any; 
+          
+          if (!custom){
+            added = project.addFeature( (this.getProjectFeature(featureName, version, username, password) ! ));
+            if (added){
+              this.downloadFeature(project.getFeatures().get(featureName) as ProjectFeature, projectName).then(()=>resolve(true));
+            }else{
+              resolve(false);
+            }
           }else{
-            resolve(false);
+            if (customFeature){
+              added = project.addFeature(new CustomFeature({name: featureName, version: version, username: username, password: password, installed: false, zipLocation: customFeature.zip, installScript: customFeature.installScript, creates: customFeature.creates.replace(/\s/g, "").split(',')}));
+            }
           }
           
         });
       }
 
       private downloadFeature(feature:ProjectFeature, projectName:string):Promise<void>{
-        let pManager:ProjectManager=ProjectManager.getInstance();
-        return new Promise((resolve, reject)=>{
-          var filename = pManager.getProject(projectName).getPath() +'/dependencies/'+feature.getName()+'_'+feature.getReleaseInformation()+'.zip';
-          feature.getDownloadUrl()
-                    .then(function(url){
-                    var options = {
-                      url: "",
-                      headers: {}
-                    };
-                    
-                    options.url=url;
+        let pManager : ProjectManager = ProjectManager.getInstance();
+        let project  : Project        = pManager.getProject(projectName);
+        return new Promise((resolve, reject) => {
+          
+          var filename = project.getPath() + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '.zip';
+          
+          if(feature.getType() !== "CUSTOM"){
+            feature.getDownloadUrl().then(function(url){
+              var options = {
+                uri: "",
+                headers: {}
+              };
+              
+              options.uri = url;
 
-                    if (GithubCredentials.get()){
-                        options.headers= {
-                            'User-Agent': 'xcl',
-                            'Authorization': 'token ' + GithubCredentials.get()
-                        };
-                    }else{
-                      options.headers= {
-                        'User-Agent': 'xcl'
-                      }
-                    }
+              if (GithubCredentials.get()){
+                  options.headers = {
+                      'User-Agent': 'xcl',
+                      'Authorization': 'token ' + GithubCredentials.get()
+                  };
+              }else{
+                options.headers = {
+                  'User-Agent': 'xcl'
+                }
+              }
 
               if(!fs.pathExistsSync(pManager.getProject(projectName).getPath() + '/dependencies')){
                   fs.mkdirSync(pManager.getProject(projectName).getPath() + '/dependencies');
@@ -184,7 +206,8 @@ export class FeatureManager{
               );
 
             });
-          });
+          }
+        });
       }
 
       public listProjectFeatures(projectName:string, type:string){
@@ -198,24 +221,33 @@ export class FeatureManager{
           ]
         });
 
-        let feature:ProjectFeature;
+        let feature:Feature;
         let project:Project = ProjectManager.getInstance().getProject(projectName);
         for(feature of project.getFeatures().values()){
           if (feature.getType()===type || type==="all"){
-            if (feature.getType()==='DEPLOY'){
+            if (feature instanceof ProjectFeature && feature.getType()===FeatureType.DEPLOY){
               table.push([
                 feature.getName(), 
-                feature.getReleaseInformation(),
+                feature.getVersion(),
                 feature.getType(),
                 feature.getStatus()
               ]);
             }else{
-              table.push([
-                feature.getName(), 
-                feature.getReleaseInformation(),
-                feature.getType(),
-                (project.getStatus().getDependencyStatus(feature)?chalk.green('installed'):chalk.red('uninstalled'))
-              ]);
+              if(feature instanceof ProjectFeature){
+                table.push([
+                  feature.getName(), 
+                  feature.getVersion(),
+                  feature.getType(),
+                  (project.getStatus().getDependencyStatus(feature)?chalk.green('installed'):chalk.red('uninstalled'))
+                ]);
+              }else if(feature instanceof CustomFeature){
+                table.push([
+                  feature.getName(), 
+                  feature.getVersion(),
+                  feature.getType(),
+                  (project.getStatus().getDependencyStatus(feature)?chalk.green('installed'):chalk.red('uninstalled'))
+                ]);
+              }
             }
           }
         }
@@ -228,7 +260,7 @@ export class FeatureManager{
         let feature:ProjectFeature|undefined;
         if( FeatureManager.features.has(featureName.toLowerCase()) ){
           if (FeatureManager.features.get(featureName.toLowerCase()) !== undefined ){
-            feature = new ProjectFeature({parent: (FeatureManager.features.get(featureName.toLowerCase()) !),
+            feature = new ProjectFeature({parent: (FeatureManager.features.get(featureName.toLowerCase()) ! as GithubFeature),
                                               version: version,
                                               username: username,
                                               password: password,
@@ -244,10 +276,24 @@ export class FeatureManager{
         return feature;
       }
 
+      public getCustomProjectFeature(featureName:string, version:string, username:string, password:string, customFeature:{zip: string, installScript: string, creates:string[]}, installed:boolean=false):CustomFeature{
+        let feature:CustomFeature = new CustomFeature({
+                                          name          : featureName, 
+                                          version       : version, 
+                                          installScript : customFeature.installScript, 
+                                          creates       : customFeature.creates,
+                                          zipLocation   : customFeature.zip, 
+                                          username      : username, 
+                                          password      : password, 
+                                          installed     : installed
+                                      });
+        return feature;
+      }
+
       public async installAllProjectFeatures(projectName:string, connection:string, syspw:string, forceInstall:boolean){
         for (const feature of ProjectManager.getInstance().getProject(projectName).getFeaturesOfType('DB').values()){
           if(feature.isInstalled() && forceInstall){
-            await FeatureManager.updateFeatureVersion(feature.getName(), feature.getReleaseInformation().toString(), projectName, connection, syspw);
+            await FeatureManager.updateFeatureVersion(feature.getName(), feature.getVersion(), projectName, connection, syspw);
           }else{
             FeatureManager.getInstance().installProjectFeature(feature.getName(), connection, syspw, projectName);
           }
@@ -266,170 +312,196 @@ export class FeatureManager{
               always: boolean
             }
 
-            var projectPath=ProjectManager.getInstance().getProject(projectName).getPath();
-            syspw = syspw ? syspw : Environment.readConfigFrom(projectPath, "syspw");
-            var project = ProjectManager.getInstance().getProject(projectName);
+            var projectPath = ProjectManager.getInstance().getProject(projectName).getPath();
+            syspw           = syspw ? syspw : Environment.readConfigFrom(projectPath, "syspw");
+            var project     = ProjectManager.getInstance().getProject(projectName);
             
             if (project.getFeatures().has(featureName)){
-              let feature:ProjectFeature=project.getFeatures().get(featureName)!;
-              var featurePath = projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
-              if (feature.getType()==="DB"){
-                var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection)!;
-                //Check if feature is already installed (this may not work properly)
-                DBHelper.isFeatureInstalled(feature, project,c)
-                  .then((installed) => {
-                    /*
-                      if feature installed check is negative and 
-                      the current project status for this depedency is that
-                      the feature needs to be installed
-                    */
-                    var installSteps:any = FeatureManager.getInstallSteps(feature.getName());
-                    if(! installed && (project.getStatus().checkDependency(feature) ===  Operation.INSTALL)){ 
-                      console.log(`Installing feature ${feature.getName()}...`)
-                    }else{
-                      console.info(chalk.blue(`INFO: Feature '${feature.getName()}' is already installed! Just executing the run always scripts!`));
-                      installSteps.scripts = installSteps.scripts.filter((script:Script) => script.always);
-                    }
-                    
-                    FeatureManager.unzipFeature(installSteps, projectPath, feature).then(()=>{
-                      if (installSteps.scripts){
-                        //Iterate through install script steps
-                        for (var i=0; i<installSteps.scripts.length; i++){
-                          //Initializing needed variables 
-                          var argumentString="";        //If installstep has any arguments
-                          let substeps:string[] = [];   //If installstep has substeps
-                          
-                          //Iterate through arguments at install step entry
-                          if (installSteps.scripts[i].arguments){
-                            for (var j=0; j<installSteps.scripts[i].arguments.length; j++){
-                              substeps = [];
-                              //If install-steps needs user-credentials to login to database
-                              if (installSteps.scripts[i].arguments[j] == 'credentials'){
-                                /*
-                                  If the feature is to be installed in a project-schema 
-                                  we need to get the credentials from xcl user config,
-                                  else we get the credentials from feature config
-                                */
-                                if(project.getUsers().get(feature.getUser().getName())){
-                                  argumentString = " " + project.getUsers().get(feature.getUser().getName())?.getConnectionName() + " ";
-                                  argumentString = argumentString + project.getUsers().get(feature.getUser().getName())?.getProxy()?.getPassword();
-                                }else{
-                                  argumentString = " " + feature.getUser().getConnectionName() + " ";
-                                  argumentString = argumentString + feature.getUser().getPassword();
-                                }
-                              }else if(installSteps.scripts[i].arguments[j] == 'username'){
-                                /*
-                                  If the installsteps argument is 'username'
-                                  check if target schema is one of the project-schemata
-                                  else it is installed in a seperate schema 
-                                */
-                                if(project.getUsers().get(feature.getUser().getName())){
-                                  argumentString = " " +  project.getUsers().get(feature.getUser().getName())?.getName();
-                                }else{
-                                  argumentString = " " + feature.getUser().getConnectionName(); 
-                                }
-                              }else if(installSteps.scripts[i].arguments[j] == 'usernames'){   
-                                /*
-                                  If argument is 'usernames' then the script shall be executed for all the project users
-                                  therefor we need to iterate over the array and execute the script n-times with the username as argument
-                                */
-                                for (let user in project.getUserNames()){
+              const feature:Feature = project.getFeatures().get(featureName)!;
+              var featurePath       = project.getDependenciesPath() +'/' + feature.getName() + '_' + feature.getVersion();
+              if (feature instanceof ProjectFeature){
+                const projectFeature = project.getFeatures().get(featureName) as ProjectFeature;
+                switch (feature.getType()){
+                  case FeatureType.DB:
+                    var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection)!;
 
-                                  substeps[user] = installSteps.scripts[i].path + ' ' + project.getUserNames()[user];
+                    //Check if feature is already installed (this may not work properly)
+                    DBHelper.isFeatureInstalled(projectFeature, project, c)
+                      .then((installed) => {
+                        /*
+                          if feature installed check is negative and 
+                          the current project status for this depedency is that
+                          the feature needs to be installed
+                        */
+                        var installSteps:any = FeatureManager.getInstallSteps(projectFeature.getName());
+                        if(! installed && (project.getStatus().checkDependency(projectFeature) ===  Operation.INSTALL)){ 
+                          console.log(`Installing feature ${projectFeature.getName()}...`)
+                        }else{
+                          console.info(chalk.blue(`INFO: Feature '${projectFeature.getName()}' is already installed! Just executing the run always scripts!`));
+                          installSteps.scripts = installSteps.scripts.filter((script:Script) => script.always);
+                        }
+                        
+                        FeatureManager.unzipFeature(installSteps, project.getDependenciesPath(), projectFeature).then(()=>{
+                          if (installSteps.scripts){
+                            //Iterate through install script steps
+                            for (var i=0; i<installSteps.scripts.length; i++){
+                              //Initializing needed variables 
+                              var argumentString="";        //If installstep has any arguments
+                              let substeps:string[] = [];   //If installstep has substeps
+                              
+                              //Iterate through arguments at install step entry
+                              if (installSteps.scripts[i].arguments){
+                                for (var j=0; j<installSteps.scripts[i].arguments.length; j++){
+                                  substeps = [];
+                                  //If install-steps needs user-credentials to login to database
+                                  if (installSteps.scripts[i].arguments[j] == 'credentials'){
+                                    /*
+                                      If the feature is to be installed in a project-schema 
+                                      we need to get the credentials from xcl user config,
+                                      else we get the credentials from feature config
+                                    */
+                                    if(project.getUsers().get(projectFeature.getUser().getName())){
+                                      argumentString = " " + project.getUsers().get(projectFeature.getUser().getName())?.getConnectionName() + " ";
+                                      argumentString = argumentString + project.getUsers().get(projectFeature.getUser().getName())?.getProxy()?.getPassword();
+                                    }else{
+                                      argumentString = " " + projectFeature.getUser().getConnectionName() + " ";
+                                      argumentString = argumentString + projectFeature.getUser().getPassword();
+                                    }
+                                  }else if(installSteps.scripts[i].arguments[j] == 'username'){
+                                    /*
+                                      If the installsteps argument is 'username'
+                                      check if target schema is one of the project-schemata
+                                      else it is installed in a seperate schema 
+                                    */
+                                    if(project.getUsers().get(projectFeature.getUser().getName())){
+                                      argumentString = " " +  project.getUsers().get(projectFeature.getUser().getName())?.getName();
+                                    }else{
+                                      argumentString = " " + projectFeature.getUser().getConnectionName(); 
+                                    }
+                                  }else if(installSteps.scripts[i].arguments[j] == 'usernames'){   
+                                    /*
+                                      If argument is 'usernames' then the script shall be executed for all the project users
+                                      therefor we need to iterate over the array and execute the script n-times with the username as argument
+                                    */
+                                    for (let user in project.getUserNames()){
+
+                                      substeps[user] = installSteps.scripts[i].path + ' ' + project.getUserNames()[user];
+                                    }
+                                  }else{
+                                    argumentString = argumentString + " " + installSteps.parameters[installSteps.scripts[i].arguments[j]];
+                                  }
+                                }
+                              }
+                              
+                              //when script needs to be executed as sysdba establish a connection with sysdba role
+                              if (installSteps.scripts[i].sys === true){
+                                connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
+                                c = DBHelper.getConnectionProps('sys', syspw, connection)!;
+                              }else{
+                                connectionWithUser = projectFeature.getUser().getConnectionName() + "/" + projectFeature.getUser().getPassword() + "@" + connection;
+                                //if script has the executeAs flag
+                                if (!installSteps.scripts[i].executeAs){
+                                  //and executeAs is a project-schema
+                                  if(project.getUsers().has(projectFeature.getUser().getName())){
+                                    c = DBHelper.getConnectionProps(project.getUsers().get(projectFeature.getUser().getName())?.getConnectionName(),
+                                                                    Environment.readConfigFrom(project.getPath(), 'password', false),
+                                                                    connection)!; 
+                                  }else{ //else use the user defined in the feature configuration
+                                    c = DBHelper.getConnectionProps(projectFeature.getUser().getConnectionName(),projectFeature.getUser().getPassword(),connection)!;
+                                  }
+                                }
+                              }
+
+                              var executeString="";
+                              var xclScript = installSteps.scripts[i].xcl ? installSteps.scripts[i].xcl : false;    //if script is provided by xcl
+                              if (!xclScript && fs.existsSync(featurePath + '/' + installSteps.scripts[i].path)){
+                                executeString = Utils.checkPathForSpaces(featurePath 
+                                                            + '/' 
+                                                            + installSteps.scripts[i].path) 
+                                                            + argumentString;
+                              }else{
+                                if(fs.existsSync(__dirname + "/scripts/" + installSteps.scripts[i].path)){
+                                  if(xclScript){
+                                    project.getLogger().getLogger().log("warning", 'Using XCL-Script instead of native script!');
+                                  }
+                                  executeString=Utils.checkPathForSpaces(__dirname + "/scripts/" + installSteps.scripts[i].path) + argumentString;
+                                }else{
+                                  throw Error(`Script '${__dirname + "/scripts/" + installSteps.scripts[i].path}' couldn't be found!`);
+                                }
+                              }
+                              
+                              //If installstep has no subprocesses to execute
+                              if (substeps.length == 0){
+                                //when the executeAs flag in software.yml is 'PROJECT_USER'
+                                //the setup-step needs to be executed as every project-user (SINGLE or MULTI_SCHEMA)
+                                if(installSteps.scripts[i].executeAs === "PROJECT_USER"){
+                                  for (let [user, schema] of project.getUsers()){
+                                    c = DBHelper.getConnectionProps(project.getUsers().get(user)?.getConnectionName(),
+                                                                    Environment.readConfigFrom(project.getPath(), 'password', false),
+                                                                    connection)!; 
+                                    DBHelper.executeScript(c, executeString, project.getLogger());            
+                                  }
+                                }else{  //if not execute the script as feature-user
+                                  DBHelper.executeScript(c, executeString, project.getLogger());
                                 }
                               }else{
-                                argumentString = argumentString + " " + installSteps.parameters[installSteps.scripts[i].arguments[j]];
+                                //when installstep has substeps
+                                //execute them all
+                                for (let s in substeps){
+                                  DBHelper.executeScript(c, featurePath + '/' + substeps[s], project.getLogger());
+                                }
                               }
                             }
-                          }
-                          
-                          //when script needs to be executed as sysdba establish a connection with sysdba role
-                          if (installSteps.scripts[i].sys === true){
-                            connectionWithUser="sys/" + syspw + "@" + connection + " AS SYSDBA";
-                            c = DBHelper.getConnectionProps('sys',syspw,connection)!;
+                            fs.removeSync(projectPath + '/dependencies/' + projectFeature.getName() + '_' + projectFeature.getVersion());
                           }else{
-                            connectionWithUser = feature.getUser().getConnectionName() + "/" + feature.getUser().getPassword() + "@" + connection;
-                            //if script has the executeAs flag
-                            if (!installSteps.scripts[i].executeAs){
-                              //and executeAs is a project-schema
-                              if(project.getUsers().has(feature.getUser().getName())){
-                                c = DBHelper.getConnectionProps(project.getUsers().get(feature.getUser().getName())?.getConnectionName(),
-                                                                Environment.readConfigFrom(project.getPath(), 'password', false),
-                                                                connection)!; 
-                              }else{ //else use the user defined in the feature configuration
-                                c = DBHelper.getConnectionProps(feature.getUser().getConnectionName(),feature.getUser().getPassword(),connection)!;
-                              }
-                            }
+                            throw Error('Could not find installation information! Update your software.yml file!');
                           }
-
-                          var executeString="";
-                          var xclScript = installSteps.scripts[i].xcl ? installSteps.scripts[i].xcl : false;    //if script is provided by xcl
-                          if (!xclScript && fs.existsSync(featurePath + '/' + installSteps.scripts[i].path)){
-                            executeString = Utils.checkPathForSpaces(featurePath 
-                                                        + '/' 
-                                                        + installSteps.scripts[i].path) 
-                                                        + argumentString;
-                          }else{
-                            if(fs.existsSync(__dirname + "/scripts/" + installSteps.scripts[i].path)){
-                              if(xclScript){
-                                project.getLogger().getLogger().log("warning", 'Using XCL-Script instead of native script!');
-                              }
-                              executeString=Utils.checkPathForSpaces(__dirname + "/scripts/" + installSteps.scripts[i].path) + argumentString;
-                            }else{
-                              throw Error(`Script '${__dirname + "/scripts/" + installSteps.scripts[i].path}' couldn't be found!`);
-                            }
-                          }
-                          
-                          //If installstep has no subprocesses to execute
-                          if (substeps.length == 0){
-                            //when the executeAs flag in software.yml is 'PROJECT_USER'
-                            //the setup-step needs to be executed as every project-user (SINGLE or MULTI_SCHEMA)
-                            if(installSteps.scripts[i].executeAs === "PROJECT_USER"){
-                              for (let [user, schema] of project.getUsers()){
-                                c = DBHelper.getConnectionProps(project.getUsers().get(user)?.getConnectionName(),
-                                                                Environment.readConfigFrom(project.getPath(), 'password', false),
-                                                                connection)!; 
-                                DBHelper.executeScript(c, executeString, project.getLogger());            
-                              }
-                            }else{  //if not execute the script as feature-user
-                              DBHelper.executeScript(c, executeString, project.getLogger());
-                            }
-                          }else{
-                            //when installstep has substeps
-                            //execute them all
-                            for (let s in substeps){
-                              DBHelper.executeScript(c, featurePath + '/' + substeps[s], project.getLogger());
-                            }
-                          }
+                        });
+                      })
+                      .finally( function(){
+                          projectFeature.setInstalled(true);
+                          //ProjectManager.getInstance().getProject(projectName).updateFeature(feature);
+                          project.getStatus().updateDependencyStatus(projectFeature);
+                          resolve();
                         }
-                        fs.removeSync(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation());
-                      }else{
-                        throw Error('Could not find installation information! Update your software.yml file!');
-                      }
+                      );
+                    break;
+                case FeatureType.DEPLOY:
+                    FeatureManager.unzipFeature(undefined, project.getDependenciesPath(), projectFeature).then(()=>{
+                      deliveryFactory.getNamed<DeliveryMethod>("Method",featureName.toUpperCase()).install(projectFeature, projectPath, project.getMode() === 'multi' ? false : true);
+                      feature.setInstalled(true);
+                      project.updateFeature(projectFeature);
+                      resolve();
                     });
-                  })
-                  .finally( async function(){
-                      if (await DBHelper.isFeatureInstalled(feature, project,c)){
-                        feature.setInstalled(true);
-                        project.getStatus().updateDependencyStatus(feature);
-                        resolve();
-                      }else{
-                        project.getLogger().getLogger().log('error',`Error when installing  ${feature.getName()}! Please check xcl.log for details`);
-                        reject();                       
-                      }
-                      
-                      //project.updateFeature(feature);
-                    }
-                  );
-              }else{
-                if(feature.getType() === "DEPLOY"){
-                  FeatureManager.unzipFeature(undefined, projectPath, feature).then(()=>{
-                    deliveryFactory.getNamed<DeliveryMethod>("Method",featureName.toUpperCase()).install(feature, projectPath, project.getMode() === 'multi' ? false : true);
-                    feature.setInstalled(true);
-                    project.updateFeature(feature);
-                    resolve();
-                  });
                 }
+              }else if (feature instanceof CustomFeature){
+                const customFeature  = project.getFeatures().get(featureName) as CustomFeature;
+                var c:IConnectionProperties = DBHelper.getConnectionProps('sys', syspw, connection)!;
+                DBHelper.schemaExists(c, customFeature.getUser().getName()).then(exists=>{
+                  if (!exists){
+                    DBHelper.executeScript(c, Utils.checkPathForSpaces(`${__dirname}/scripts/create_user.sql`) +` ${customFeature.getUser().getName()} ${customFeature.getUser().getPassword()}`, project.getLogger());
+                  }
+
+                  if(project.getUsers().has(customFeature.getUser().getName())){
+                    c = DBHelper.getConnectionProps(project.getUsers().get(customFeature.getUser().getName())?.getConnectionName(),
+                                                    Environment.readConfigFrom(project.getPath(), 'password', false),
+                                                    connection)!; 
+                  }else{ //else use the user defined in the feature configuration
+                    c = DBHelper.getConnectionProps(customFeature.getUser().getConnectionName(),customFeature.getUser().getPassword(),connection)!;
+                  }
+                  
+                  FeatureManager.unzipFeature(undefined, project.getDependenciesPath(), customFeature).then(async ()=>{
+                    DBHelper.executeScript(c, `${featurePath}/${customFeature.getInstallScript()}`, project.getLogger());
+                    if(await DBHelper.isFeatureInstalled(customFeature, project, c)){
+                      customFeature.setInstalled(true);
+                      project.getStatus().updateDependencyStatus(customFeature);
+                      resolve();
+                    }else{
+                      reject();
+                    }
+                    
+                  });
+                });
               }
             }else{
               console.log(chalk.red('ERROR: Dependency missing! Execute ´xcl feature:add´ first!'));
@@ -447,11 +519,11 @@ export class FeatureManager{
           syspw = syspw ? syspw : Environment.readConfigFrom(projectPath, "syspw");  
             if (project.getFeatures().has(featureName)){
 
-              let feature:ProjectFeature=project.getFeatures().get(featureName)!;
+              let feature:ProjectFeature=project.getFeatures().get(featureName) as ProjectFeature;
               var deinstallSteps = FeatureManager.getDeinstallSteps(feature.getName());
 
               const featurePath:string = projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation();
-              FeatureManager.unzipFeature(deinstallSteps, projectPath, feature)
+              FeatureManager.unzipFeature(deinstallSteps, project.getDependenciesPath(), feature)
                 .then(()=>{
                   if (deinstallSteps.scripts){
                     for (var i=0; i<deinstallSteps.scripts.length; i++){
@@ -549,30 +621,35 @@ export class FeatureManager{
         });
       }
 
-      private static unzipFeature(installSteps:any, projectPath:string, feature:ProjectFeature):Promise<void>{
+      private static unzipFeature(installSteps:any, projectPath:string, feature:Feature):Promise<void>{
         return new Promise((resolve, reject)=>{
-          if (installSteps && installSteps.installzip){
-            var zip = new AdmZip(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '.zip');
-            zip.extractAllTo(projectPath + '/dependencies/');
-            var zipEntries = zip.getEntries();
-            var unzipped = zipEntries[0].entryName.toString();
-            fs.renameSync(projectPath + '/dependencies/' + unzipped,
-                          projectPath + '/dependencies/' + feature.getName().toLowerCase() + '_' + feature.getReleaseInformation() + '_tmp');
-            var pathTmp = projectPath + '/dependencies/' + feature.getName().toLowerCase() + '_' + feature.getReleaseInformation() + '_tmp';
-            
-            zip = new AdmZip(pathTmp + '/' + installSteps.installzip[0].path + '/' + feature.getName().toLowerCase() + '_'+feature.getReleaseInformation() + '.zip');
+          try{
+            if (installSteps && installSteps.installzip){
+              var zip = new AdmZip(projectPath + '/' + feature.getName() + '_' + feature.getVersion() + '.zip');
+              zip.extractAllTo(projectPath + '/');
+              var zipEntries = zip.getEntries();
+              var unzipped = zipEntries[0].entryName.toString();
+              fs.renameSync(projectPath + '/' + unzipped,
+                            projectPath + '/' + feature.getName().toLowerCase() + '_' + feature.getVersion() + '_tmp');
+              var pathTmp = projectPath + '/' + feature.getName().toLowerCase() + '_' + feature.getVersion() + '_tmp';
+              
+              zip = new AdmZip(pathTmp + '/' + installSteps.installzip[0].path + '/' + feature.getName().toLowerCase() + '_'+feature.getVersion() + '.zip');
 
-            zip.extractAllTo(projectPath + '/dependencies/' + feature.getName().toLowerCase() + '_' + feature.getReleaseInformation() + '/');
-            fs.removeSync(pathTmp);
-          }else{
-            var zip = new AdmZip(projectPath + '/dependencies/' + feature.getName() + '_' + feature.getReleaseInformation() + '.zip');
-            zip.extractAllTo(projectPath+'/dependencies/');
-            var zipEntries = zip.getEntries();
-            var unzipped = zipEntries[0].entryName.toString();
-            fs.renameSync(projectPath + '/dependencies/' + unzipped,
-                          projectPath + '/dependencies/' + feature.getName().toLowerCase() + '_' + feature.getReleaseInformation());
+              zip.extractAllTo(projectPath + '/' + feature.getName().toLowerCase() + '_' + feature.getVersion() + '/');
+              fs.removeSync(pathTmp);
+            }else{
+              var zip = new AdmZip(projectPath + '/' + feature.getName() + '_' + feature.getVersion() + '.zip');
+              zip.extractAllTo(projectPath+'/');
+              var zipEntries = zip.getEntries();
+              var unzipped = zipEntries[0].entryName.toString();
+              fs.renameSync(projectPath + '/' + unzipped,
+                            projectPath + '/' + feature.getName().toLowerCase() + '_' + feature.getVersion());
+            }
+            resolve();  
+          }catch(err){
+            console.log(err);
+            console.log(chalk.red('ERROR: Could not handle feature archive!'));
           }
-          resolve();
         });
       }
 
@@ -610,12 +687,12 @@ export class FeatureManager{
         return new Promise((resolve, reject)=>{
           if (ProjectManager.getInstance().getProject(projectName).getFeatures().has(featureName)){
             let p:Project = ProjectManager.getInstance().getProject(projectName);
-            let feature = p.getFeatures().get(featureName);
+            let feature = p.getFeatures().get(featureName) as ProjectFeature;
             let newFeature = feature;
             
             syspw = syspw ? syspw : Environment.readConfigFrom( p.getPath(), "syspw");
 
-            newFeature?.setReleaseInformation(version);
+            newFeature?.setVersion(version);
             FeatureManager.getInstance().deinstallProjectFeature(featureName, connection, syspw, projectName)
               .then(function(){
                 FeatureManager.getInstance().dropOwnerSchema(featureName, connection, syspw, projectName)
@@ -644,7 +721,7 @@ export class FeatureManager{
         return new Promise((resolve, reject)=>{
           let project = ProjectManager.getInstance().getProject(projectName);
           if( project.getFeatures().has(featureName) ){
-            let feature:ProjectFeature = project.getFeatures().get(featureName)!;
+            let feature:ProjectFeature = project.getFeatures().get(featureName) as ProjectFeature;
             if ( feature.getType() === 'DEPLOY' ){
               deliveryFactory.getNamed<DeliveryMethod>( "Method", project.getDeployMethod().toUpperCase() ).remove(feature, project.getPath(), project.getMode() === Project.MODE_SINGLE);
             }
@@ -659,11 +736,11 @@ export class FeatureManager{
         });
       }
 
-      public getFeatureType(featureName:string){
+      public getFeatureType(featureName:string, projectName:string){
         if(FeatureManager.features.has(featureName)){
           return FeatureManager.features.get(featureName)?.getType();
         }else{
-         console.log(chalk.red("ERROR: Unkown Feature!")) 
+          return ProjectManager.getInstance().getProject(projectName).getFeatures().get(featureName)?.getType();
         }
       }
 
@@ -722,7 +799,7 @@ export class FeatureManager{
             choices: await FeatureManager.getInstance().getFeatureReleases(featureList.features[i])
           }]);
 
-          if(FeatureManager.getInstance().getFeatureType(featureList.features[i]) === "DB"){
+          if(FeatureManager.getInstance().getFeatureType(featureList.features[i], project.getName()) === "DB"){
             user = await FeatureManager.getUsername(project.getName());
           }
 

@@ -6,6 +6,7 @@ import * as fs from "fs-extra";
 import * as os from "os";
 import { Logger } from './Logger';
 import { Environment } from './Environment';
+import { Feature } from './Feature';
 
 const oracledb = require('oracledb')
 
@@ -89,9 +90,9 @@ export class DBHelper {
   };
 
   //checks if a feature is installed
-  public static async isFeatureInstalled(feature: ProjectFeature, project:Project, conn:IConnectionProperties):Promise<boolean>{
+  public static async isFeatureInstalled(feature: Feature, project:Project, conn:IConnectionProperties):Promise<boolean>{
     let connection;
-    let userCount=0;
+    let userCount = 0;
     try{
       connection = await oracledb.getConnection(conn);
       const USER:string = project.getUsers().has(feature.getUser().getConnectionName()) ? project.getUsers().get(feature.getUser().getConnectionName())?.getName()! : feature.getUser().getConnectionName();
@@ -293,6 +294,20 @@ export class DBHelper {
     }else{
       logger.getLogger().log("error", childProcess.stderr); 
     }
+  }
+
+  public static async schemaExists(conn: IConnectionProperties, schema:string):Promise<boolean>{
+    let connection;
+    try{
+      connection = await oracledb.getConnection(conn);
+      let query = `SELECT count(1) FROM all_users where username like '${schema.toUpperCase()}`;
+      const result = await connection.execute(query);
+      return result.rows[0][0] > 0;
+    }catch(err){
+      console.log(err);
+      return true;
+    }
+
   }
 
   private static getSqlClient(logger:Logger):string|undefined{
